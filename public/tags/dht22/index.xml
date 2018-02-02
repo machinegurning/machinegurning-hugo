@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dht22 on A Hugo website</title>
+    <link>/tags/dht22/</link>
+    <description>Recent content in Dht22 on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 15 Jan 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/dht22/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Sensing temperature with a Raspberry Pi</title>
+      <link>/2016/01/15/sensing-temperature-with-a-raspberry-pi/</link>
+      <pubDate>Fri, 15 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/01/15/sensing-temperature-with-a-raspberry-pi/</guid>
+      <description>In my last post I started to delve into a year of sensor data that I have been collecting with my Raspberry Pi sensors. I made some general observations about the data, and went through the process of cleaning it.
+In this post I&amp;rsquo;ll taking a deeper look at the temperature data. I currently have three temperatrue sensors: two internal (one a DS18B20, and a second within an DHT22 combined temperature and humidity sensor) and one external (another DS18B20).</description>
+    </item>
+    
+  </channel>
+</rss>

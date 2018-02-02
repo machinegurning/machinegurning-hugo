@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Wickham on A Hugo website</title>
+    <link>/tags/wickham/</link>
+    <description>Recent content in Wickham on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 07 Apr 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/wickham/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>The Hadley Effect</title>
+      <link>/2016/04/07/the-hadley-effect/</link>
+      <pubDate>Thu, 07 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/04/07/the-hadley-effect/</guid>
+      <description>Last week Matt G tweeted about a quick blog post I wrote about iteratively applying models using some of Hadley&amp;rsquo;s packages, to which Hadley replied:
+@mammykins_ @m_a_upson the only thing it&amp;#39;s missing is that you should store related data frames and models as list columns of s data frame
+&amp;mdash; Hadley Wickham (@hadleywickham) April 2, 2016 
+Now this blog is pretty new, and we haven&amp;rsquo;t made much of an effort to promote it.</description>
+    </item>
+    
+  </channel>
+</rss>

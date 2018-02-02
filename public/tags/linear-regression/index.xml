@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linear Regression on A Hugo website</title>
+    <link>/tags/linear-regression/</link>
+    <description>Recent content in Linear Regression on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 23 Oct 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/linear-regression/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Sold!</title>
+      <link>/2016/10/23/sold/</link>
+      <pubDate>Sun, 23 Oct 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/10/23/sold/</guid>
+      <description>There seems nothing the British press likes more than a good house price story. Accordingly we use the Kaggle dataset on house prices as a demonstration of the data science workflow. With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home (every dataset has a story, see here for details). I found this dataset particularly interesting, as it informs someone new to he housing market as to what variables one should ask questions about if one were to buy a house.</description>
+    </item>
+    
+    <item>
+      <title>Sparking your interest in a dry subject</title>
+      <link>/2016/09/19/sparking-your-interest-in-a-dry-subject/</link>
+      <pubDate>Mon, 19 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/09/19/sparking-your-interest-in-a-dry-subject/</guid>
+      <description>I recently attended the conference Effective Applications of the R language in London. One of the many excellent speakers described how one can use Spark to apply some simple Machine Learning to larger data sets and then extend the range of potential models by simply adding water.
+We explore some of the main features and how to get started in this blog. Spark is a general purpose cluster computing system.</description>
+    </item>
+    
+    <item>
+      <title>Growing up</title>
+      <link>/2015/08/16/growing-up/</link>
+      <pubDate>Sun, 16 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/16/growing-up/</guid>
+      <description>I&amp;rsquo;ve been playing with implementations of linear and logistic regression over the last couple of months, following the exercises from a machine learning course that I have been doing. So far I have been writing things in a very functional way, constantly defining specific functions to do what are essentially generic things.
+I&amp;rsquo;ve also started to write a couple of my own packages, one of which I have published on github and zenodo.</description>
+    </item>
+    
+    <item>
+      <title>Elastic-net regularisation</title>
+      <link>/2015/08/08/elastic-net-regularisation/</link>
+      <pubDate>Sat, 08 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/08/elastic-net-regularisation/</guid>
+      <description>A more formalised implementation of regularisation A short while ago I published a post based on an exercise from Andrew Ng&amp;rsquo;s Machine Learning course on Coursera. In that post I implemented regularisation for a vectorised implementation of linear regression. In reality when approaching a machine learning problem, I wouldn&amp;rsquo;t want to rely on functions I have written myself when there are fully formed packages supporting these techniques. So in this post I&amp;rsquo;m going to reproduce the analysis from my previous post but using the R package glmnet.</description>
+    </item>
+    
+    <item>
+      <title>Regularised linear regression</title>
+      <link>/2015/07/26/regularised-linear-regression/</link>
+      <pubDate>Sun, 26 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/07/26/regularised-linear-regression/</guid>
+      <description>In this post I reproduce an example similar to an exercise I did for the coursera MOOC course in machine learning written by Andrew Ng. I&amp;rsquo;m compelting the course musing R, not the requisite matlab. In the next couple of posts I&amp;rsquo;m going to complete the equivalent of exercise 5.
+The exercise was about creating a vectorised implementation of regularised linear regression, and using this to test some theory relating to the diagnosis of bias (underfitting) and variance (overfitting).</description>
+    </item>
+    
+  </channel>
+</rss>

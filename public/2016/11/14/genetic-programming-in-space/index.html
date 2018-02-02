@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Genetic programming in space - A Hugo website</title>
+<meta property="og:title" content="Genetic programming in space - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">10 min read</span>
+    
+
+    <h1 class="article-title">Genetic programming in space</h1>
+
+    
+    <span class="article-date">2016/11/14</span>
+    
+
+    <div class="article-content">
+      
+
+<p>Genetic Programming (GP) is a collection of techniques from evolutionary computing (EC) for the automatic generation of computer programs that perform a user-defined task.
+Starting with a high-level problem definition, GP creates a population of random programs that are progressively refined through variation and selection until a satisfactory solution is found.
+A lack of foresight does not prevent this blind watchmaker from arriving at a sensible design solution for modelling the data as demonstrated in this post.</p>
+
+<p>My attention was first drawn to this approach through the <a href="https://twitter.com/mammykins_/status/727623873777274880">MarIO video</a>, where a program evolves through selection to get better and better at playing a computer game.
+A great advantage of GP is that the user need not specify (or know) much about the form of the eventual solution before starting.</p>
+
+<p>I studied Zoology to doctorate level and thus spotted parallels between some of these processes and thinking tools and models for natural selection and evolution.
+This is all inherently interesting, warranting a blog post.</p>
+
+<p>There are several packages that provide genetic programming tools for R, we will investigate a few of these packages and look at the scenarios in which they are useful compared to more typical machine learning methods.
+Basically, GP is an evolutionary search heuristic for arbitrary symbolic expressions, i.e. mathematical or logical formulas.</p>
+
+<p>{% highlight r %}
+library(tidyverse)
+library(ggthemes)
+library(rgp)</p>
+
+<h1 id="vignette-rgp-introduction">vignette(&ldquo;rgp_introduction&rdquo;)</h1>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="modelling-the-orbit-of-a-celestial-body">Modelling the orbit of a celestial body</h2>
+
+<p>I&rsquo;ve picked a topic I don&rsquo;t know too much about so that the GP approach can help me with this lack of expert domain knowledge.
+This scenario is receiving alot of interest as there are a shortage of data scientists; it would be nice if feature extraction based on expert knowledge did not limit the training and accuracy of our models.
+(<a href="http://www.creativemachineslab.com/data-smashing.html">data smashing</a> is a concept that is relevant here; or consider the <a href="https://www.kaggle.com/c/higgs-boson">Higgs-Boson problem</a>).
+We investigate a problem tackled by Kepler in the 17th century (note: that&rsquo;s why Pluto is included).
+We investigate the relationship between the planets&rsquo; distance from the Sun and their orbital periods (<a href="https://ww2.coastal.edu/kingw/statistics/R-tutorials/simplenonlinear.html">see here</a> for an alternative take on this problem).</p>
+
+<p>{% highlight r %}
+planets &lt;- read.table(header = TRUE, text = &ldquo;
+planet    dist   period
+Mercury   57.9    87.98
+Venus    108.2   224.70
+Earth    149.6   365.26
+Mars     228.0   686.98
+Ceres    413.8  1680.50
+Jupiter  778.3  4332.00
+Saturn  1427.0 10761.00
+Uranus  2869.0 30685.00
+Neptune 4498.0 60191.00
+Pluto   5900.0 90742.00
+&ldquo;)
+{% endhighlight %}</p>
+
+<p>With the data defined we can now set about looking for a relationship by dedicating some computing time. Prior to analysis we must convert everything to units of earth orbits, as the Earth is a relative centre of the universe.
+Thus, the units of distance will become astronomical units (AUs), and the units of period will become Earth years.</p>
+
+<p>{% highlight r %}
+planets &lt;- dplyr::mutate(
+  planets, dist_au = dist / 149.6,
+  years = period / 365.26
+) %&gt;%
+  tibble::as_tibble()
+{% endhighlight %}</p>
+
+<p>As the planets move further from the Sun their orbit period seems to increase exponentially.
+However, I&rsquo;m not really sure if they are circular or elliptical or in-between, so wouldn&rsquo;t like to guess.
+We can look at the data to confirm this suspicion.</p>
+
+<p>{% highlight r %}
+dplyr::glimpse(planets)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="observations-10">Observations: 10</h2>
+
+<h2 id="variables-5">Variables: 5</h2>
+
+<h2 id="planet-fctr-mercury-venus-earth-mars-ceres-jupiter-saturn">$ planet  <fctr> Mercury, Venus, Earth, Mars, Ceres, Jupiter, Saturn, &hellip;</h2>
+
+<h2 id="dist-dbl-57-9-108-2-149-6-228-0-413-8-778-3-1427-0-2869">$ dist    <dbl> 57.9, 108.2, 149.6, 228.0, 413.8, 778.3, 1427.0, 2869&hellip;.</h2>
+
+<h2 id="period-dbl-87-98-224-70-365-26-686-98-1680-50-4332-00-10761">$ period  <dbl> 87.98, 224.70, 365.26, 686.98, 1680.50, 4332.00, 10761&hellip;</h2>
+
+<h2 id="dist-au-dbl-0-3870321-0-7232620-1-0000000-1-5240642-2-7660428">$ dist_au <dbl> 0.3870321, 0.7232620, 1.0000000, 1.5240642, 2.7660428,&hellip;</h2>
+
+<h2 id="years-dbl-0-2408695-0-6151782-1-0000000-1-8807972-4-6008323">$ years   <dbl> 0.2408695, 0.6151782, 1.0000000, 1.8807972, 4.6008323,&hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Or plot it.</p>
+
+<p>{% highlight r %}
+#devtools::install_github(&ldquo;UKGov-Data-Science/govstyle&rdquo;)
+library(govstyle)</p>
+
+<p>ggplot(planets, aes(years, dist_au)) +
+  geom_point(color = &ldquo;grey&rdquo;) +
+  geom_text(aes(label = planet, color = &ldquo;yellow&rdquo;)) +
+  xlab(&ldquo;Orbital period (years)&rdquo;) +
+  ylab(&ldquo;Distance from the Sun (AU)&rdquo;) +
+  theme_gov()
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-11-14_fancy_scatter-1.svg" alt="plot of chunk 2016-11-14_fancy_scatter" /></p>
+
+<h2 id="regression-run">Regression Run</h2>
+
+<p>This tutorial shows how to use the <code>symbolicRegression</code> function to solve symbolic modelling and regression tasks with minimal configuration work.
+The theme of this tutorial is the discovery of a mathematical formula describing the behaviour of a physical system based on measurement
+data, i.e. symbolic regression.</p>
+
+<h3 id="symbolic-regression">Symbolic regression</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Symbolic_regression">Symbolic regression</a> is a type of regression analysis that searches the space of mathematical expressions to find the model that best fits a given dataset, both in terms of accuracy and simplicity.
+No particular model is provided as a starting point to the algorithm. Instead, initial expressions are formed by randomly combining mathematical building blocks such as mathematical operators, analytic functions, constants, and state variables.
+New equations are then formed by recombining previous equations, using genetic programming.</p>
+
+<p>We are ready to start a symbolic regression run. We choose a time budget of one minute:</p>
+
+<p>{% highlight r %}
+set.seed(255)</p>
+
+<p>model_set1 &lt;- rgp::symbolicRegression(
+  dist_au ~ years,
+  data = planets,
+  stopCondition = makeTimeStopCondition(1 * 60)
+)
+{% endhighlight %}</p>
+
+<h2 id="result-analysis">Result Analysis</h2>
+
+<p>Selection and plotting of the model with best fitness can be performed as follows:</p>
+
+<p>{% highlight r %}
+best_model1 &lt;- model_set1$population[[which.min(model_set1$fitnessValues)]]</p>
+
+<p>hyp_orbit_years &lt;- 1:250</p>
+
+<p>plot(
+  x = hyp_orbit_years,
+  y = best_model1(hyp_orbit_years),  #  we predict distance on 250 hypothetical planets
+  type = &ldquo;l&rdquo;, lty = 1,
+  xlab = &ldquo;Orbital period (years)&rdquo;,
+  ylab = &ldquo;Distance from the Sun (AU)&rdquo;,
+  ylim = c(0, 40), xlim = c(0, 250)
+)</p>
+
+<p>points(x = planets$years, y = planets$dist_au, col = &ldquo;red&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-11-14_m1_scatter-1.svg" alt="plot of chunk 2016-11-14_m1_scatter" /></p>
+
+<p>Hmm, not too bad, let&rsquo;s give it a bit more time!
+Most of the data we&rsquo;re training on is near the lower end of the scale thus we might expect our best fit line to wiggle towards those points given more time perhaps at the expense of the accuracy of distance from the Sun prediction at the regions of space with lower celestial object density (the Gas Giants hoover everything up?).</p>
+
+<p>{% highlight r %}
+model_set2 &lt;- rgp::symbolicRegression(
+  dist_au ~ years,
+  data = planets,
+  stopCondition = makeTimeStopCondition(3 * 60)
+)</p>
+
+<p>best_model2 &lt;- model_set2$population[[which.min(model_set2$fitnessValues)]]</p>
+
+<p>plot(
+  x = hyp_orbit_years,
+  y = best_model2(hyp_orbit_years),
+  xlab = &ldquo;Orbital period (years)&rdquo;,
+  ylab = &ldquo;Distance from the Sun (AU)&rdquo;,
+  type = &ldquo;l&rdquo;, lty = 1,
+  ylim = c(0, 40), xlim = c(0, 250)
+)</p>
+
+<p>points(x = planets$years, y = planets$dist_au, col = &ldquo;red&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-11-14_m2_scatter-1.svg" alt="plot of chunk 2016-11-14_m2_scatter" /></p>
+
+<p>When sat twiddling your thumbs waiting for this to compute, consider Kepler who said, regarding the lengthy arguments within his epic tome sparking the Enlightenment:</p>
+
+<blockquote>
+<p>If thou art bored with this wearisome method of calculation, take pity on me, who had to go through with at least seventy repetitions of it, at a very great loss of time.</p>
+</blockquote>
+
+<p>Not much better? Is it the lack of data or do we need to tune our parameters?</p>
+
+<h2 id="sequential-parameter-optimization-for-genetic-programming">Sequential Parameter Optimization for Genetic Programming</h2>
+
+<p>Finding good algorithm parameter settings for Genetic Programming applications is a complex task.
+Sequential parameter optimization (SPO) provides a framework for applying modern statistical methods to solve this task.
+Fortunately a package exists to help us!
+We provide the same starting conditions for our original experiment to allow comparison.</p>
+
+<p>{% highlight r %}
+library(SPOT)</p>
+
+<p>set.seed(255)
+result1 &lt;- symbolicRegression(
+  dist_au ~ years,
+  data = planets,
+  stopCondition = makeTimeStopCondition(1 * 60)
+)</p>
+
+<p>bestFitness &lt;- min(sapply(result1$population, result1$fitnessFunction))
+fit_fun &lt;- result1$population[[which.min(result1$fitnessValues)]]</p>
+
+<p>plot(
+  x = hyp_orbit_years,
+  y = fit_fun(hyp_orbit_years),
+  type = &ldquo;l&rdquo;, lty = 1,
+  xlab = &ldquo;Orbital period (years)&rdquo;,
+  ylab = &ldquo;Distance from the Sun (AU)&rdquo;,
+  ylim = c(0, 40), xlim = c(0, 250)
+)</p>
+
+<p>points(x = planets$years, y = planets$dist_au, col = &ldquo;red&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-11-14_m3_scatter-1.svg" alt="plot of chunk 2016-11-14_m3_scatter" /></p>
+
+<p>We don&rsquo;t even have to specify anything, we just load the package and it does it for us.
+I ran all this code for comparison several times by adjusting the <code>set.seed</code> at the start of this post.
+You&rsquo;ll notice that by adjusting this your get different solutions or best fitted models.
+This can be considered analagous to a phenomenon in Evolutionary Biology.</p>
+
+<p>The great evolutionist Stephen Jay Gould often employed the metaphor &ldquo;replaying life&rsquo;s tape&rdquo; to emphasize the preeminent role of contingency in the evolutionary process.
+In Gould&rsquo;s view, the outcome of this <a href="https://en.wikipedia.org/wiki/Thought_experiment">Gedanken experiment</a> would have been dramatically different from the actually observed course of events because evolution is essentially a stochastic phenomenon whereby trajectories that start infinitely close to each other soon diverge because the divergence is exponential.
+The actual evolutionary trajectory is fundamentally unpredictable because the selection of the fittest could occur along a great number of forking paths.
+Here a different seed provides a different starting point.</p>
+
+<p>But does it provide anymore information?
+Do we get an understanding of the relationship that Kepler was after?</p>
+
+<p>In this simple example we see that we have produced identical solutions given the same starting position even with the <code>SPOT</code> package loaded which automatically tunes our parameters for us. Perhaps with a different example we would have seen greater impact.</p>
+
+<p>{% highlight r %}
+best_model1
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="function-years">function (years)</h2>
+
+<h2 id="sqrt-years">sqrt(years)</h2>
+
+<h2 id="environment-0x1384bee8"><environment: 0x1384bee8></h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="using-spot">using SPOT</h1>
+
+<p>fit_fun
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="function-years-1">function (years)</h2>
+
+<h2 id="sqrt-years-1">sqrt(years)</h2>
+
+<h2 id="environment-0x1384bee8-1"><environment: 0x1384bee8></h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We have a function that takes five times the square root of the input.
+So the distance from the Sun is sort-of proportional to five times the square root of the orbit in years of the celestial body of interest.
+We can compare this to the modern solution and other historical approximations of the truth <a href="https://en.wikipedia.org/wiki/Kepler%27s_laws_of_planetary_motion">here</a>.
+This demonstrates how GP could be useful for feature selection despite it being quite slow, as it can help non experts in determining sensible relationships or transformations (other options exist e.g. Box-Cox transformation).
+This functionality is provided in the <code>caret</code> package. <code>caret::gafs</code> conducts a supervised binary search of the predictor space using a genetic algorithm.</p>
+
+<p>Altogether a good reminder that:</p>
+
+<blockquote>
+<p>nanos gigantum humeris insidentes</p>
+</blockquote>
+
+<h2 id="the-third-law">The &ldquo;third law&rdquo;</h2>
+
+<p>Kepler discovered his &ldquo;third law&rdquo; a decade after the publication of the <a href="https://en.wikipedia.org/wiki/Astronomia_nova">Astronomia nova</a> as a result of his investigations in the 1619 <a href="https://en.wikipedia.org/wiki/Harmonices_Mundi">Harmonices Mundi</a>.
+He found that the ratio of the cube of the length of the semi-major axis of each planet&rsquo;s orbit, to the square of time of its orbital period, is the same for all planets.</p>
+
+<p>{% highlight r %}
+planets &lt;- planets %&gt;%
+  mutate(
+    third_law = (dist_au^3) / (years^2)
+  )</p>
+
+<p>round(planets$third_law, digits = 3)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-999-1-000-1-000-1-001-1-000-1-001-1-000-0-999-1-001-0-994">[1] 0.999 1.000 1.000 1.001 1.000 1.001 1.000 0.999 1.001 0.994</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We rearrange the formula and create a function using Kepler&rsquo;s knowledge.</p>
+
+<p>{% highlight r %}
+kepler &lt;- function(years) {
+  (years)^(<sup>2</sup>&frasl;<sub>3</sub>)
+}</p>
+
+<p>plot(
+  x = hyp_orbit_years,
+  y = kepler(hyp_orbit_years),
+  type = &ldquo;l&rdquo;, lty = 1,
+  xlab = &ldquo;Orbital period (years)&rdquo;,
+  ylab = &ldquo;Distance from the Sun (AU)&rdquo;,
+  ylim = c(0, 40), xlim = c(0, 250)
+)</p>
+
+<p>points(x = planets$years, y = planets$dist_au, col = &ldquo;red&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-11-14_kepler_scatter-1.svg" alt="plot of chunk 2016-11-14_kepler_scatter" /></p>
+
+<p>This is an improvement, demonstrating the value of expert domain knowledge provided by careful observation and experimentation to inform model building.
+Kepler built upon Copernicus&rsquo; heliocentric theory by explaining how the planets&rsquo; speeds varied using elliptical orbits.
+A consequence of this was the third law.</p>
+
+<blockquote>
+<p>The square of the orbital period of a planet is directly proportional to the cube of the semi-major axis of its orbit. This captures the relationship between the distance of planets from the Sun, and their orbital periods.</p>
+</blockquote>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-3-2-2016-10-31">R version 3.3.2 (2016-10-31)</h2>
+
+<h2 id="platform-x86-64-pc-linux-gnu-64-bit">Platform: x86_64-pc-linux-gnu (64-bit)</h2>
+
+<h2 id="running-under-ubuntu-16-04-1-lts">Running under: Ubuntu 16.04.1 LTS</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-stats-graphics-grdevices-utils-datasets-methods-base">[1] stats     graphics  grDevices utils     datasets  methods   base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-spot-1-1-0-govstyle-0-1-0-rgp-0-4-1-ggthemes-3-2-0">[1] SPOT_1.1.0      govstyle_0.1.0  rgp_0.4-1       ggthemes_3.2.0</h2>
+
+<h2 id="5-readr-1-0-0-tidyverse-1-0-0-tidyr-0-6-0-ggplot2-2-1-0">[5] readr_1.0.0     tidyverse_1.0.0 tidyr_0.6.0     ggplot2_2.1.0</h2>
+
+<h2 id="9-dplyr-0-5-0-magrittr-1-5-tibble-1-2-purrr-0-2-2">[9] dplyr_0.5.0     magrittr_1.5    tibble_1.2      purrr_0.2.2</h2>
+
+<h2 id="13-rmd2md-0-1-2">[13] rmd2md_0.1.2</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-rcpp-0-12-7-emoa-0-5-0-formatr-1-4">[1] Rcpp_0.12.7         emoa_0.5-0          formatR_1.4</h2>
+
+<h2 id="4-git2r-0-15-0-plyr-1-8-4-class-7-3-14">[4] git2r_0.15.0        plyr_1.8.4          class_7.3-14</h2>
+
+<h2 id="7-tools-3-3-2-rpart-4-1-10-digest-0-6-10">[7] tools_3.3.2         rpart_4.1-10        digest_0.6.10</h2>
+
+<h2 id="10-evaluate-0-9-memoise-1-0-0-gtable-0-2-0">[10] evaluate_0.9        memoise_1.0.0       gtable_0.2.0</h2>
+
+<h2 id="13-dbi-0-5-1-curl-2-2-withr-1-0-2">[13] DBI_0.5-1           curl_2.2            withr_1.0.2</h2>
+
+<h2 id="16-stringr-1-1-0-httr-1-2-1-knitr-1-14">[16] stringr_1.1.0       httr_1.2.1          knitr_1.14</h2>
+
+<h2 id="19-devtools-1-12-0-grid-3-3-2-r6-2-2-0">[19] devtools_1.12.0     grid_3.3.2          R6_2.2.0</h2>
+
+<h2 id="22-rsm-2-7-4-mco-1-0-15-1-scales-0-4-0">[22] rsm_2.7-4           mco_1.0-15.1        scales_0.4.0</h2>
+
+<h2 id="25-codetools-0-2-15-mass-7-3-45-randomforest-4-6-12">[25] codetools_0.2-15    MASS_7.3-45         randomForest_4.6-12</h2>
+
+<h2 id="28-assertthat-0-1-checkpoint-0-3-16-colorspace-1-2-7">[28] assertthat_0.1      checkpoint_0.3.16   colorspace_1.2-7</h2>
+
+<h2 id="31-labeling-0-3-stringi-1-1-2-lazyeval-0-2-0">[31] labeling_0.3        stringi_1.1.2       lazyeval_0.2.0</h2>
+
+<h2 id="34-munsell-0-4-3-algdesign-1-1-7-3">[34] munsell_0.4.3       AlgDesign_1.1-7.3</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

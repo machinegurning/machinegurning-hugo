@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Handwriting recognition with logistic regression - A Hugo website</title>
+<meta property="og:title" content="Handwriting recognition with logistic regression - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">6 min read</span>
+    
+
+    <h1 class="article-title">Handwriting recognition with logistic regression</h1>
+
+    
+    <span class="article-date">2015/04/14</span>
+    
+
+    <div class="article-content">
+      
+
+<p>In my previous <a href="http://ivyleavedtoadflax.github.io//regularised-logistic-regression/">post</a> I completed an exercise using logistic regression to generate complicated non-linear decision boundaries. In this exercise I&rsquo;m going to use much of the same code for handwriting recognition. These exercises are all part of Andrew Ng&rsquo;s Machine Learning course on <a href="http://www.coursera.org">coursera</a>. All the exercises are done in Matlab/Octave, but I&rsquo;ve been stubborn and have worked solutions in R instead.</p>
+
+<h3 id="the-data">The Data</h3>
+
+<p>For this exercise the dataset comprises 5000 training examples where each examples is a $20 \times 20$ pixel grayscale image of a digit between 0-9. The pixel values (which are floating point numbers) have been unrolled into a 400 dimensional vector giving a $5000 \times 400$ matrix $X$, where each row is a training example.</p>
+
+<p>To visualise a subset of the data, I have been using the <code>raster</code> package in R</p>
+
+<h1 id="1-2-visualising-the-data">1.2 Visualising the data</h1>
+
+<p>In the Machine learning course by Andrew Ng the raster drawing function is already written. I&rsquo;m going to try to produce an R equivalent using the raster package.</p>
+
+<p>I&rsquo;ll start by loading the data and randomly selecting a 100 row subset of the data.</p>
+
+<p>{% highlight r %}
+library(dplyr)
+library(magrittr)
+library(raster)
+library(grid)
+library(ucminf)</p>
+
+<h1 id="vector-listing-the-correct-numbers-for-each-trainign-example">Vector listing the correct numbers for each trainign example</h1>
+
+<p>y &lt;- &ldquo;y.csv&rdquo; %&gt;%
+  read.csv(
+    header = FALSE
+    )</p>
+
+<h1 id="here-i-bind-the-y-and-x-matrices-together-so-that-i-can-generate-the-same">Here I bind the y and X matrices together so that I can generate the same</h1>
+
+<h1 id="random-dataset">random dataset</h1>
+
+<p>X &lt;- &ldquo;matrix.csv&rdquo; %&gt;%
+  read.csv(
+    header = FALSE
+    ) %&gt;%
+  cbind(y) %&gt;%
+  sample_n(
+    100
+    ) %&gt;%
+  as.matrix</p>
+
+<h1 id="designate-the-training-x-and-y-set">Designate the training X and y set</h1>
+
+<p>train_y &lt;- X[,401]
+train &lt;- X[,-401]
+{% endhighlight %}</p>
+
+<p>One of the things about the raster package is that for a grayscale image it expects the values to be between 0 and 1, and this is not the case in the training data. The values are also unrolled, so to create a bitmap, they need to be rolled back up.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="create-a-value-between-0-and-1-by-normalising-the-data">Create a value between 0 and 1 by normalising the data</h1>
+
+<p>normalise &lt;- function(x) {</p>
+
+<p>(x - min(x))/(max(x)-min(x))</p>
+
+<p>}</p>
+
+<h1 id="unroll-the-20-x-20-pixel-images-into-a-400-dimensional-vector">Unroll the 20 x 20 pixel images into a 400 dimensional vector</h1>
+
+<p>roll &lt;- function(x) {</p>
+
+<p>x &lt;- normalise(x)
+  x &lt;- matrix(1-x,nrow=20,ncol=20)</p>
+
+<p>return(x)
+  }
+{% endhighlight %}</p>
+
+<p>Now we can plot a single digit using:</p>
+
+<p>{% highlight r %}
+grid.raster(
+  roll(train[1,]),
+  interpolate = FALSE
+  )
+{% endhighlight %}</p>
+
+<p><a href="/figures/2015-04-14-single-digit.png"><img src="/figures/2015-04-14-single-digit.png" alt="plot of chunk 2015-04-14-single-digit" /></a></p>
+
+<p>So that&rsquo;s great for a single row, or a single training example. But it would be nice to plot the entire 100 row dataset that we are working from as a matrix. The following code loops through each row, and parks the $20 \times 20$ pixel grid into a matrix of $100$ bitmaps.</p>
+
+<p>{% highlight r %}
+hw_row &lt;- function(X,ind) {</p>
+
+<p>out_mat &lt;- roll(X[ind[1],])</p>
+
+<p>for (i in ind[2]:ind[10]) {</p>
+
+<pre><code>out_mat %&lt;&gt;% cbind(roll(X[i,]))
+
+}
+</code></pre>
+
+<p>return(out_mat)</p>
+
+<p>}</p>
+
+<p>hw_mat &lt;- function(X) {</p>
+
+<p>for (j in seq(1,91,10)) {</p>
+
+<p>if (j == 1) hw_1 &lt;- hw_row(X,1:10) else</p>
+
+<pre><code>hw_1 %&lt;&gt;% rbind(hw_row(X,j:(j+9)))
+</code></pre>
+
+<p>}</p>
+
+<p>return(hw_1)
+}
+{% endhighlight %}</p>
+
+<p>Which gives us&hellip;</p>
+
+<p>{% highlight r %}
+grid.raster(
+  hw_mat(train),
+  interpolate = FALSE
+  )
+{% endhighlight %}</p>
+
+<p><a href="/figures/2015-04-14-digit-matrix.png"><img src="/figures/2015-04-14-digit-matrix.png" alt="plot of chunk 2015-04-14-digit-matrix" /></a></p>
+
+<p>So great, this is what we are trying to classify.</p>
+
+<h3 id="multiclass-classification">Multiclass classification</h3>
+
+<p>In this exercise I&rsquo;m going to use the code I wrote in the previous <a href="http://ivyleavedtoadflax.github.io//regularised-logistic-regression/">post</a>, which should be ready to go out of the box.</p>
+
+<p>For multiclass classification with logistic regression we simply run a mdoel for each possible class, then combine this ensemble of mdoels, and pick the value that has the highest likelihood based on the several models.</p>
+
+<p>Now because the code is well vectorised running ten models together is an absolute breaze. First we define the parameter matrix $\theta$.</p>
+
+<p>{% highlight r %}
+Theta &lt;- matrix(
+  0,
+  ncol = 10,
+  nrow = 400
+  )
+{% endhighlight %}</p>
+
+<p>Then use a for loop to generate parameters for each of our ten models</p>
+
+<p>{% highlight r %}
+for (i in 1:10) {</p>
+
+<p>Theta[,i] &lt;- reg_lr(
+    X = train,
+    y = (train_y == i) * 1,
+    theta = Theta[,i],
+    lambda = 0
+    )</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<p>Now we run a logistic regression model using these parameters, which is simply $h_\theta=g(\theta^TX)$ where $g$ is the sigmoid function $g(z)=\frac{1}{1 + e^{-z}}$.</p>
+
+<p>{% highlight r %}
+out &lt;- h(Theta,train)</p>
+
+<h1 id="call-the-matrixstats-package-for-the-rowmaxs-function">call the matrixStats package for the rowMaxs function</h1>
+
+<p>library(matrixStats)</p>
+
+<p>out_class &lt;- (rowMaxs(out) == out) %&gt;%
+  multiply_by(1) %&gt;%
+  multiply_by(
+    rep(1:10) %&gt;%
+      replicate(n = nrow(out)) %&gt;%
+      t
+    ) %&gt;%
+  rowMaxs
+{% endhighlight %}</p>
+
+<h3 id="the-result">The result</h3>
+
+<p>That was pretty straightforward. Let&rsquo;s check the first few predictions against the bitmap plotted earlier:</p>
+
+<p>{% highlight r %}
+out_class[1:10]
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-9-2-9-6-6-7-8-3-10-7">[1]  9  2  9  6  6  7  8  3 10  7</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So far so good. Note that zeros are classified as tens to avoid confusion. So how well does the model work on the training data overall?</p>
+
+<p>{% highlight r %}
+sum(out_class == train_y)/100
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-1">[1] 1</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So currently the model achieved 100% accuracy with $\lambda = 0$ (the regularisation parameter), i.e. no regularisation at all.</p>
+
+<h3 id="what-about-a-test-set">What about a test set?</h3>
+
+<p>I&rsquo;ll wrap this all in a function, then try it on a different subset of the $X$ matrix.</p>
+
+<p>{% highlight r %}
+hw_rec &lt;- function(train,test,train_y,test_y,lambda,classes) {</p>
+
+<p>Theta &lt;- matrix(
+    0,
+    ncol = classes, # number of classes
+    nrow = ncol(train)
+    )</p>
+
+<p>for (i in 1:classes) {</p>
+
+<pre><code>Theta[,i] &lt;- reg_lr(
+  X = train,
+  y = (train_y == i) * 1,
+  theta = Theta[,i],
+  lambda = lambda
+  )
+
+}
+</code></pre>
+
+<p>out &lt;- h(Theta,test)</p>
+
+<p>out_class &lt;- (rowMaxs(out) == out) %&gt;%
+    multiply_by(1) %&gt;%
+    multiply_by(
+      rep(1:10) %&gt;%
+        replicate(n = nrow(out)) %&gt;%
+        t
+      ) %&gt;%
+    rowMaxs</p>
+
+<p>acc &lt;- sum(out_class == test_y)/100</p>
+
+<p># Gives output of the predicted classes, the parameters (theta), and the
+  # percentage accuracy</p>
+
+<p>return(
+    list(
+      class = out_class,
+      theta = Theta,
+      acc = acc
+      )
+    )</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<p>So repeating the earlier code, I select a different random subset of 100 rows from the $X$ matrix.</p>
+
+<p>{% highlight r %}
+y &lt;- &ldquo;y.csv&rdquo; %&gt;%
+  read.csv(
+    header = FALSE
+    )</p>
+
+<p>test &lt;- &ldquo;matrix.csv&rdquo; %&gt;%
+  read.csv(
+    header = FALSE
+    ) %&gt;%
+  cbind(y) %&gt;%
+  sample_n(
+    100
+    ) %&gt;%
+  as.matrix</p>
+
+<p>test_y &lt;- test[,401]
+test &lt;- test[,-401]
+{% endhighlight %}</p>
+
+<p>And looping through a range of $\lambda$, how accurately is the model predicting the digits?</p>
+
+<p>{% highlight r %}
+lambdas &lt;- c(0.001,0.01,0.1,0.5,1,10)</p>
+
+<p>test_lambda_y &lt;- sapply(
+  lambdas,
+  function(x) {
+      hw_rec(train,test,train_y,test_y,x,10)$acc
+    }
+  )</p>
+
+<p>test_lambda_y
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-76-0-75-0-76-0-77-0-76-0-74">[1] 0.76 0.75 0.76 0.77 0.76 0.74</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So not bad considering the model was trained on a dataset the same size as the test set. With varying levels of regularisation ($\lambda$) the model has between 74% and 77% accuracy.</p>
+
+<p>Next time I&rsquo;ll define training, test, and cross validation sets with a 60:20:20 split, to improve classification, and better inform my choice of $\lambda$.</p>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-1-2-2014-10-31">R version 3.1.2 (2014-10-31)</h2>
+
+<h2 id="platform-x86-64-unknown-linux-gnu-64-bit">Platform: x86_64-unknown-linux-gnu (64-bit)</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-grid-methods-stats-graphics-grdevices-utils-datasets">[1] grid      methods   stats     graphics  grDevices utils     datasets</h2>
+
+<h2 id="8-base">[8] base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-matrixstats-0-14-0-ucminf-1-1-3-raster-2-3-24">[1] matrixStats_0.14.0 ucminf_1.1-3       raster_2.3-24</h2>
+
+<h2 id="4-sp-1-0-15-magrittr-1-5-dplyr-0-2">[4] sp_1.0-15          magrittr_1.5       dplyr_0.2</h2>
+
+<h2 id="7-testthat-0-9-knitr-1-6">[7] testthat_0.9       knitr_1.6</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-assertthat-0-1-evaluate-0-5-5-formatr-1-0-lattice-0-20-29">[1] assertthat_0.1  evaluate_0.5.5  formatR_1.0     lattice_0.20-29</h2>
+
+<h2 id="5-parallel-3-1-2-rcpp-0-11-2-stringr-0-6-2-tools-3-1-2">[5] parallel_3.1.2  Rcpp_0.11.2     stringr_0.6.2   tools_3.1.2</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

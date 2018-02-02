@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Classification on A Hugo website</title>
+    <link>/tags/classification/</link>
+    <description>Recent content in Classification on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 27 Nov 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/classification/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Classification of spreadsheets</title>
+      <link>/2017/11/27/classification-of-spreadsheets/</link>
+      <pubDate>Mon, 27 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/11/27/classification-of-spreadsheets/</guid>
+      <description>Data tables in the form of spreadsheets are ubiquitous in enterprise. For better or worse, they are the Swiss Army Knife (or cockroaches) for decision support in many organisations.
+Why are they so popular and widely used? That&amp;rsquo;s not the focus of this blog, instead we focus on how you might go about automating the classification of spreadsheets without manually having to open and inspect them. We use some of the techniques we used in previous posts to represent a spreadsheet as a matrix (empty or not-empty cells) and attempt dimension reduction.</description>
+    </item>
+    
+    <item>
+      <title>Deploying a model</title>
+      <link>/2017/03/17/deploying-a-model/</link>
+      <pubDate>Fri, 17 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/03/17/deploying-a-model/</guid>
+      <description>This blog post draws heavily on Chapter 10 in the excellent Practical Data Science with R.
+To understand the different layers of a full-stack development it can be useful to produce a reference deployment of your model. This can be a good way to jump-start deployment as it can allow experienced engineers (who are better suited to true production deployment) to tinker and experiment with your work, test corner cases and build acceptance tests.</description>
+    </item>
+    
+    <item>
+      <title>The Fast and the Furiously Frugal</title>
+      <link>/2016/09/08/the-fast-and-the-furiously-frugal/</link>
+      <pubDate>Thu, 08 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/09/08/the-fast-and-the-furiously-frugal/</guid>
+      <description>Fast and frugal trees I&amp;rsquo;ve praised the utility of decision trees in other scenarios especially where accountability and transparency of decision making is important. Here we explore why decision trees are a good introduction to Machine Learning and its ability to spot patterns in data providing insight. Decision trees are arguably easier to interpret and more inline with human thinking than some other ML methods, thus we write a post here to use a fast and frugal tree method, providing a quick solution to a classification problem.</description>
+    </item>
+    
+    <item>
+      <title>Non-linear classification with logistic regression</title>
+      <link>/2015/04/10/non-linear-classification-with-logistic-regression/</link>
+      <pubDate>Fri, 10 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/04/10/non-linear-classification-with-logistic-regression/</guid>
+      <description>In my last post I compared vectorised logistic regression solved with an optimisation algorithm with a generalised linear model. I tested it out on a very simple dataset which could be classified using a linear boundary. In this post I&amp;rsquo;m following the next part of Andrew Ng&amp;rsquo;s Machine Learning course on coursera and implementing regularisation and feature mapping to allow me to map non-linear decision boundaries using logistic regression. And of course, I&amp;rsquo;m doing it in R, not Matlab or Octave.</description>
+    </item>
+    
+  </channel>
+</rss>

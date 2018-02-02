@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>SylvaSense Part I - A Hugo website</title>
+<meta property="og:title" content="SylvaSense Part I - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">SylvaSense Part I</h1>
+
+    
+    <span class="article-date">2015/07/28</span>
+    
+
+    <div class="article-content">
+      
+
+<h3 id="a-bit-of-context">A bit of context</h3>
+
+<p>I&rsquo;ve been playing a lot with <a href="https://www.raspberrypi.org/">raspberry pi</a>s over the last couple of years. I&rsquo;m now the proud owner of an original Raspberry Pi B, A, two A+s, and a brand spanking new Pi 2. Currently I have one sitting next to my electricity meter reading LED pulses from the meter, charting my electricity consumption, and a second running an external and internal temperature sensor, light, and humidity sensors. The data is then pushed to an online server and postgres database, so that I can get access to it wherever I am.</p>
+
+<p><a href="/figures/2015-07-27-psql.png"><img src="/figures/2015-07-27-psql.png" alt="" /></a></p>
+
+<p><em>Plots from a raspberry pi driven environmental sensor linked to an online postgres server.</em></p>
+
+<p>After a conversation with some other researchers at a conference recently, I&rsquo;ve started to put some thought into how I can use raspberry pis or <a href="https://www.arduino.cc/">arduino</a>s to measure environmental variables like temperature, humidity, light intensity, and soil moisture content in the field. Soil moisture content is an interesting one, because there are lots of questions that can be answered with real-time (or near real-time) soil moisture sensing.</p>
+
+<p>One of the applications is in agroforestry research, which was partly the subject of my PhD and subsequent post-doctoral research. Agroforestry systems are combinations of trees with agricultural practices, be it arable of pastoral. In the case of arable, the interaction between trees and crops can have an influence on soil moisture content, and there are a number of other questions that might be answered in similar fields by the deployment of cheap soil moisture sensors and arduinos.</p>
+
+<p>There are of course proprietary soil moisture sensors, but they are much more expensive; whilst perhaps not prohibitive for the odd one or two sensors, deploying a network of many tens, or a hundred or so sensors would certainly be out of the question for most research budgets.</p>
+
+<h3 id="developing-an-arduino-powered-soil-moisture-sensor">Developing an arduino powered soil moisture sensor</h3>
+
+<p>The internet being what it is, there are already a host of resources available online for environmental scientists. One of the most promising I came across is the <a href="http://vanderleevineyard.com/1/post/2013/12/gypsum-sensor-casting.html">Van der Leer Vineyard</a> who have created their own autonomous viticulture monitoring system called Vinduino, and even published a <a href="http://www.academia.edu/10258579/An_Embedded_System_for_Smart_Vineyard_Agriculture">conference paper</a> on the subject.</p>
+
+<p>There&rsquo;s a great alternative to their design of soil moisture sensor using 3D printed parts <a href="http://unpuntilloalambre.blogspot.com.es/2014/01/gypsum-block-for-soil-moisture-sensor.html">here</a> making use of 35 mm hair curlers, and a 3D printed top and base to perfectly space stainless steel M3 studding to act as electrodes.</p>
+
+<p>This is the design that I&rsquo;m going to play with, so over the last week I have been assembling components with the help of <a href="https://twitter.com/mceep">@MCeeP</a> who was kind enough to print the caps for my first three sensors.</p>
+
+<p><a href="/figures/2015-07-27-3dprinter.jpg"><img src="/figures/2015-07-27-3dprinter.jpg" alt="" /></a></p>
+
+<p><em>Parts freshly extruded on the printer.</em></p>
+
+<p>I&rsquo;m just waiting for some new studding to arrive so that I can finish the construction and cast the sensor from gypsum, which is cheaply available as &lsquo;plaster of Paris&rsquo;.</p>
+
+<p><a href="/figures/2015-07-27-assembly.jpg"><img src="/figures/2015-07-27-assembly.jpg" alt="" /></a></p>
+
+<p><em>Starting to assemble a sensor before casting with gypsum.</em></p>
+
+<p>In the meantime, I have also been doing some experiments to work out how long I will be able to run an Arduino in the field on battery power. So far I have been testing a setup with 5 ds18b20 temperature sensors, and three light dependent resistors (LDRs) acting as light sensors running off a 10,000 mAh lithium ion battery pack designed for re-charging mobile phones.</p>
+
+<p>With a measurement frequency of once every minute, and logging values to a microSD card, though not at present with a real time clock unit, on an arduino Uno, I&rsquo;ve managed to get around 70 hours of life from the arduino, without any special effort to save battery power</p>
+
+<p><a href="/figures/2015-07-27-datalog-1.png"><img src="/figures/2015-07-27-datalog-1.png" alt="plot of chunk 2015-07-27-datalog" /></a></p>
+
+<p>Field based readings are likely to be much less frequent, so even with a relatively small battery I anticipate getting several days worth of readings.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+  </body>
+</html>
+

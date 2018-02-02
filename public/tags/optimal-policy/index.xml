@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Optimal Policy on A Hugo website</title>
+    <link>/tags/optimal-policy/</link>
+    <description>Recent content in Optimal Policy on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 08 Jul 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/optimal-policy/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>A pipe dream</title>
+      <link>/2016/07/08/a-pipe-dream/</link>
+      <pubDate>Fri, 08 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/07/08/a-pipe-dream/</guid>
+      <description>This is the first part of a two part series of blog posts on how to solve and / or optimise complex decision making elucidated using a simple hypothetical problem.
+Decision makers are faced with complex policy decisions where they are expected to maximise immediate utility for stakeholder value but not at the expense of future stakeholders&amp;rsquo; interests. The effect of the current action determined through policy thus contributes to both current utility and to future utility through its effect on the future state of the system.</description>
+    </item>
+    
+  </channel>
+</rss>

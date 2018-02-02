@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Student performance in Portugal - A Hugo website</title>
+<meta property="og:title" content="Student performance in Portugal - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">10 min read</span>
+    
+
+    <h1 class="article-title">Student performance in Portugal</h1>
+
+    
+    <span class="article-date">2016/03/01</span>
+    
+
+    <div class="article-content">
+      
+
+<p>{% include _toc.html %}</p>
+
+<p>Education is a key factor affecting long term economic progress. Success in the core languages provide a linguistic and numeric scaffold for other subjects later in students&rsquo; academic careers.The growth in school educational databases facilitates the use of Data Mining and Machine Learning practises to improve outcomes in these subjects by identifying factors that are indicative of failure. Predicting outcomes allows educators to take corrective measures for weak students mitigating the risk of failure.</p>
+
+<h2 id="the-data">The Data</h2>
+
+<p>The <a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance">data</a> was downloaded from the UCI Machine Learning database and inspired by Cortez <em>et al</em>., 2008. We use maths results data only. We start off by clearing the workspace, then setting the working directory to match the location of the student maths data file. A caveat, note that the data is not comma-seperated but semi-colon seperated, be sure to specify this in the <code>sep</code> argument in the <code>read.table()</code> function. Normally you should refer to the <code>sessionInfo()</code> output at the foot of this blog-post to determine which packages are installed and loaded for this, however as there are quite a few, this time we detail them here.</p>
+
+<p>{% highlight r %}
+knitr::opts_chunk$set(
+  dev = &ldquo;svg&rdquo;
+  )</p>
+
+<p>library(dplyr)
+library(C50)
+library(gmodels)
+library(rpart)
+library(rpart.plot)</p>
+
+<p>#INPUT</p>
+
+<p>mydata &lt;- &ldquo;data/2016-03-01_student_performance.csv&rdquo;</p>
+
+<p>mydata &lt;- read.table(
+  mydata, sep = &ldquo;;&rdquo;,
+  header = TRUE
+  )
+{% endhighlight %}</p>
+
+<p>Let&rsquo;s have a look at our data using the convenient <code>glimpse</code> courtesy of the <code>dplyr</code> package. Notice how the range of the numeric variables is different.</p>
+
+<p>{% highlight r %}
+glimpse(mydata)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="observations-395">Observations: 395</h2>
+
+<h2 id="variables-33">Variables: 33</h2>
+
+<h2 id="school-fctr-gp-gp-gp-gp-gp-gp-gp-gp-gp-gp-gp-gp-gp">$ school     (fctr) GP, GP, GP, GP, GP, GP, GP, GP, GP, GP, GP, GP, GP&hellip;</h2>
+
+<h2 id="sex-fctr-f-f-f-f-f-m-m-f-m-m-f-f-m-m-m-f-f">$ sex        (fctr) F, F, F, F, F, M, M, F, M, M, F, F, M, M, M, F, F,&hellip;</h2>
+
+<h2 id="age-int-18-17-15-15-16-16-16-17-15-15-15-15-15">$ age        (int) 18, 17, 15, 15, 16, 16, 16, 17, 15, 15, 15, 15, 15,&hellip;</h2>
+
+<h2 id="address-fctr-u-u-u-u-u-u-u-u-u-u-u-u-u-u-u-u-u">$ address    (fctr) U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U, U,&hellip;</h2>
+
+<h2 id="famsize-fctr-gt3-gt3-le3-gt3-gt3-le3-le3-gt3-le3-gt3">$ famsize    (fctr) GT3, GT3, LE3, GT3, GT3, LE3, LE3, GT3, LE3, GT3, &hellip;</h2>
+
+<h2 id="pstatus-fctr-a-t-t-t-t-t-t-a-a-t-t-t-t-t-a-t-t">$ Pstatus    (fctr) A, T, T, T, T, T, T, A, A, T, T, T, T, T, A, T, T,&hellip;</h2>
+
+<h2 id="medu-int-4-1-1-4-3-4-2-4-3-3-4-2-4-4-2-4-4">$ Medu       (int) 4, 1, 1, 4, 3, 4, 2, 4, 3, 3, 4, 2, 4, 4, 2, 4, 4, &hellip;</h2>
+
+<h2 id="fedu-int-4-1-1-2-3-3-2-4-2-4-4-1-4-3-2-4-4">$ Fedu       (int) 4, 1, 1, 2, 3, 3, 2, 4, 2, 4, 4, 1, 4, 3, 2, 4, 4, &hellip;</h2>
+
+<h2 id="mjob-fctr-at-home-at-home-at-home-health-other-services">$ Mjob       (fctr) at_home, at_home, at_home, health, other, services&hellip;</h2>
+
+<h2 id="fjob-fctr-teacher-other-other-services-other-other-oth">$ Fjob       (fctr) teacher, other, other, services, other, other, oth&hellip;</h2>
+
+<h2 id="reason-fctr-course-course-other-home-home-reputation-hom">$ reason     (fctr) course, course, other, home, home, reputation, hom&hellip;</h2>
+
+<h2 id="guardian-fctr-mother-father-mother-mother-father-mother-mo">$ guardian   (fctr) mother, father, mother, mother, father, mother, mo&hellip;</h2>
+
+<h2 id="traveltime-int-2-1-1-1-1-1-1-2-1-1-1-3-1-2-1-1-1">$ traveltime (int) 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 3, 1, 2, 1, 1, 1, &hellip;</h2>
+
+<h2 id="studytime-int-2-2-2-3-2-2-2-2-2-2-2-3-1-2-3-1-3">$ studytime  (int) 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 3, 1, 2, 3, 1, 3, &hellip;</h2>
+
+<h2 id="failures-int-0-0-3-0-0-0-0-0-0-0-0-0-0-0-0-0-0">$ failures   (int) 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="schoolsup-fctr-yes-no-yes-no-no-no-no-yes-no-no-no-no">$ schoolsup  (fctr) yes, no, yes, no, no, no, no, yes, no, no, no, no,&hellip;</h2>
+
+<h2 id="famsup-fctr-no-yes-no-yes-yes-yes-no-yes-yes-yes-yes">$ famsup     (fctr) no, yes, no, yes, yes, yes, no, yes, yes, yes, yes&hellip;</h2>
+
+<h2 id="paid-fctr-no-no-yes-yes-yes-yes-no-no-yes-yes-yes">$ paid       (fctr) no, no, yes, yes, yes, yes, no, no, yes, yes, yes,&hellip;</h2>
+
+<h2 id="activities-fctr-no-no-no-yes-no-yes-no-no-no-yes-no-yes">$ activities (fctr) no, no, no, yes, no, yes, no, no, no, yes, no, yes&hellip;</h2>
+
+<h2 id="nursery-fctr-yes-no-yes-yes-yes-yes-yes-yes-yes-yes-y">$ nursery    (fctr) yes, no, yes, yes, yes, yes, yes, yes, yes, yes, y&hellip;</h2>
+
+<h2 id="higher-fctr-yes-yes-yes-yes-yes-yes-yes-yes-yes-yes">$ higher     (fctr) yes, yes, yes, yes, yes, yes, yes, yes, yes, yes, &hellip;</h2>
+
+<h2 id="internet-fctr-no-yes-yes-yes-no-yes-yes-no-yes-yes-yes">$ internet   (fctr) no, yes, yes, yes, no, yes, yes, no, yes, yes, yes&hellip;</h2>
+
+<h2 id="romantic-fctr-no-no-no-yes-no-no-no-no-no-no-no-no-n">$ romantic   (fctr) no, no, no, yes, no, no, no, no, no, no, no, no, n&hellip;</h2>
+
+<h2 id="famrel-int-4-5-4-3-4-5-4-4-4-5-3-5-4-5-4-4-3">$ famrel     (int) 4, 5, 4, 3, 4, 5, 4, 4, 4, 5, 3, 5, 4, 5, 4, 4, 3, &hellip;</h2>
+
+<h2 id="freetime-int-3-3-3-2-3-4-4-1-2-5-3-2-3-4-5-4-2">$ freetime   (int) 3, 3, 3, 2, 3, 4, 4, 1, 2, 5, 3, 2, 3, 4, 5, 4, 2, &hellip;</h2>
+
+<h2 id="goout-int-4-3-2-2-2-2-4-4-2-1-3-2-3-3-2-4-3">$ goout      (int) 4, 3, 2, 2, 2, 2, 4, 4, 2, 1, 3, 2, 3, 3, 2, 4, 3, &hellip;</h2>
+
+<h2 id="dalc-int-1-1-2-1-1-1-1-1-1-1-1-1-1-1-1-1-1">$ Dalc       (int) 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &hellip;</h2>
+
+<h2 id="walc-int-1-1-3-1-2-2-1-1-1-1-2-1-3-2-1-2-2">$ Walc       (int) 1, 1, 3, 1, 2, 2, 1, 1, 1, 1, 2, 1, 3, 2, 1, 2, 2, &hellip;</h2>
+
+<h2 id="health-int-3-3-3-5-5-5-3-1-1-5-2-4-5-3-3-2-2">$ health     (int) 3, 3, 3, 5, 5, 5, 3, 1, 1, 5, 2, 4, 5, 3, 3, 2, 2, &hellip;</h2>
+
+<h2 id="absences-int-6-4-10-2-4-10-0-6-0-0-0-4-2-2-0-4-6">$ absences   (int) 6, 4, 10, 2, 4, 10, 0, 6, 0, 0, 0, 4, 2, 2, 0, 4, 6&hellip;</h2>
+
+<h2 id="g1-int-5-5-7-15-6-15-12-6-16-14-10-10-14-10">$ G1         (int) 5, 5, 7, 15, 6, 15, 12, 6, 16, 14, 10, 10, 14, 10, &hellip;</h2>
+
+<h2 id="g2-int-6-5-8-14-10-15-12-5-18-15-8-12-14-10">$ G2         (int) 6, 5, 8, 14, 10, 15, 12, 5, 18, 15, 8, 12, 14, 10, &hellip;</h2>
+
+<h2 id="g3-int-6-6-10-15-10-15-11-6-19-15-9-12-14-11">$ G3         (int) 6, 6, 10, 15, 10, 15, 11, 6, 19, 15, 9, 12, 14, 11,&hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>From the <a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance#">codebook</a> we know that G3 is the final grade of the students. We can inspect it&rsquo;s distribution using a historgram or the <code>hist()</code> function.</p>
+
+<p>{% highlight r %}
+hist(mydata$G3)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-03-01_histogram-1.svg" alt="plot of chunk 2016-03-01_histogram" /></p>
+
+<h2 id="make-the-final-grade-binary-pass-and-fail">Make the final grade binary (pass and fail)</h2>
+
+<p><code>G3</code> is pretty normally distributed, despite the dodgy tail. To simplify matters converted G3 marks below 10 as a fail, above or equal to 10 as a pass. Often a school is judged by whether students meet a critical boundary, in the UK it is a C grade at GCSE for example. Notice how we first set the <code>final</code> variable to the <code>NULL</code> object then use the logical <code>ifelse</code> to convert <code>G3</code> into the binary <code>final</code> (see <a href="http://www.r-bloggers.com/r-na-vs-null">here</a>).</p>
+
+<p>{% highlight r %}
+mydata$final &lt;- NULL</p>
+
+<p>mydata$final &lt;- factor(
+  ifelse(mydata$G3 &gt;= 10, 1, 0),
+  labels = c(&ldquo;fail&rdquo;, &ldquo;pass&rdquo;)
+  )
+{% endhighlight %}</p>
+
+<h2 id="normalising-the-data">Normalising the data</h2>
+
+<p>The numeric variables cover different ranges. As we want all variables to be treated the same we should convert them so that they range between zero and one, thus operating on the same scale. We are interested in relative differences not absolute.<br />
+Our custom <code>normalise()</code> function takes a vector x of numeric values, and for each value in x subtracts the min value in x and divides by the range of values in x. A vector is returned.</p>
+
+<p>{% highlight r %}
+normalise &lt;- function(x) {
+  return((x - min(x)) / (max(x) - min(x)))
+}
+{% endhighlight %}</p>
+
+<h2 id="objectives">Objectives</h2>
+
+<ul>
+<li>is it possible to predict student performance?<br /></li>
+<li>can we identify the important variables in determining intervention?<br /></li>
+</ul>
+
+<h2 id="decision-tree-advantages">Decision tree advantages</h2>
+
+<ul>
+<li>Appropriate as students and parent will want to know why a student has been selected for intervention. The outcome is essentially a flowchart.<br /></li>
+<li>Widely used.<br /></li>
+<li>Decent performance.<br /></li>
+<li>There arn&rsquo;t too many variables in this problem.<br /></li>
+</ul>
+
+<h2 id="training-and-test-datasets">Training and test datasets.</h2>
+
+<p>We need to split the data so we can build the model and then test it, to see if it generalises well. This gives us confidence in the external validity of the model. The data arrived in a random order thus we don&rsquo;t need to worry about sampling at random.</p>
+
+<p>{% highlight r %}
+data_train &lt;- data_interest[1:350, ]
+data_test &lt;- data_interest[351:395, ]
+{% endhighlight %}</p>
+
+<p>Now we need to train the model using the data.</p>
+
+<p>{% highlight r %}
+#Build the classifier
+m &lt;- C5.0(x = data_train[-13], y = data_train$final)</p>
+
+<h1 id="final-is-the-class-variable-so-we-need-to-exclude-it-from-training">final is the class variable so we need to exclude it from training</h1>
+
+<p>summary(m)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="call">Call:</h2>
+
+<h2 id="c5-0-default-x-data-train-13-y-data-train-final">C5.0.default(x = data_train[-13], y = data_train$final)</h2>
+
+<h2 id="c5-0-release-2-07-gpl-edition-sun-mar-13-21-08-40-2016">C5.0 [Release 2.07 GPL Edition]      Sun Mar 13 21:08:40 2016</h2>
+
+<h2 id="toc_45">&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-</h2>
+
+<h2 id="class-specified-by-attribute-outcome">Class specified by attribute `outcome&rsquo;</h2>
+
+<h2 id="read-350-cases-13-attributes-from-undefined-data">Read 350 cases (13 attributes) from undefined.data</h2>
+
+<h2 id="decision-tree">Decision tree:</h2>
+
+<h2 id="g2-0-4736842-pass-224-8">G2 &gt; 0.4736842: pass (<sup>224</sup>&frasl;<sub>8</sub>)</h2>
+
+<h2 id="g2-0-4736842">G2 &lt;= 0.4736842:</h2>
+
+<h2 id="g2-0-368421-fail-53">:&hellip;G2 &lt;= 0.368421: fail (53)</h2>
+
+<h2 id="g2-0-368421">G2 &gt; 0.368421:</h2>
+
+<h2 id="fjob-in-at-home-health-services-teacher-fail-33-5">:&hellip;Fjob in {at_home,health,services,teacher}: fail (<sup>33</sup>&frasl;<sub>5</sub>)</h2>
+
+<h2 id="fjob-other">Fjob = other:</h2>
+
+<h2 id="g2-0-4210526-fail-18-3">:&hellip;G2 &lt;= 0.4210526: fail (<sup>18</sup>&frasl;<sub>3</sub>)</h2>
+
+<h2 id="g2-0-4210526">G2 &gt; 0.4210526:</h2>
+
+<h2 id="goout-0-75-pass-4">:&hellip;goout &gt; 0.75: pass (4)</h2>
+
+<h2 id="goout-0-75">goout &lt;= 0.75:</h2>
+
+<h2 id="failures-0-fail-2">:&hellip;failures &gt; 0: fail (2)</h2>
+
+<h2 id="failures-0">failures &lt;= 0:</h2>
+
+<h2 id="g1-0-375-pass-10-2">:&hellip;G1 &lt;= 0.375: pass (<sup>10</sup>&frasl;<sub>2</sub>)</h2>
+
+<h2 id="g1-0-375-fail-6-1">G1 &gt; 0.375: fail (<sup>6</sup>&frasl;<sub>1</sub>)</h2>
+
+<h2 id="evaluation-on-training-data-350-cases">Evaluation on training data (350 cases):</h2>
+
+<h2 id="decision-tree-1">Decision Tree</h2>
+
+<h2 id="toc_65">&mdash;&mdash;&mdash;&mdash;&mdash;-</h2>
+
+<h2 id="size-errors">Size      Errors</h2>
+
+<h2 id="8-19-5-4">8   19( 5.4%)   &lt;&lt;</h2>
+
+<h2 id="a-b-classified-as">(a)   (b)    &lt;-classified as</h2>
+
+<h2 id="toc_69">&mdash;-  &mdash;-</h2>
+
+<h2 id="103-10-a-class-fail">103    10    (a): class fail</h2>
+
+<h2 id="9-228-b-class-pass">9   228    (b): class pass</h2>
+
+<h2 id="attribute-usage">Attribute usage:</h2>
+
+<h2 id="100-00-g2">100.00% G2</h2>
+
+<h2 id="20-86-fjob">20.86% Fjob</h2>
+
+<h2 id="6-29-goout">6.29% goout</h2>
+
+<h2 id="5-14-failures">5.14% failures</h2>
+
+<h2 id="4-57-g1">4.57% G1</h2>
+
+<h2 id="time-0-0-secs">Time: 0.0 secs</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Only 5% error rate, and the model has described an obvious relationship between most recent test score, <code>G2</code>, but has also identified the father&rsquo;s job, <code>Fedu</code>, as being a useful indicator which may not have been revealed in a human expert analysis.<br />
+Let&rsquo;s see how generalisable the model is by comparing it&rsquo;s predicted student math <code>G3</code> outcomes to real pass or fail status.</p>
+
+<p>{% highlight r %}
+#PREDICT
+p &lt;- predict(m, data_test)
+CrossTable(data_test$final, p, prop.chisq = FALSE,
+           prop.c = FALSE, prop.r = FALSE, dnn = c(&ldquo;actual pass&rdquo;,
+                                                   &ldquo;predicted pass&rdquo;))
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="cell-contents">Cell Contents</h2>
+
+<h2 id="toc_80">|&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-|</h2>
+
+<h2 id="n">|                       N |</h2>
+
+<h2 id="n-table-total">|         N / Table Total |</h2>
+
+<h2 id="toc_83">|&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-|</h2>
+
+<h2 id="total-observations-in-table-45">Total Observations in Table:  45</h2>
+
+<h2 id="predicted-pass">| predicted pass</h2>
+
+<h2 id="actual-pass-fail-pass-row-total">actual pass |      fail |      pass | Row Total |</h2>
+
+<h2 id="toc_87">&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|</h2>
+
+<h2 id="fail-17-0-17">fail |        17 |         0 |        17 |</h2>
+
+<h2 id="0-378-0-000">|     0.378 |     0.000 |           |</h2>
+
+<h2 id="toc_90">&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|</h2>
+
+<h2 id="pass-3-25-28">pass |         3 |        25 |        28 |</h2>
+
+<h2 id="0-067-0-556">|     0.067 |     0.556 |           |</h2>
+
+<h2 id="toc_93">&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|</h2>
+
+<h2 id="column-total-20-25-45">Column Total |        20 |        25 |        45 |</h2>
+
+<h2 id="toc_95">&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|&mdash;&mdash;&mdash;&ndash;|</h2>
+
+<p>{% endhighlight %}
+93.4% model accuracy, not bad, 3 students proved us wrong and passed anyway! Seems like a useful model for identifying students who need extra intervention and importantly it can be applied and interpreted by a human.</p>
+
+<h2 id="seeing-the-trees-for-the">Seeing the trees for the&hellip;</h2>
+
+<p>Let&rsquo;s finish by improving the way we visualise the tree diagram. We use this type of algorithm as it is very intuitive and easy to interpret, if we plot it appropriately! Here we use the <code>rpart</code> package to specify an identical model to pass to plot.</p>
+
+<p>{% highlight r %}
+#create tree using rpart, so we can plot it
+m2 &lt;- rpart(final ~ . , data = data_train, method = &lsquo;class&rsquo;)
+#Plot it
+plot(m2)
+text(m2, pretty = 0, cex = 0.65)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-03-01_plot_m2-1.svg" alt="plot of chunk 2016-03-01_plot_m2" /></p>
+
+<p>OK, but not great, we need a pretty interfce if people are expected to use this tool. Let&rsquo;s use the <code>rpart.plot</code> package and the <code>prp()</code> function therein.</p>
+
+<p>{% highlight r %}
+prp(m2,varlen = 4, extra = 2)  # plot with shortened abrreviated variable names
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-03-01_plot_prp-1.svg" alt="plot of chunk 2016-03-01_plot_prp" /></p>
+
+<p>This function is much better for plotting trees with huge customisation options. Here we display the classification rate at the node, expressed as the number of correct classifications and the number of observations in the node.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This tool can now be implemented as policy at the school to determine where interventions should be targeted pending model validation.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Cortez and Silva (2008). Using data mining to predict secondary school performance.</li>
+<li>Crawley (2004). Statistics an introduction using R.</li>
+<li>James et al., (2014). An introduction to statistical learning with applications in R.</li>
+<li><a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance">https://archive.ics.uci.edu/ml/datasets/Student+Performance</a></li>
+</ul>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-2-3-2015-12-10">R version 3.2.3 (2015-12-10)</h2>
+
+<h2 id="platform-x86-64-pc-linux-gnu-64-bit">Platform: x86_64-pc-linux-gnu (64-bit)</h2>
+
+<h2 id="running-under-ubuntu-14-04-4-lts">Running under: Ubuntu 14.04.4 LTS</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-methods-stats-graphics-grdevices-utils-datasets-base">[1] methods   stats     graphics  grDevices utils     datasets  base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-rpart-plot-1-5-3-rpart-4-1-10-gmodels-2-16-2-c50-0-1-0-24">[1] rpart.plot_1.5.3 rpart_4.1-10     gmodels_2.16.2   C50_0.1.0-24</h2>
+
+<h2 id="5-dplyr-0-4-3-testthat-0-11-0-knitr-1-12-3">[5] dplyr_0.4.3      testthat_0.11.0  knitr_1.12.3</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-rcpp-0-12-2-magrittr-1-5-splines-3-2-3-mass-7-3-44">[1] Rcpp_0.12.2     magrittr_1.5    splines_3.2.3   MASS_7.3-44</h2>
+
+<h2 id="5-r6-2-1-1-stringr-1-0-0-tools-3-2-3-parallel-3-2-3">[5] R6_2.1.1        stringr_1.0.0   tools_3.2.3     parallel_3.2.3</h2>
+
+<h2 id="9-grid-3-2-3-dbi-0-3-1-gtools-3-5-0-lazyeval-0-1-10">[9] grid_3.2.3      DBI_0.3.1       gtools_3.5.0    lazyeval_0.1.10</h2>
+
+<h2 id="13-survival-2-38-3-assertthat-0-1-digest-0-6-8-crayon-1-3-1">[13] survival_2.38-3 assertthat_0.1  digest_0.6.8    crayon_1.3.1</h2>
+
+<h2 id="17-formatr-1-2-1-memoise-0-2-1-evaluate-0-8-gdata-2-17-0">[17] formatR_1.2.1   memoise_0.2.1   evaluate_0.8    gdata_2.17.0</h2>
+
+<h2 id="21-stringi-1-0-1-partykit-1-0-5">[21] stringi_1.0-1   partykit_1.0-5</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Case When on A Hugo website</title>
+    <link>/tags/case-when/</link>
+    <description>Recent content in Case When on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Feb 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/case-when/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>It&#39;s if_else statements all the way down...</title>
+      <link>/2017/02/23/its-if_else-statements-all-the-way-down.../</link>
+      <pubDate>Thu, 23 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/02/23/its-if_else-statements-all-the-way-down.../</guid>
+      <description>I&amp;rsquo;ve been developing a package where I needed a function to take numerous different actions (different [mutations]()) depending on the values of different variables within each row of a dataframe. I started off by using a series of nested dplyr::if_else functions inside of a dplyr::mutate call. I ended up with a bit of a mess, perhaps a dozen or so if_else calls&amp;hellip; that&amp;rsquo;s when I got some abuse from my colleague following a Github pull request.</description>
+    </item>
+    
+  </channel>
+</rss>

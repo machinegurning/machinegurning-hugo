@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Decision Trees on A Hugo website</title>
+    <link>/tags/decision-trees/</link>
+    <description>Recent content in Decision Trees on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 08 Sep 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/decision-trees/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>The Fast and the Furiously Frugal</title>
+      <link>/2016/09/08/the-fast-and-the-furiously-frugal/</link>
+      <pubDate>Thu, 08 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/09/08/the-fast-and-the-furiously-frugal/</guid>
+      <description>Fast and frugal trees I&amp;rsquo;ve praised the utility of decision trees in other scenarios especially where accountability and transparency of decision making is important. Here we explore why decision trees are a good introduction to Machine Learning and its ability to spot patterns in data providing insight. Decision trees are arguably easier to interpret and more inline with human thinking than some other ML methods, thus we write a post here to use a fast and frugal tree method, providing a quick solution to a classification problem.</description>
+    </item>
+    
+  </channel>
+</rss>

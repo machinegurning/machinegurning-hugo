@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Dealing with dates - A Hugo website</title>
+<meta property="og:title" content="Dealing with dates - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">9 min read</span>
+    
+
+    <h1 class="article-title">Dealing with dates</h1>
+
+    
+    <span class="article-date">2017/01/28</span>
+    
+
+    <div class="article-content">
+      
+
+<p>In the past I have worked with a number of timeseries of sensor data that I collected using raspberry pis, arduinos, and esp8266 modules.
+It&rsquo;s not something I do regularly enough to remember the best way to do it, so I&rsquo;m writing this post as a reminder to myself, and perhaps someone will benefit from my <em>aide-memoire</em>.</p>
+
+<p>In previous posts I have combined data from two sensors I built, both based on raspberry pis (e.g. <a href="http://www.machinegurning.com/rstats/infographic1/">Measuring obsession</a>).
+<a href="https://github.com/ivyleavedtoadflax/Sensor">The first sensor</a> sampled internal and external temperature, internal humidity, and internal light levels at a frequency of once every three minutes.
+<a href="https://github.com/ivyleavedtoadflax/elec">Another sensor</a> I built recorded my electricity usage every minute by essentially counting the pulses on my electricity meter.</p>
+
+<p>The data are all in the <a href="https://github.com/machinegurning/machinegurning.github.io/tree/master/data">machinegurning</a> github repo, so I&rsquo;ll access it here.
+In the cleaned state that they are available in, the data consist of some 750,000 observations.</p>
+
+<p>{% highlight r %}
+library(tidyverse)
+library(RCurl)
+library(govstyle)
+library(scales)
+library(lubridate)</p>
+
+<h1 id="to-make-things-run-a-little-faster-and-to-exacerbate-the-problem-of">To make things run a little faster, and to exacerbate the problem of</h1>
+
+<h1 id="non-matching-timescales-i-ll-take-a-smaller-sample-of-these-data-comprising">non-matching timescales, I&rsquo;ll take a smaller sample of these data comprising</h1>
+
+<h1 id="just-100-000-data-points">just 100,000 data points</h1>
+
+<p>sensor_data &lt;- read_rds(&lsquo;data/2015-12-24-sensorpi_join.Rds&rsquo;) %&gt;%
+  sample_n(100000) %&gt;%
+  mutate(
+    key1 = ifelse(grepl(&lsquo;temp&rsquo;, key), &lsquo;temp&rsquo;, as.character(key)),
+    key1 = factor(key1)
+    )</p>
+
+<h1 id="produce-some-very-simple-summary-stats-on-these-data">Produce some very simple summary stats on these data</h1>
+
+<p>sensor_data %&gt;%
+  str
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="classes-tbl-df-tbl-and-data-frame-100000-obs-of-6-variables">Classes &lsquo;tbl_df&rsquo;, &lsquo;tbl&rsquo; and &lsquo;data.frame&rsquo;:    100000 obs. of  6 variables:</h2>
+
+<h2 id="yday-num-32-115-204-57-295-98-258-252-261-77">$ yday     : num  32 115 204 57 295 98 258 252 261 77 &hellip;</h2>
+
+<h2 id="timestamp-posixct-format-2015-02-01-18-06-00-2015-04-25-23-15-00">$ timestamp: POSIXct, format: &ldquo;2015-02-01 18:06:00&rdquo; &ldquo;2015-04-25 23:15:00&rdquo; &hellip;</h2>
+
+<h2 id="week-num-5-17-na-na-43-15-na-na-38-na">$ week     : num  5 17 NA NA 43 15 NA NA 38 NA &hellip;</h2>
+
+<h2 id="key-factor-w-5-levels-elec-ext-temp1-2-2-1-1-5-3-1-1-2-1">$ key      : Factor w/ 5 levels &ldquo;elec&rdquo;,&ldquo;ext_temp1&rdquo;,..: 2 2 1 1 5 3 1 1 2 1 &hellip;</h2>
+
+<h2 id="value-num-2-75-8-75-0-004-0-001-17-8">$ value    : num  2.75 8.75 0.004 0.001 17.8 &hellip;</h2>
+
+<h2 id="key1-factor-w-4-levels-elec-int-humidity-4-4-1-1-4-2-1-1-4-1">$ key1     : Factor w/ 4 levels &ldquo;elec&rdquo;,&ldquo;int_humidity&rdquo;,..: 4 4 1 1 4 2 1 1 4 1 &hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So what are the simple ways that we can visualise the data, first off?</p>
+
+<p>{% highlight r %}
+p &lt;- sensor_data %&gt;%
+  ggplot +
+  aes(
+    x = timestamp,
+    y = value,
+    colour = key
+  ) +
+  geom_line() +
+  facet_wrap(
+    ~key1,
+    scale = &lsquo;free_y&rsquo;,
+    ncol = 1
+  ) +
+  theme_gov(
+    base_colour = &lsquo;black&rsquo;
+  ) +
+  scale_colour_manual(
+    values = unname(gov_cols[c(&lsquo;turquoise&rsquo;,&lsquo;light_blue&rsquo;,&lsquo;purple&rsquo;,&lsquo;pink&rsquo;,&lsquo;green&rsquo;)])
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(
+    legend.position = &lsquo;bottom&rsquo;,
+    legend.key = element_blank()
+    )</p>
+
+<p>p
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-21_whole_timeseries-1.svg" alt="plot of chunk 2017-01-21_whole_timeseries" /></p>
+
+<p>Great, so <code>ggplot</code> is smart enough to detect that we need time on the x-axis, and it gives us an appropriate scale - good job Hadley!</p>
+
+<p>We can also set the breaks we want&hellip;</p>
+
+<p>{% highlight r %}
+p %+%
+  (sensor_data %&gt;% dplyr::filter(
+    timestamp &lt; &lsquo;2015-07-01&rsquo;,
+    timestamp &gt; &lsquo;2015-06-14&rsquo;
+    )) +
+  scale_x_datetime(date_breaks = &lsquo;3 days&rsquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-21_subset-1.svg" alt="plot of chunk 2017-01-21_subset" /></p>
+
+<p>And these can be times, not just dates - smart.</p>
+
+<p>{% highlight r %}
+p %+%
+  (sensor_data %&gt;% dplyr::filter(
+    timestamp &gt; &lsquo;2015-07-01&rsquo;,
+    timestamp &lt; &lsquo;2015-07-02&rsquo;
+    )) +
+  scale_x_datetime(
+    date_breaks = &lsquo;2 hours&rsquo;,
+    date_labels = &lsquo;%H:%M&rsquo;
+    )
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-21_single_day-1.svg" alt="plot of chunk 2017-01-21_single_day" /></p>
+
+<h3 id="date-aggregation">Date aggregation</h3>
+
+<p>OK, so far so good, all very simple.</p>
+
+<p>The fun begins when we start to aggregate this data.
+In this case I use <code>tidyr::spread</code> to move this data from long format to wide format.</p>
+
+<p>{% highlight r %}
+sensor_data_wide &lt;- sensor_data %&gt;%
+  select(-key1) %&gt;%
+  spread(
+    key, value
+  )
+{% endhighlight %}</p>
+
+<p>Because we started by randomly sampling 100,000 values from a dataset of 750,000, and this dataset was in long format, we are likely to have a lot of <code>NA</code> values across the various values of the timeseries:</p>
+
+<p>{% highlight r %}
+sensor_data_wide %&gt;%
+  slice(1:10) %&gt;%
+  knitr::kable()
+{% endhighlight %}</p>
+
+<table>
+<thead>
+<tr>
+<th align="right">yday</th>
+<th align="left">timestamp</th>
+<th align="right">week</th>
+<th align="right">elec</th>
+<th align="right">ext_temp1</th>
+<th align="right">int_humidity</th>
+<th align="right">int_light</th>
+<th align="right">int_temp</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 15:18:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">2069.0</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 15:30:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">7.187</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">16.8</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 15:33:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">3719.0</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 15:39:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">5384.0</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 15:45:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">7.000</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 16:00:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1230.5</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 16:12:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">6.687</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 16:15:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">48.75</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 16:18:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">49.05</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+
+<tr>
+<td align="right">2</td>
+<td align="left">2015-01-02 16:27:00</td>
+<td align="right">1</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">17.3</td>
+</tr>
+</tbody>
+</table>
+
+<p>Just looking at these rows, we can see that there are often multiple observations per minute.</p>
+
+<p>Two problems I often have are:</p>
+
+<ul>
+<li>how to aggregate to the nearest unit of time, and<br /></li>
+<li>how to aggregate across a unit of time</li>
+</ul>
+
+<p>This is the difference between aggregating to every five minutes of every day, and aggregating to every five minutes across all days.
+The former is easy, and can be achieved with <code>lubridate::ceiling_date</code> and <code>lubridate::floor_date</code>.
+Ceiling rounds up, whilst floor rounds down, and we can choose any time period of interest:</p>
+
+<p>{% highlight r %}
+test_dates &lt;- sensor_data_wide$timestamp[1:10]</p>
+
+<p>test_dates
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-18-00-utc-2015-01-02-15-30-00-utc">[1] &ldquo;2015-01-02 15:18:00 UTC&rdquo; &ldquo;2015-01-02 15:30:00 UTC&rdquo;</h2>
+
+<h2 id="3-2015-01-02-15-33-00-utc-2015-01-02-15-39-00-utc">[3] &ldquo;2015-01-02 15:33:00 UTC&rdquo; &ldquo;2015-01-02 15:39:00 UTC&rdquo;</h2>
+
+<h2 id="5-2015-01-02-15-45-00-utc-2015-01-02-16-00-00-utc">[5] &ldquo;2015-01-02 15:45:00 UTC&rdquo; &ldquo;2015-01-02 16:00:00 UTC&rdquo;</h2>
+
+<h2 id="7-2015-01-02-16-12-00-utc-2015-01-02-16-15-00-utc">[7] &ldquo;2015-01-02 16:12:00 UTC&rdquo; &ldquo;2015-01-02 16:15:00 UTC&rdquo;</h2>
+
+<h2 id="9-2015-01-02-16-18-00-utc-2015-01-02-16-27-00-utc">[9] &ldquo;2015-01-02 16:18:00 UTC&rdquo; &ldquo;2015-01-02 16:27:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+ceiling_date(test_dates, unit = &lsquo;5 minutes&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-20-00-utc-2015-01-02-15-30-00-utc">[1] &ldquo;2015-01-02 15:20:00 UTC&rdquo; &ldquo;2015-01-02 15:30:00 UTC&rdquo;</h2>
+
+<h2 id="3-2015-01-02-15-35-00-utc-2015-01-02-15-40-00-utc">[3] &ldquo;2015-01-02 15:35:00 UTC&rdquo; &ldquo;2015-01-02 15:40:00 UTC&rdquo;</h2>
+
+<h2 id="5-2015-01-02-15-45-00-utc-2015-01-02-16-00-00-utc-1">[5] &ldquo;2015-01-02 15:45:00 UTC&rdquo; &ldquo;2015-01-02 16:00:00 UTC&rdquo;</h2>
+
+<h2 id="7-2015-01-02-16-15-00-utc-2015-01-02-16-20-00-utc">[7] &ldquo;2015-01-02 16:15:00 UTC&rdquo; &ldquo;2015-01-02 16:20:00 UTC&rdquo;</h2>
+
+<h2 id="9-2015-01-02-16-30-00-utc">[9] &ldquo;2015-01-02 16:30:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+floor_date(test_dates, unit = &lsquo;5 minutes&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-15-00-utc-2015-01-02-15-30-00-utc">[1] &ldquo;2015-01-02 15:15:00 UTC&rdquo; &ldquo;2015-01-02 15:30:00 UTC&rdquo;</h2>
+
+<h2 id="3-2015-01-02-15-35-00-utc-2015-01-02-15-45-00-utc">[3] &ldquo;2015-01-02 15:35:00 UTC&rdquo; &ldquo;2015-01-02 15:45:00 UTC&rdquo;</h2>
+
+<h2 id="5-2015-01-02-16-00-00-utc-2015-01-02-16-10-00-utc">[5] &ldquo;2015-01-02 16:00:00 UTC&rdquo; &ldquo;2015-01-02 16:10:00 UTC&rdquo;</h2>
+
+<h2 id="7-2015-01-02-16-15-00-utc-2015-01-02-16-25-00-utc">[7] &ldquo;2015-01-02 16:15:00 UTC&rdquo; &ldquo;2015-01-02 16:25:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+ceiling_date(test_dates, unit = &lsquo;30 minutes&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-30-00-utc-2015-01-02-16-00-00-utc">[1] &ldquo;2015-01-02 15:30:00 UTC&rdquo; &ldquo;2015-01-02 16:00:00 UTC&rdquo;</h2>
+
+<h2 id="3-2015-01-02-16-30-00-utc">[3] &ldquo;2015-01-02 16:30:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+floor_date(test_dates, unit = &lsquo;30 minutes&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-00-00-utc-2015-01-02-15-30-00-utc">[1] &ldquo;2015-01-02 15:00:00 UTC&rdquo; &ldquo;2015-01-02 15:30:00 UTC&rdquo;</h2>
+
+<h2 id="3-2015-01-02-16-00-00-utc">[3] &ldquo;2015-01-02 16:00:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+ceiling_date(test_dates, unit = &lsquo;1 hour&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-16-00-00-utc-2015-01-02-17-00-00-utc">[1] &ldquo;2015-01-02 16:00:00 UTC&rdquo; &ldquo;2015-01-02 17:00:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+floor_date(test_dates, unit = &lsquo;1 hour&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-00-00-utc-2015-01-02-16-00-00-utc">[1] &ldquo;2015-01-02 15:00:00 UTC&rdquo; &ldquo;2015-01-02 16:00:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+ceiling_date(test_dates, unit = &lsquo;3 hours&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-18-00-00-utc">[1] &ldquo;2015-01-02 18:00:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+floor_date(test_dates, unit = &lsquo;3 hours&rsquo;) %&gt;% unique
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2015-01-02-15-00-00-utc">[1] &ldquo;2015-01-02 15:00:00 UTC&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>&hellip;you get the idea.</p>
+
+<p>But if I wanted to plot the average temperature at five minute intervals for each month, I will not be able to do this:</p>
+
+<p>{% highlight r %}
+p &lt;- sensor_data %&gt;%
+  dplyr::filter(
+    key == &lsquo;int_temp&rsquo;,
+    timestamp &lt; &lsquo;2015-12-01&rsquo;
+    ) %&gt;%
+     mutate(
+       month = month(timestamp),
+       timestamp = ceiling_date(timestamp, &lsquo;5 minutes&rsquo;)
+     )  %&gt;%
+     group_by(month, timestamp) %&gt;%
+     summarise(
+       value = median(value)
+     ) %&gt;%
+  ggplot +
+  aes(
+    x = timestamp,
+    y = value
+  ) +
+  geom_line(
+    colour = gov_cols[[&lsquo;purple&rsquo;]]
+    ) +
+  facet_wrap(
+    ~month,
+    ncol = 2
+    ) +
+  scale_x_datetime(
+    date_labels = &lsquo;%H:%M&rsquo;
+  ) +
+  geom_smooth(
+    col = &lsquo;red&rsquo;,
+    size = 0.5) +
+  theme_gov()</p>
+
+<p>p
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-21_daily_average_1-1.svg" alt="plot of chunk 2017-01-21_daily_average_1" /></p>
+
+<p>This doesn&rsquo;t give us what we want because there is still date information wrapped up within the timestamp, so we only get a timeseries of each value from each month.
+To get what we want is a little more tricky, and there may well be a better way that I have not yet discovered, but this is what I have been doing so far.</p>
+
+<p>First we need to extract the time from the timestamp without date information.</p>
+
+<p>{% highlight r %}
+format(test_dates,&ldquo;%H:%M:%S&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-15-18-00-15-30-00-15-33-00-15-39-00-15-45-00-16-00-00">[1] &ldquo;15:18:00&rdquo; &ldquo;15:30:00&rdquo; &ldquo;15:33:00&rdquo; &ldquo;15:39:00&rdquo; &ldquo;15:45:00&rdquo; &ldquo;16:00:00&rdquo;</h2>
+
+<h2 id="7-16-12-00-16-15-00-16-18-00-16-27-00">[7] &ldquo;16:12:00&rdquo; &ldquo;16:15:00&rdquo; &ldquo;16:18:00&rdquo; &ldquo;16:27:00&rdquo;</h2>
+
+<p>{% endhighlight %}
+The downside here is that while <code>format</code> will return time as a <code>character</code> vector, so we will not be able to rely on <code>ggplot2</code> to cleverly adjust axes.</p>
+
+<p>To fix this, we can turn these times back into timestamps, but this time with all the same date.</p>
+
+<p>{% highlight r %}
+get_time &lt;- function(x) {</p>
+
+<p>time_ &lt;- strftime(x, format = &ldquo;%H:%M:%S&rdquo;)
+   datetime_ &lt;- as.POSIXct(time<em>, format = &ldquo;%H:%M:%S&rdquo;)
+   return(datetime</em>)</p>
+
+<p>}</p>
+
+<p>get_time(test_dates)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2017-01-28-15-18-00-gmt-2017-01-28-15-30-00-gmt">[1] &ldquo;2017-01-28 15:18:00 GMT&rdquo; &ldquo;2017-01-28 15:30:00 GMT&rdquo;</h2>
+
+<h2 id="3-2017-01-28-15-33-00-gmt-2017-01-28-15-39-00-gmt">[3] &ldquo;2017-01-28 15:33:00 GMT&rdquo; &ldquo;2017-01-28 15:39:00 GMT&rdquo;</h2>
+
+<h2 id="5-2017-01-28-15-45-00-gmt-2017-01-28-16-00-00-gmt">[5] &ldquo;2017-01-28 15:45:00 GMT&rdquo; &ldquo;2017-01-28 16:00:00 GMT&rdquo;</h2>
+
+<h2 id="7-2017-01-28-16-12-00-gmt-2017-01-28-16-15-00-gmt">[7] &ldquo;2017-01-28 16:12:00 GMT&rdquo; &ldquo;2017-01-28 16:15:00 GMT&rdquo;</h2>
+
+<h2 id="9-2017-01-28-16-18-00-gmt-2017-01-28-16-27-00-gmt">[9] &ldquo;2017-01-28 16:18:00 GMT&rdquo; &ldquo;2017-01-28 16:27:00 GMT&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Now we can get the plot we are after:</p>
+
+<p>{% highlight r %}
+p &lt;- sensor_data %&gt;%
+  dplyr::filter(
+    key == &lsquo;int_temp&rsquo;,
+    timestamp &lt; &lsquo;2015-12-01&rsquo;
+    ) %&gt;%
+     mutate(
+       month = month(timestamp),
+       timestamp = get_time(timestamp),
+       timestamp = ceiling_date(timestamp, &lsquo;5 minutes&rsquo;)
+     )  %&gt;%
+     group_by(month, timestamp) %&gt;%
+     summarise(
+       value = median(value)
+     ) %&gt;%
+  ggplot +
+  aes(
+    x = timestamp,
+    y = value
+  ) +
+  geom_line(
+    colour = gov_cols[[&lsquo;purple&rsquo;]]
+    ) +
+  facet_wrap(
+    ~month,
+    ncol = 2
+    ) +
+  scale_x_datetime(
+    date_labels = &lsquo;%H:%M&rsquo;
+  ) +
+  geom_smooth(
+    col = &lsquo;red&rsquo;,
+    size = 0.5) +
+  theme_gov()</p>
+
+<p>p
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-21_daily_average_2-1.svg" alt="plot of chunk 2017-01-21_daily_average_2" /></p>
+
+<p>If anyone knows a better way of doing this, I would love to know, but this works for now.</p>
+
+<p>{% highlight r %}
+devtools::session_info()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="setting-value">setting  value</h2>
+
+<h2 id="version-r-version-3-3-2-2016-10-31">version  R version 3.3.2 (2016-10-31)</h2>
+
+<h2 id="system-x86-64-linux-gnu">system   x86_64, linux-gnu</h2>
+
+<h2 id="ui-rstudio-1-0-136">ui       RStudio (1.0.136)</h2>
+
+<h2 id="language-en-gb-en">language en_GB:en</h2>
+
+<h2 id="collate-en-gb-utf-8">collate  en_GB.UTF-8</h2>
+
+<h2 id="tz-gb">tz       GB</h2>
+
+<h2 id="date-2017-01-28">date     2017-01-28</h2>
+
+<h2 id="package-version-date">package    * version  date</h2>
+
+<h2 id="assertthat-0-1-2013-12-06">assertthat   0.1      2013-12-06</h2>
+
+<h2 id="backports-1-0-4-2016-10-24">backports    1.0.4    2016-10-24</h2>
+
+<h2 id="bitops-1-0-6-2013-08-17">bitops     * 1.0-6    2013-08-17</h2>
+
+<h2 id="colorspace-1-3-1-2016-11-18">colorspace   1.3-1    2016-11-18</h2>
+
+<h2 id="dbi-0-5-1-2016-09-10">DBI          0.5-1    2016-09-10</h2>
+
+<h2 id="devtools-1-12-0-2016-06-24">devtools     1.12.0   2016-06-24</h2>
+
+<h2 id="digest-0-6-11-2017-01-03">digest       0.6.11   2017-01-03</h2>
+
+<h2 id="dplyr-0-5-0-2016-06-24">dplyr      * 0.5.0    2016-06-24</h2>
+
+<h2 id="evaluate-0-10-2016-10-11">evaluate     0.10     2016-10-11</h2>
+
+<h2 id="ggplot2-2-2-1-2016-12-30">ggplot2    * 2.2.1    2016-12-30</h2>
+
+<h2 id="govstyle-0-1-2-2017-01-22">govstyle   * 0.1.2    2017-01-22</h2>
+
+<h2 id="gtable-0-2-0-2016-02-26">gtable       0.2.0    2016-02-26</h2>
+
+<h2 id="highr-0-6-2016-05-09">highr        0.6      2016-05-09</h2>
+
+<h2 id="htmltools-0-3-5-2016-03-21">htmltools    0.3.5    2016-03-21</h2>
+
+<h2 id="knitr-1-15-1-2016-11-22">knitr        1.15.1   2016-11-22</h2>
+
+<h2 id="labeling-0-3-2014-08-23">labeling     0.3      2014-08-23</h2>
+
+<h2 id="lattice-0-20-34-2016-09-06">lattice      0.20-34  2016-09-06</h2>
+
+<h2 id="lazyeval-0-2-0-2016-06-12">lazyeval     0.2.0    2016-06-12</h2>
+
+<h2 id="lubridate-1-6-0-2016-09-13">lubridate  * 1.6.0    2016-09-13</h2>
+
+<h2 id="magrittr-1-5-2014-11-22">magrittr     1.5      2014-11-22</h2>
+
+<h2 id="matrix-1-2-7-1-2016-09-01">Matrix       1.2-7.1  2016-09-01</h2>
+
+<h2 id="memoise-1-0-0-2016-01-29">memoise      1.0.0    2016-01-29</h2>
+
+<h2 id="mgcv-1-8-16-2016-11-07">mgcv         1.8-16   2016-11-07</h2>
+
+<h2 id="munsell-0-4-3-2016-02-13">munsell      0.4.3    2016-02-13</h2>
+
+<h2 id="nlme-3-1-129-2017-01-19">nlme         3.1-129  2017-01-19</h2>
+
+<h2 id="plyr-1-8-4-2016-06-08">plyr         1.8.4    2016-06-08</h2>
+
+<h2 id="purrr-0-2-2-2016-06-18">purrr      * 0.2.2    2016-06-18</h2>
+
+<h2 id="r6-2-2-0-2016-10-05">R6           2.2.0    2016-10-05</h2>
+
+<h2 id="rcpp-0-12-8-2016-11-17">Rcpp         0.12.8   2016-11-17</h2>
+
+<h2 id="rcurl-1-95-4-8-2016-03-01">RCurl      * 1.95-4.8 2016-03-01</h2>
+
+<h2 id="readr-1-0-0-2016-08-03">readr      * 1.0.0    2016-08-03</h2>
+
+<h2 id="rmarkdown-1-2-2016-11-21">rmarkdown    1.2      2016-11-21</h2>
+
+<h2 id="rmd2md-0-1-1-2017-01-28">rmd2md       0.1.1    2017-01-28</h2>
+
+<h2 id="rprojroot-1-1-2016-10-29">rprojroot    1.1      2016-10-29</h2>
+
+<h2 id="rstudioapi-0-6-2016-06-27">rstudioapi   0.6      2016-06-27</h2>
+
+<h2 id="scales-0-4-1-2016-11-09">scales     * 0.4.1    2016-11-09</h2>
+
+<h2 id="stringi-1-1-2-2016-10-01">stringi      1.1.2    2016-10-01</h2>
+
+<h2 id="stringr-1-1-0-2016-08-19">stringr      1.1.0    2016-08-19</h2>
+
+<h2 id="tibble-1-2-2016-08-26">tibble     * 1.2      2016-08-26</h2>
+
+<h2 id="tidyr-0-6-0-2016-08-12">tidyr      * 0.6.0    2016-08-12</h2>
+
+<h2 id="tidyverse-1-0-0-2016-09-09">tidyverse  * 1.0.0    2016-09-09</h2>
+
+<h2 id="withr-1-0-2-2016-06-20">withr        1.0.2    2016-06-20</h2>
+
+<h2 id="source">source</h2>
+
+<h2 id="cran-r-3-2-3">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-1">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-1">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-2">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-2">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-0-6-11">cran (@0.6.11)</h2>
+
+<h2 id="cran-r-3-2-3-3">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-3">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-2-2-1">cran (@2.2.1)</h2>
+
+<h2 id="github-ukgovdatascience-govstyle-8cd6098">Github (ukgovdatascience/govstyle@8cd6098)</h2>
+
+<h2 id="cran-r-3-2-3-4">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-5">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-6">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-4">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-7">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-1">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-3-2-5">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-8">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-9">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-1-1">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-2-3-10">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-6">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-11">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-7">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-12">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-13">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-14">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-8">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-9">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-15">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-10">CRAN (R 3.3.2)</h2>
+
+<h2 id="github-ivyleavedtoadflax-rmd2md-3434815">Github (ivyleavedtoadflax/rmd2md@3434815)</h2>
+
+<h2 id="cran-r-3-3-2-11">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-16">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-12">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-17">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-18">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-19">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-20">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-21">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-22">CRAN (R 3.2.3)</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

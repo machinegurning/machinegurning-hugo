@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Agent Based Modelling on A Hugo website</title>
+    <link>/tags/agent-based-modelling/</link>
+    <description>Recent content in Agent Based Modelling on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 30 Apr 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/agent-based-modelling/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Agent Based Modelling</title>
+      <link>/2017/04/30/agent-based-modelling/</link>
+      <pubDate>Sun, 30 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/04/30/agent-based-modelling/</guid>
+      <description>This blog post draws heavily on the excellent SysMIC course I completed during my PhD.
+Agent based models (ABM) are one of a class of computational models for simulating the actions and interactions of autonomous agents (both individual or collective entities such as organizations or groups). The goal of ABM is to search for explanatory insight into the collective behavior of agents obeying simple rules, typically in natural systems. There are many ways to get hooked on ABM, for me I found the Game of Life intriguing (there are many examples from biological, ecological and socioeconomical systems).</description>
+    </item>
+    
+  </channel>
+</rss>

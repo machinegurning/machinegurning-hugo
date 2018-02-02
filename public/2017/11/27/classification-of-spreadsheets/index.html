@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Classification of spreadsheets - A Hugo website</title>
+<meta property="og:title" content="Classification of spreadsheets - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">23 min read</span>
+    
+
+    <h1 class="article-title">Classification of spreadsheets</h1>
+
+    
+    <span class="article-date">2017/11/27</span>
+    
+
+    <div class="article-content">
+      
+
+<p>Data tables in the form of spreadsheets are ubiquitous in enterprise. For better or worse, they are the Swiss Army Knife (or <a href="https://blog.kinaxis.com/2010/08/how-are-spreadsheets-like-cockroaches/">cockroaches</a>) for decision support in many organisations.</p>
+
+<p>Why are they so <a href="https://twitter.com/pudo/status/248473299741446144?lang=en">popular</a> and widely used? That&rsquo;s not the focus of this blog, instead we focus on how you might go about automating the classification of spreadsheets without manually having to open and inspect them. We use some of the techniques we used in <a href="http://www.machinegurning.com/rstats/tsne/">previous posts</a> to represent a spreadsheet as a matrix (empty or not-empty cells) and attempt dimension reduction. We also focus on feature extraction of spreadsheets by reviewing the literature and drawing from the experience of experts who do <a href="http://www.felienne.com/about-3">PhDs on this sort of thing</a>.</p>
+
+<p>In this post we refer to workbooks as spreadsheets and worksheets as sheets.</p>
+
+<h2 id="the-problem">The problem</h2>
+
+<p>Tabular data is an abundant source of information on the
+internet, but remains mostly isolated from the latter’s interconnections since spreadsheets lack machine readable descriptions of their structure. The structure can be widely varied and inconsistent, written for human interpret-ability foremost.</p>
+
+<p>Most organisations have an abundance of spreadsheets, too many to sort and label manually, often stored in a jumble of directories. Too many to quality assure retrospectively. An automated method for labeling spreadsheets could help with knowledge management and searching for relevant spreadsheets to address business needs as well as identifying areas of business risk. As well as classifying the general content of a spreadsheet (such as the classic case study of 16,189 <a href="http://www.felienne.com/archives/3634">Enron spreadsheets</a>), perhaps this approach could be used to identify those spreadsheets that have a nice or tidy structure or contain sensitive information. These could be useful tags or classification by theme for an organisation to have on it&rsquo;s spreadsheets, such as spreadsheets found at <a href="https://data.gov.uk/">data.gov.uk / gov.uk</a> (credit to <a href="https://github.com/nacnudus">Duncan Garmonsway</a> for this idea).</p>
+
+<p>The following framework can be used to approach this problem:</p>
+
+<ul>
+<li>select labelled spreadsheets to train classification algorithms<br /></li>
+<li>preprocess the data and extract features<br /></li>
+<li>train the algorithm<br /></li>
+<li>evaluate the derived model on test spreadsheets<br /></li>
+<li>classify new spreadsheets<br /></li>
+</ul>
+
+<h2 id="thinking-about-spreadsheet-features">Thinking about spreadsheet features</h2>
+
+<p>Spreadsheets consist of textual values in a two-dimensional grid format. They are popular precisely because of their high information density due to the semantic meaning communicated in their layout and structure. Often this may be implicit and learned by spreadsheet users as a cultural norm throughout their career and exposure to different conventions. These cultural norms for spreadsheets probably vary from organisation to organisation with some feature being useful regardless of the business. Thus, we might a expect a representative training set to be key to training a good classifier (The famous EUSES spreadsheets are open source and might not be representative of closed source spreadsheets found in an organisation as argued <a href="https://figshare.com/articles/Enron_s_Spreadsheets_and_Related_Emails_A_Dataset_and_Analysis/1222882">here</a>). We might not expect a model trained on the <a href="https://figshare.com/articles/Enron_Spreadsheets_and_Emails/1221767">Enron spreadsheets</a> to perform well on the spreadsheets found on <a href="https://data.gov.uk/">data.gov.uk</a>.</p>
+
+<p>However, these demonstrative examples on model data sets can inform our decision making for feature extraction by standing on the shoulders of giants:</p>
+
+<ul>
+<li>This <a href="https://figshare.com/articles/Enron_s_Spreadsheets_and_Related_Emails_A_Dataset_and_Analysis/1222882">ENRON paper</a> also identifies some useful proxy measures of a spreadsheets quality by categorising the &ldquo;smells&rdquo; in a spreadsheets formulae (e.g. unique formulas  that have a calculation chain of five or longer).<br /></li>
+<li>This could be useful for an organisation attempting to audit the quality of its spreadsheets and flagging spreadsheets for quality assurance.<br /></li>
+</ul>
+
+<h2 id="the-data">The data</h2>
+
+<p>The data is pretty big (almost 1 Gb zipped) so we don&rsquo;t store it in our repo. Instead download it from origin at <a href="https://figshare.com/articles/Enron_Spreadsheets_and_Emails/1221767">figshare</a> (Hermanns, 2015). Unfortunately this data is in .xlsx format.</p>
+
+<p>Some interesting points about this Enron spreadsheet data, especially if it is representative of other organisations (albeit it is somewhat dated now):</p>
+
+<ul>
+<li>24% of Enron spreadsheets with formulas contain an Excel error. It&rsquo;s also noted that formal testing (software development) is rare in spreadsheets in general, discussed in a <a href="http://swerl.tudelft.nl/twiki/pub/Main/TechnicalReports/TUD-SERG-2017-002.pdf">recent paper</a>, the very thing required to protect against these errors.<br /></li>
+<li>There is remarkably little diversity in the functions used in spreadsheets: we observe that there is a core set of 15 spreadsheet functions which is used in 76% of spreadsheets. Thus, these could be readily replaced by a software package containing this core set used across the organisation and developed using DevOps best practice. This  supports the case for developing <a href="https://ukgovdatascience.github.io/rap_companion/">reproducible analytical pipelines</a> in an organisation.<br /></li>
+<li>Spreadsheet use within companies is common, with 100
+spreadsheets emailed around per day! Version control is essential for collaboration, yet looks like Enron didn&rsquo;t use it&hellip;<br /></li>
+</ul>
+
+<h2 id="reading-the-data">Reading the data</h2>
+
+<p>We copy and modify <a href="https://github.com/nacnudus/ClassifySpreadsheets/tree/master/analysis">Duncan&rsquo;s code</a> to read in the spreadsheets. It&rsquo;s great practice to work with another data scientist on a project to help you learn new tips and tricks (for example, I hadn&rsquo;t seen the <code>here</code> package before).</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="googled-it-it-s-not-on-cran-yet">Googled it, it&rsquo;s not on CRAN yet</h1>
+
+<h1 id="devtools-install-github-krlmlr-here">devtools::install_github(&ldquo;krlmlr/here&rdquo;)</h1>
+
+<h1 id="devtools-install-github-ironholds-piton">devtools::install_github(&ldquo;ironholds/piton&rdquo;)</h1>
+
+<h1 id="devtools-install-github-nacnudus-tidyxl">devtools::install_github(&ldquo;nacnudus/tidyxl&rdquo;)</h1>
+
+<p>{% endhighlight %}</p>
+
+<h3 id="workbooks">Workbooks</h3>
+
+<p>We look at the spreadsheet files.</p>
+
+<p>{% highlight r %}
+c(
+  head(list.files(&ldquo;./data/enron_spreadsheets/&ldquo;), 3),
+  tail(list.files(&ldquo;./data/enron_spreadsheets/&ldquo;), 3)
+)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-albert-meyers-1-1-25act-xlsx">[1] &ldquo;albert_meyers<strong>1</strong>1-25act.xlsx&rdquo;</h2>
+
+<h2 id="2-albert-meyers-2-1-29act-xlsx">[2] &ldquo;albert_meyers<strong>2</strong>1-29act.xlsx&rdquo;</h2>
+
+<h2 id="3-andrea-ring-10-enrongas-1200-xlsx">[3] &ldquo;andrea_ring<strong>10</strong>ENRONGAS(1200).xlsx&rdquo;</h2>
+
+<h2 id="4-vladi-pimenov-41078-vladi-xlsx">[4] &ldquo;vladi_pimenov<strong>41078</strong>vladi.xlsx&rdquo;</h2>
+
+<h2 id="5-vladi-pimenov-41079-dailyprices-xlsx">[5] &ldquo;vladi_pimenov<strong>41079</strong>DailyPrices.xlsx&rdquo;</h2>
+
+<h2 id="6-vladi-pimenov-41080-basis-spreads-for-mike-grigsby-xlsx">[6] &ldquo;vladi_pimenov<strong>41080</strong>Basis Spreads for Mike Grigsby.xlsx&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>File names presumably have the sender (or receiver prefixed) and are of the <code>.xlsx</code> type, thus we need the <code>tidyxl</code> package to read them in. Some spreadsheets it is possible to guess what the contents might be from title alone, others the theme would only be apparent on opening.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="set-the-path-to-your-directory-of-enron-spreadsheets-here">Set the path to your directory of Enron spreadsheets here</h1>
+
+<p>enron_path &lt;- &ldquo;./data/enron_spreadsheets/&rdquo;</p>
+
+<h1 id="set-the-sample-size-for-testing-here">Set the sample size for testing here</h1>
+
+<p>sample_size &lt;- 100</p>
+
+<p>library(dplyr)
+library(purrr)
+library(tidyxl)
+library(here)
+library(readxl)</p>
+
+<p>all_paths &lt;- list.files(enron_path,
+                        full.names = TRUE)</p>
+
+<h1 id="for-testing-look-at-n-sample-size-random-workbooks">For testing, look at n (sample_size) random workbooks.</h1>
+
+<p>set.seed(1337)
+sample_paths &lt;- sample(all_paths, sample_size)</p>
+
+<p>paths &lt;- sample_paths
+{% endhighlight %}</p>
+
+<p>Looking at the length of <code>all_paths</code> suggests almost 16 thousand unique spreadsheets (workbooks) in our directory.</p>
+
+<p>{% highlight r %}
+length(all_paths)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-15929">[1] 15929</h2>
+
+<p>{% endhighlight %}</p>
+
+<h3 id="worksheets">Worksheets</h3>
+
+<p>In our sample of spreadsheets (100) we see that a spreadsheet can have a number of sheets associated with it. We use <code>purrr</code> to apply a function element-wise to a list. We then unlist and count the number of sheets per workbook and plot as a histogram.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="purr-package">purr package</h1>
+
+<h1 id="https-jennybc-github-io-purrr-tutorial-index-html"><a href="https://jennybc.github.io/purrr-tutorial/index.html">https://jennybc.github.io/purrr-tutorial/index.html</a></h1>
+
+<p>sheet_count &lt;- purrr::map(paths, readxl::excel_sheets) %&gt;%
+  purrr::map(length) %&gt;%
+  unlist()</p>
+
+<p>hist(sheet_count, main = &ldquo;&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-11-27-hist.png" alt="" /></p>
+
+<h3 id="data-range-within-worksheets">Data range within worksheets</h3>
+
+<p>Let&rsquo;s work out what&rsquo;s typical in terms of the height (number of rows) and width of a sheet (number of columns) by sampling. We can then set our &ldquo;view&rdquo; to encapsulate this typical range (although <code>readxl</code> does this automatically by skipping trailing emp). We need to <a href="https://stackoverflow.com/questions/12945687/read-all-worksheets-in-an-excel-workbook-into-an-r-list-with-data-frames">read the spreadsheets</a> in and look at some features using the <code>readxl</code> package combined with <code>purrr</code> for readability.</p>
+
+<p>To load all the sheets in a workbook into a <a href="http://readxl.tidyverse.org/articles/articles/readxl-workflows.html#iterate-over-multiple-worksheets-in-a-workbook">list of data frames</a>, we need to:</p>
+
+<ul>
+<li>Get worksheet names as a self-named character vector (these names propagate nicely).<br /></li>
+<li>Use <code>purrr::map()</code> to iterate sheet reading.<br /></li>
+</ul>
+
+<p>{% highlight r %}
+books &lt;-
+  dplyr::data_frame(filename = basename(paths),
+             path = paths,
+             sheet_name = purrr::map(paths, readxl::excel_sheets)
+             ) %&gt;%
+  dplyr::mutate(id = as.character(row_number()))
+{% endhighlight %}</p>
+
+<p>We look at one workbook and peek at its first sheet therein.</p>
+
+<p>{% highlight r %}
+head(books$sheet_name)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1">[[1]]</h2>
+
+<h2 id="1-mlp-s">[1] &ldquo;MLP&rsquo;s&rdquo;</h2>
+
+<h2 id="2">[[2]]</h2>
+
+<h2 id="1-dj-sp15">[1] &ldquo;DJ SP15&rdquo;</h2>
+
+<h2 id="3">[[3]]</h2>
+
+<h2 id="1-newpower-purchase-10-00">[1] &ldquo;newpower-purchase 10&rsquo;00&rdquo;</h2>
+
+<h2 id="4">[[4]]</h2>
+
+<h2 id="1-value-positions-swaps-run-query-results">[1] &ldquo;value&rdquo;     &ldquo;positions&rdquo; &ldquo;swaps&rdquo;     &ldquo;Run Query&rdquo; &ldquo;Results&rdquo;</h2>
+
+<h2 id="5">[[5]]</h2>
+
+<h2 id="1-may-00">[1] &ldquo;MAY-00&rdquo;</h2>
+
+<h2 id="6">[[6]]</h2>
+
+<h2 id="1-eol">[1] &ldquo;EOL&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>It might be more useful to treat each worksheet as the experimental unit by having one row per worksheet and a list column for the data therein plus extra variables could be added later as we extract features from the worksheets.</p>
+
+<h3 id="reading-data-from-many-workbooks-many-sheets">Reading data from many workbooks&rsquo; many sheets</h3>
+
+<p>This was trickier than anticipated as testified by my appeal to help at <a href="https://stackoverflow.com/questions/47511319/read-all-worksheets-as-dataframes-from-multiple-excel-workbooks-of-different-s">Stack Overflow</a>. If you want an explanation of the code below, refer to the link above.</p>
+
+<p>First, list the filenames, which will passed to <code>readxl::excel_sheets()</code> for the names of the sheets within each file, and  <code>readxl::read_excel()</code> to import the data itself.</p>
+
+<p>{% highlight r %}
+library(openxlsx)
+library(tidyr) # for unnest to expand a list column</p>
+
+<h1 id="paths-was-our-sample-paths-to-each-of-the-spreadsheets">paths was our sample paths to each of the spreadsheets</h1>
+
+<p>x &lt;- tibble::data_frame(path = paths)
+{% endhighlight %}</p>
+
+<p>Then &ldquo;Map&rdquo; the <code>readxl::excel_sheets()</code> function over each of the file paths, and store the results in a new list-column. Each row of the <code>sheet_name</code> column is a vector of sheet names.</p>
+
+<p>{% highlight r %}
+x &lt;- dplyr::mutate(x, sheet_name = purrr::map(path, readxl::excel_sheets))
+{% endhighlight %}</p>
+
+<p>We need to pass each filename and each sheet name into <code>readxl::read_excel(path=, sheet=)</code>, so the next step is to have a data frame where each row gives a path and one sheet name. This is done using <code>tidyr::unnest()</code>.</p>
+
+<p>{% highlight r %}
+x &lt;- tidyr::unnest(x)
+{% endhighlight %}</p>
+
+<p>Now each path and sheet name can be passed into <code>readxl::read_excel()</code>, using  <code>purrr::map2()</code> rather than <code>purrr::map()</code> because we pass two arguments rather than one.</p>
+
+<p>{% highlight r %}
+sheets &lt;- dplyr::mutate(dplyr::slice(x, c(1:10, 12:13, 20:30, 80:100)),
+                   data = purrr::map2(path, sheet_name,
+                                          ~ readxl::read_excel(.x, .y)))
+{% endhighlight %}</p>
+
+<p>The reason for the weird <code>slice()</code> is that we have to avoid some worksheets. <code>readxl</code> turns out to have a <a href="https://github.com/tidyverse/readxl/issues/408">bug</a> that means it errors on worksheet 14 <code>daren_farmer__6529__egmnom-Jan.xlsx</code> sheet 6 <code>Module1</code>, so the function passed to <code>mutate()</code> will have to cope with errors. The bug is that it expects sheets to have a data file, but it turns out that empty sheets don&rsquo;t have data files. We can dodge this bug by trial and error so that we get a reasonable sample to work out the typical size of a worksheet.</p>
+
+<p>{% highlight r %}
+sheets$sheet_name[3]
+str(sheets$data[3])
+{% endhighlight %}</p>
+
+<p>The dimensions of the data in each sheet is useful for determining its size but note how there are <a href="https://github.com/nacnudus/ClassifySpreadsheets/blob/master/vignettes/dev-notes.md">lots of empty cells</a>, including missing rows and columns making it very different to a <a href="http://vita.had.co.nz/papers/tidy-data.html">tidy data</a> frame we would prefer to work with. However, it may serve as a rough proxy for the &ldquo;area&rdquo; of cells occupied in a sheet. Thus we count the number of variables and rows to give us the dimensions.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="this-doesn-t-compile-properly-so-we-don-t-evaluate-it-here">This doesn&rsquo;t compile properly, so we don&rsquo;t evaluate it here</h1>
+
+<p>sheets_data_attr &lt;- lapply(sheets$data, attributes)</p>
+
+<p>df_columns &lt;- purrr::map(sheets_data_attr, &ldquo;names&rdquo;) %&gt;%
+  purrr::map_int(length)</p>
+
+<p>df_rows &lt;- purrr::map(sheets_data_attr, &ldquo;row.names&rdquo;) %&gt;%
+  purrr::map_int(length)</p>
+
+<p>sheets_data_attr %&gt;% {
+  tibble::tibble(
+       row_dim = df_rows,
+    col_dim = df_columns
+  )
+} -&gt; df</p>
+
+<h1 id="eyeball-and-draw-a-square">eyeball and draw a square</h1>
+
+<p>plot(y = df$row_dim, x = df$col_dim)
+abline(v = 35, h = 85, col = &ldquo;red&rdquo;)
+{% endhighlight %}
+<img src="/figures/2017-11-27-sheets_dims.png" alt="The typical dimensions of a sample of Enron worksheets" /></p>
+
+<p>From this plot we eyeball that a rectangle of 35 columns and 85 rows captures approximately 95% of the data in this sample. Typically a spreadsheet has more rows than it does columns; it&rsquo;s longer than it is wide.</p>
+
+<p>{% highlight r %}
+sum((df$row_dim &gt; df$col_dim)) / nrow(df)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-8636364">[1] 0.8636364</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We use this information to adjust the view in <a href="https://github.com/nacnudus/ClassifySpreadsheets/blob/master/analysis/01-import.R">Duncan&rsquo;s code</a> (we limit the view range to capture typical spreadsheets and reduce computation).</p>
+
+<h3 id="limitations">Limitations</h3>
+
+<p>By reading in as a data frame, due to the non-tidy of the worksheets often variables that look like <code>numeric</code> variables will be labelled as <code>chr</code> because of how <code>readxl</code> guesses the column variables based on the first thousand rows (as default). If it contains a mix then often the variable defaults to being described as a character variable in R (demonstrated below; try it yourself).</p>
+
+<p>{% highlight r %}
+suppressWarnings(as.numeric(&ldquo;three&rdquo;))
+as.character(&ldquo;three&rdquo;)
+as.numeric(3)
+as.character(3)
+{% endhighlight %}</p>
+
+<p>On reading it in, we can only ascertain whether a cell is empty or not (assuming recognised <code>NA</code> placeholders were used in the spreadsheets). We can use this to visualise the shape of the sheet in each spreadsheet workbook and incorporate our learning from the previous section. However, the <code>tidyxl</code> package allows you to extract cell metadata (what&rsquo;s the contents e.g. formatting and values).</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="set-the-view-range-here-described-here">Set the view range here, described here</h1>
+
+<p>view_rows &lt;- 1:85
+view_cols &lt;- 1:85  # make it square matrix</p>
+
+<h1 id="create-a-row-col-cells">create a row*col cells</h1>
+
+<p>view_range &lt;- tidyr::crossing(row = view_rows, col = view_cols)</p>
+
+<p>load_view_range &lt;- function(x) {
+  cells &lt;- tidyxl::xlsx_cells(x)
+  formats &lt;- tidyxl::xlsx_formats(x)$local
+  formatting &lt;-
+    data_frame(biu = formats$font$bold
+                     | formats$font$italic
+                     | !is.na(formats$font$underline),
+               fill = !is.na(formats$fill$patternFill$patternType),
+               border = !is.na(formats$border$top$style)
+                        | !is.na(formats$border$bottom$style)
+                        | !is.na(formats$border$left$style)
+                        | !is.na(formats$border$right$style),
+               indent = formats$alignment$indent != 0L) %&gt;%
+    dplyr::mutate(local_format_id = row_number())
+  cells %&gt;%
+    dplyr::inner_join(view_range, by = c(&ldquo;row&rdquo;, &ldquo;col&rdquo;)) %&gt;% # filter for the view range
+    dplyr::select(sheet, row, col, character, numeric, date, is_blank, local_format_id) %&gt;%
+    dplyr::mutate(character = !is.na(character),
+           numeric = !is.na(numeric),
+           date = !is.na(date)) %&gt;%
+    dplyr::left_join(formatting, by = &ldquo;local_format_id&rdquo;) %&gt;%
+    dplyr::select(-local_format_id)
+}</p>
+
+<p>view_ranges &lt;-
+  map_dfr(books$path, suppressWarnings(load_view_range), .id = &ldquo;id&rdquo;) %&gt;%
+  inner_join(books, by = &ldquo;id&rdquo;) %&gt;%
+  select(-id, -path) %&gt;%
+  mutate(biu       = !is_blank &amp; biu,
+         fill      = !is_blank &amp; fill,
+         border    = !is_blank &amp; border,
+         indent    = !is_blank &amp; indent,
+         character = !is_blank &amp; character,
+         numeric   = !is_blank &amp; numeric,
+         date      = !is_blank &amp; date) %&gt;%
+  group_by(filename, sheet) %&gt;% # pad each view range with blanks
+  tidyr::complete(row = view_rows,
+           col = view_cols,
+           fill = list(is_blank = TRUE,
+                       biu = FALSE,
+                       fill = FALSE,
+                       border = FALSE,
+                       indent = FALSE,
+                       character = FALSE,
+                       numeric = FALSE,
+                       date = FALSE)) %&gt;%
+  dplyr::ungroup()</p>
+
+<h1 id="check-that-there-is-a-complete-view-range-for-all-sheets">Check that there is a complete view range for all sheets</h1>
+
+<p>nrow(view_ranges) / nrow(view_range) == nrow(distinct(view_ranges, filename, sheet))
+{% endhighlight %}</p>
+
+<p>We then convert to a wide matrix with each row representing one worksheet and each column a cell.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="convert-to-a-matrix-one-row-per-sheet-one-column-per-cell">Convert to a matrix, one row per sheet, one column per cell</h1>
+
+<p>feature_matrix &lt;-
+  view_ranges %&gt;%
+  dplyr::arrange(filename, sheet, row, col) %&gt;%
+  dplyr::rename(y = row, x = col, z = is_blank) %&gt;%
+  dplyr::mutate(z = as.integer(z)) %&gt;% # encode blanks as 0
+  dplyr::pull(z) %&gt;%
+  matrix(ncol = nrow(view_range), byrow = TRUE)
+feature_names &lt;-
+  view_ranges %&gt;%
+  dplyr::distinct(filename, sheet) %&gt;%
+  dplyr::arrange(filename, sheet) %&gt;%
+  dplyr::mutate(rownames = paste(filename, &ldquo;|&rdquo;, sheet))
+rownames(feature_matrix) &lt;- feature_names$rownames</p>
+
+<p>dim(feature_matrix)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-262-7225">[1]  262 7225</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We now have a large matrix which captures the &ldquo;look&rdquo; of every spreadsheet. We can visualise this to demonstrate by setting blank cells to beige and cells with contents to red.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="plot-a-few-of-them-red-value-beige-blank">Plot a few of them.  red = value, beige = blank</h1>
+
+<p>image_inputs &lt;-
+  view_ranges %&gt;%
+  dplyr::rename(x = row, y = col, z = is_blank) %&gt;%
+  dplyr::mutate(z = as.integer(z)) %&gt;% # encode blanks as 0
+  dplyr::group_by(filename, sheet) %&gt;%
+  dplyr::arrange(filename, sheet, desc(x), y) %&gt;% # Flip along a horizontal axis for plotting
+  dplyr::ungroup() %&gt;%
+  tidyr::nest(-filename, -sheet) %&gt;%
+  dplyr::mutate(matrix = purrr::map(data,
+                                    ~ matrix(.x$z, ncol = length(view_cols)))) %&gt;%
+  dplyr::slice(c(8:13))
+{% endhighlight %}</p>
+
+<p>We <code>slice</code> out some worksheets to visualise, with the workbook name above the image and the worksheet below in grey. Because our view range isn&rsquo;t square it means it is harder to relate the image to the spreadsheet compared to <a href="https://github.com/nacnudus/ClassifySpreadsheets/blob/master/vignettes/dev-notes.md">Duncan&rsquo;s examples</a>. However, by being more likely to catch most of the data in the worksheet the feature matrix may provide a better representation of the worksheet it represents.</p>
+
+<p>{% highlight r %}
+par(mfrow = c(2, 3))</p>
+
+<p>par(adj = 0)</p>
+
+<h1 id="map-over-multiple-inputs-simultaneously">map over multiple inputs simultaneously</h1>
+
+<h1 id="this-syntax-allows-you-to-create-very-compact-anonymous-functions">This syntax allows you to create very compact anonymous functions.</h1>
+
+<p>purrr::pwalk(list(image_inputs$matrix, image_inputs$filename, image_inputs$sheet),
+      ~ {image(..1, axes = FALSE); title(..2, sub = ..3)})
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-11-27-worksheets_image.png" alt="" /></p>
+
+<p>We notice the left-handedness of the images as this matches the typical zoom and opening view when reading the spreadsheets in Excel (one starts in the top left corner; also rows are narrower than columns so you can fit more rows on the screen). Here we see the value of the square matrix for the <code>view_range</code> which gives us an image comparable to the worksheets upon inspection. Some spreadsheets have islands of filled cells far from the main body, this is often some extra annotation or versioning by the author.</p>
+
+<h3 id="t-sne">t-SNE</h3>
+
+<p>Unfortunately we lack a suitable label for the worksheets (i.e. tidy, or contains an error) which means we are in the unenvious position of having to make sense of the spreadsheets using dimension reduction techniques. The plots above are effective when interpreted by a human for getting a sense of the shape of the data in a sheet (and could be extended by using different colours for different cell contents type e.g. formula, error, number etc.) but can we capture the essence of how sheets are filled using dimension reduction techniques? We could then automate our interpretation of a sheet without having to look at it. Useful when most organisations are drowning in spreadsheets.</p>
+
+<p>We plot the row numbers so we can look up and compare the worksheets that are clustered together. Remember with t-SNE, rather than keeping dissimilar data points apart (like linear methods i.e. PCA), t-SNE keeps the low-dimensional representations of very similar data-points close together on a low-dimensional, non-linear manifold (CAVEAT: when using t-SNE in my previous <a href="http://www.machinegurning.com/rstats/tsne/">blog post</a> we learnt some important lessons).</p>
+
+<p>Bear in mind if the worksheets by the same author are organised sequentially by row number. Thus we could have used row number as our plotting font to give this extra bit of info, however you&rsquo;ll need to manually inspect them afterwards to work out why they are close together following t-SNE.</p>
+
+<p>{% highlight r %}
+library(Rtsne)
+set.seed(2481632)
+tsne &lt;- Rtsne(feature_matrix, check_duplicates = FALSE) # Demanding with many sheets</p>
+
+<p>#####&mdash;&mdash;
+par(mfrow = c(1, 1))</p>
+
+<p>plot(tsne$Y,
+       # type = &ldquo;n&rdquo;,
+       pch = 21, cex = 0.6,
+       main = paste(&ldquo;t-SNE of Enron: in&rdquo;, nrow(books), &ldquo;books&rdquo;,
+                            &ldquo;and&rdquo;, length(unlist(unique(books$sheet_name))), &ldquo;worksheets.&rdquo;))</p>
+
+<h1 id="text-x-tsne-y-1">text(x = tsne$Y[, 1],</h1>
+
+<h1 id="y-tsne-y-2">y = tsne$Y[, 2],</h1>
+
+<h1 id="labels-seq-along-1-nrow-feature-names">labels = seq_along(1:nrow(feature_names)),</h1>
+
+<h1 id="cex-c-0-5-0-6-0-7-different-size-to-help-discern-worksheet-number">cex = c(0.5, 0.6, 0.7), # different size to help discern worksheet number</h1>
+
+<h1 id="col-c-black-blue-green-colours-to-help-read-worksheet-number">col = c(&ldquo;black&rdquo;, &ldquo;blue&rdquo;, &ldquo;green&rdquo;))  # colours to help read worksheet number</h1>
+
+<p>{% endhighlight %}</p>
+
+<p><img src="/figures/2017-11-27-tsne_plot.png" alt="" /></p>
+
+<p>We notice that there are quite a few distinctive high cluster blobs which warrant further inspection. For example, the worksheets to the top-right. Indeed they are close together, possibly by the same author.</p>
+
+<p>{% highlight r %}
+w &lt;- which(tsne$Y[, 1] &gt; 9 &amp; tsne$Y[, 2] &gt; 10)
+w
+paste(&ldquo;There are &ldquo;, length(w), &ldquo;worksheets in this range.&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-80-81-82-83-84-85-86-87-88-89-90-91-92-93-94">[1] 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-there-are-15-worksheets-in-this-range">[1] &ldquo;There are  15 worksheets in this range.&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="plot-a-few-of-them-red-value-beige-blank-1">Plot a few of them.  red = value, beige = blank</h1>
+
+<p>image_inputs &lt;-
+  view_ranges %&gt;%
+  dplyr::rename(x = row, y = col, z = is_blank) %&gt;%
+  dplyr::mutate(z = as.integer(z)) %&gt;% # encode blanks as 0
+  dplyr::group_by(filename, sheet) %&gt;%
+  dplyr::arrange(filename, sheet, desc(x), y) %&gt;% # Flip along a horizontal axis for plotting
+  dplyr::ungroup() %&gt;%
+  tidyr::nest(-filename, -sheet) %&gt;%
+  dplyr::mutate(matrix = purrr::map(data,
+                                    ~ matrix(.x$z, ncol = length(view_cols)))) %&gt;%
+  dplyr::slice(w)  #  pass w to slice</p>
+
+<p>par(mfrow = c(3, 5))
+par(mar = rep(2, 4))</p>
+
+<h1 id="par-adj-0">par(adj = 0)</h1>
+
+<h1 id="map-over-multiple-inputs-simultaneously-1">map over multiple inputs simultaneously</h1>
+
+<h1 id="this-syntax-allows-you-to-create-very-compact-anonymous-functions-1">This syntax allows you to create very compact anonymous functions.</h1>
+
+<p>purrr::pwalk(list(image_inputs$matrix, image_inputs$filename, image_inputs$sheet),
+      ~ {image(..1, axes = FALSE); title(..2, sub = ..3)})</p>
+
+<h1 id="reset-margins">reset margins</h1>
+
+<p>op &lt;- par(oma=c(5,7,1,1))
+par(op)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-11-27-tsne_worksheets_joe_parks.png" alt="" /></p>
+
+<p>These appear to be sheets dedicated to periodic &ldquo;Estimates&rdquo; with a copy and pasted worksheet style. We are also likely to see the evolution of workbooks through time and their worksheets therein which results in a lack of diversity on our worksheets and t-SNE clustering those worksheets which are directly related. This is not useful, as this is just repeating the information found in the worksheet name. We could try this again after removing duplicate sheets (i.e. periodic accounting) which might result in more informative clusters based on the shape of a spreadsheet. t-SNE does not seem to be adding much value in this scenario as we might prefer to use our own spreadsheet experience to engineer better features rather than resorting to dimension reduction.</p>
+
+<h3 id="another-cluster">Another cluster</h3>
+
+<p>We repeat for another putative cluster.</p>
+
+<p>{% highlight r %}
+w &lt;- which(tsne$Y[, 1] &gt; 6 &amp; tsne$Y[, 2] &lt; 2)
+w
+paste(&ldquo;There are &ldquo;, length(w), &ldquo;worksheets in this range.&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-184-250-251">[1] 184 250 251</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-there-are-3-worksheets-in-this-range">[1] &ldquo;There are  3 worksheets in this range.&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>But hide the code this time.</p>
+
+<p><img src="/figures/2017-11-27-tsne_worksheets_vkaminski.png" alt="" /></p>
+
+<p>These are characterised by a top-leftedness, small and mostly empty. These are across a greater range of authors but captures their sameness.</p>
+
+<p>This approach seems to be pretty good for identifying repeated structures or worksheets that are copy and pasted.</p>
+
+<h3 id="the-other-extreme">The other extreme</h3>
+
+<p>We look to the opposite end of the t-SNE plot and inspect those worksheets to get a feel for what these dimensions are capturing (third time I&rsquo;ve done this, should of written a function).</p>
+
+<p>{% highlight r %}
+w &lt;- which(tsne$Y[, 1] &lt; -7 &amp; tsne$Y[, 2] &lt; -10)
+w
+paste(&ldquo;There are &ldquo;, length(w), &ldquo;worksheets in this range.&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-10-72-76-110-111-201">[1]  10  72  76 110 111 201</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-there-are-6-worksheets-in-this-range">[1] &ldquo;There are  6 worksheets in this range.&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>But hide the code this time.</p>
+
+<p><img src="/figures/2017-11-27-tsne_worksheets_sparse.png" alt="" /></p>
+
+<h3 id="versioning-spreadsheets-retrospectively">Versioning spreadsheets retrospectively</h3>
+
+<p>This demonstrable clustering of spreadsheets around &ldquo;evolutionary&rdquo; groups was identified in our examples and by this <a href="http://www.tcse.cn/~wsdou/papers/2016-icse-venron.pdf">paper</a> and can be used to infer versioning of spreadsheets through time. It could also be helpful in identifying organisational risk as often errors creep in to his copy and pasting approach (16.9% of the time according to the cited paper (Liang et al., 2017)).</p>
+
+<h3 id="t-sne-extension">t-SNE extension</h3>
+
+<p>Given some labels for our spreadsheets, we could employ the same strategy used for the MNIST digit data set and described in our last <a href="http://www.machinegurning.com/rstats/tsne/">blog post</a>, where we use Support Vector Machines to train on our t-SNE&rsquo;ed data.</p>
+
+<h4 id="once-i-have-a-t-sne-map-how-can-i-embed-incoming-test-points-in-that-map">Once I have a t-SNE map, how can I embed incoming test points in that map?</h4>
+
+<p>t-SNE learns a non-parametric mapping, which means that it does not learn an explicit function that maps data from the input space to the map (at least for <a href="https://github.com/jkrijthe/Rtsne/issues/6">now</a>). Therefore, it is not possible to embed test points in an existing map (although you could re-run t-SNE on the full dataset). A potential approach to deal with this would be to train a multivariate regressor to predict the map location from the input data.</p>
+
+<h2 id="feature-engineering">Feature engineering</h2>
+
+<p>Fortunately a recent <a href="https://arxiv.org/abs/1704.01147">literature review</a> (Reschenhofer et al., 2017) provides a conceptual model for measuring the complexity of spreadsheets which might be useful in helping our classifying spreadsheets that are complex or not (although we lack this label on our Enron data), or in classifying the theme of a spreadsheet, or whether it&rsquo;s tidy or not. We might expect, for example, any economic modelling spreadsheets to be more complicated than a spreadsheet for a social event (a list of names) which could be a useful predictor.</p>
+
+<p><img src="/figures/2017-11-27-spreadsheets_complexity.png" alt="A conceptual and integrated model for measuring complexity in spreadsheets." /></p>
+
+<p>This model integrates knowledge about aspects for spreadsheet complexity based on existing complexity metrics. Interestingly these measures can be quantified and have origins in software development and linguistics. We summarise them here but see the <a href="https://arxiv.org/abs/1704.01147">paper</a> for the full list:</p>
+
+<h3 id="spreadsheet-complexity-metrics">Spreadsheet complexity Metrics</h3>
+
+<ul>
+<li>Average <a href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">abstract syntax tree</a> (AST) depth per formula<br /></li>
+<li>Number of formula cells<br /></li>
+<li>Ratio of formula cells to non-empty cells<br /></li>
+<li>Number of input cells (feed into a formula)<br /></li>
+<li>Ratio of input cells to non-empty cells<br /></li>
+<li>Ratio of formula cells to input cells<br /></li>
+<li>Number of distinct formulas<br /></li>
+<li>Average number of conditionals per formula<br /></li>
+<li>Average spreading factor per formula<br /></li>
+<li>Average number of functions per formula<br /></li>
+<li>Average number of distinct functions per formula<br /></li>
+<li>Average number of elements per formula<br /></li>
+<li>Entropy of functions within a function<br /></li>
+</ul>
+
+<p>This review concluded with these aspects captured by the conceptual model for spreadsheet complexity being mostly independent from each other (through covariance of metrics), and a high complexity with respect to a certain aspect does not imply a high complexity with respect to another one. It would be interesting to explore the use of these metrics in feature engineering for our spreadsheets in an attempt to improve our classification of the theme of a spreadsheet. To achieve this we would need to read in and retain all the metadata stored about each cell rather than just the value of the cell.</p>
+
+<h2 id="natural-language-processing-nlp-of-content">Natural language processing (NLP) of content</h2>
+
+<p>Spreadsheet files are often designed to be informative in  determining the theme and content therein. Some authors fail to give good names for files. A spreadsheet could contain worksheets of different themes. As well as numeric data and formulae, spreadsheets contain text to impart the theme or the context of the spreadsheet to the human reader. We could use <a href="https://cran.r-project.org/web/packages/text2vec/vignettes/text-vectorization.html">NLP modelling with bag of words or bag of n-grams methods</a> to facilitate a machine reading this content.</p>
+
+<h2 id="deep-learning">Deep learning</h2>
+
+<p>An alternative method that doesn&rsquo;t rely on our manually selecting or feature engineering based on expert domain knowledge (which I don&rsquo;t have) is to rely on deep learning (although we still need to help the process with a suitable abstraction; it&rsquo;s not a free lunch). Deep learning has proven successful in image recognition, we could provide an abstraction of the spreadsheet structure that retains the visual and spatial structure.<br />
+We could implement the Melford method proposed in this <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2017/01/melford-tr-Jan2017-1.pdf">paper</a> (although again, where&rsquo;s the code?). Essentially it recodes the contents of each cell by type (e.g. formula, empty, string, number). This can then be solved as a classification problem, whereby given the context of the surrounding cells what is the probability this specific cell contains an error based on sufficient training data.</p>
+
+<p>We&rsquo;re already part way there achieving this based on Duncan&rsquo;s original preparation of the spreadsheet data demonstrated in the <code>view_ranges</code> object. However, we lack the important variable to train on, the presence or absence of an error. Thus we would need an unsupervised method for identifying cells which are unexpected (e.g. a harded coded number in a row full of formulas; the column totals). Given the training data what is the probability this cell has this type of data in it given it&rsquo;s neighbours? If that probability were low then it suggests our cell has an unusual data type given its neighbours and would warrant inspection from a human. We wonder how different / better this approach is to the logic already implemented in a spreadsheet&rsquo;s built-in error checking tools.</p>
+
+<h3 id="closed-source">Closed source</h3>
+
+<p>Working in the spreadsheet domain is frustrating, presumably due to commercial interests, code is rarely openly available. This makes reproducing alot of the work and hype in these papers difficult.</p>
+
+<p>Make things open, it makes things better.</p>
+
+<h2 id="take-home-message">Take home message</h2>
+
+<p>We applied our previous learning of converting an image of a digit into a matrix to the Enron spreadsheet data set. We used <code>purrr</code> and <code>tidyxl</code> to read in many worksheets from many workbooks. We decided on a sensible view range through data exploration of what was typical for an Enron spreadsheet. We then converted the existing matrix structure of a spreadsheet to a square matrix with 0 for empty cells and 1 for those with content. We then explored these data using visualisation. We extended the t-SNE method to this data set, with a larger matrix for every worksheet. This unsupervised approach seemed promising for separating out similar worksheets into clusters, however the problem was somewhat contrived t-SNE components probably not that useful as features, depending on the problem.</p>
+
+<p>Given appropriate labels (e.g. tidy data or not) for a specific data science problem one could build on this approach to predict labels. This could be complemented by further feature engineering for each worksheet based on the literature and the problem domain. This would be a suitable route for automation given many organisations have huge numbers of spreadsheets in their knowledge repository. We also consider the use of deep learning which could be viable given a training set of thousands of sheets.</p>
+
+<h2 id="acknowledgements">Acknowledgements</h2>
+
+<p>This project was inspired by <a href="https://github.com/nacnudus">Duncan Garmonsway</a> and was undertaken using our development time at GDS.</p>
+
+<p>Used a data-set and code to read in from this <a href="https://github.com/nacnudus/ClassifySpreadsheets">repo</a>.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Adelfio and Semet, 2013. <a href="http://www.cs.umd.edu/~hjs/pubs/spreadsheets-vldb13.pdf">The paper</a></li>
+<li>Chen and Caferella, 2013. <a href="https://pdfs.semanticscholar.org/f51c/a5b5a1f7f75cba9cc4416e33727311e8a79b.pdf">The paper</a>.<br /></li>
+<li>EUSES <a href="http://cse.unl.edu/~grother/papers/weuse05.pdf">corpus</a>.<br /></li>
+<li>Hermanns, 2015. <a href="https://figshare.com/articles/Enron_s_Spreadsheets_and_Related_Emails_A_Dataset_and_Analysis/1222882">The paper</a>.<br /></li>
+<li>Hermanns, 2015. <a href="https://figshare.com/articles/Enron_Spreadsheets_and_Emails/1221767">Enron spreadsheet data</a>.<br /></li>
+<li>Liang Xu, Wensheng Dou, Chushu Gao, Jie Wang, Jun Wei, Hua Zhong, Tao Huang. SpreadCluster: Recovering Versioned Spreadsheets through Similarity-Based Clustering. In Proceedings of the 14th International Conference on Mining Software Repositories (MSR 2017), pages 158-169, Buenos Aires, Argentina, May 2017.<br /></li>
+<li>Reschenofer et al., 2017. <a href="https://arxiv.org/abs/1704.01147">A Conceptual model for measuring the complexity of spreadsheets</a>.<br /></li>
+</ul>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-4-1-2017-06-30">R version 3.4.1 (2017-06-30)</h2>
+
+<h2 id="platform-x86-64-apple-darwin15-6-0-64-bit">Platform: x86_64-apple-darwin15.6.0 (64-bit)</h2>
+
+<h2 id="running-under-os-x-el-capitan-10-11-6">Running under: OS X El Capitan 10.11.6</h2>
+
+<h2 id="matrix-products-default">Matrix products: default</h2>
+
+<h2 id="blas-system-library-frameworks-accelerate-framework-versions-a-frameworks-veclib-framework-versions-a-libblas-dylib">BLAS: /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib</h2>
+
+<h2 id="lapack-library-frameworks-r-framework-versions-3-4-resources-lib-librlapack-dylib">LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-en-gb-utf-8-en-gb-utf-8-en-gb-utf-8-c-en-gb-utf-8-en-gb-utf-8">[1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-stats-graphics-grdevices-utils-datasets-methods-base">[1] stats     graphics  grDevices utils     datasets  methods   base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-tidyr-0-6-3-openxlsx-4-0-17-e1071-1-6-8-rtsne-0-13">[1] tidyr_0.6.3     openxlsx_4.0.17 e1071_1.6-8     Rtsne_0.13</h2>
+
+<h2 id="5-bindrcpp-0-2-bayesab-0-7-0-matrix-1-2-10-ggplot2-2-2-1">[5] bindrcpp_0.2    bayesAB_0.7.0   Matrix_1.2-10   ggplot2_2.2.1</h2>
+
+<h2 id="9-simecol-0-8-7-desolve-1-14-readxl-1-0-0-here-0-1">[9] simecol_0.8-7   deSolve_1.14    readxl_1.0.0    here_0.1</h2>
+
+<h2 id="13-tidyxl-1-0-0-purrr-0-2-3-dplyr-0-7-3">[13] tidyxl_1.0.0    purrr_0.2.3     dplyr_0.7.3</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-rcpp-0-12-14-highr-0-6-cellranger-1-1-0-compiler-3-4-1">[1] Rcpp_0.12.14     highr_0.6        cellranger_1.1.0 compiler_3.4.1</h2>
+
+<h2 id="5-plyr-1-8-4-bindr-0-1-class-7-3-14-tools-3-4-1">[5] plyr_1.8.4       bindr_0.1        class_7.3-14     tools_3.4.1</h2>
+
+<h2 id="9-digest-0-6-12-evaluate-0-10-tibble-1-3-4-gtable-0-2-0">[9] digest_0.6.12    evaluate_0.10    tibble_1.3.4     gtable_0.2.0</h2>
+
+<h2 id="13-lattice-0-20-35-pkgconfig-2-0-1-rlang-0-1-2-yaml-2-1-14">[13] lattice_0.20-35  pkgconfig_2.0.1  rlang_0.1.2      yaml_2.1.14</h2>
+
+<h2 id="17-stringr-1-2-0-knitr-1-16-rprojroot-1-2-grid-3-4-1">[17] stringr_1.2.0    knitr_1.16       rprojroot_1.2    grid_3.4.1</h2>
+
+<h2 id="21-glue-1-1-1-r6-2-2-2-minqa-1-2-4-magrittr-1-5">[21] glue_1.1.1       R6_2.2.2         minqa_1.2.4      magrittr_1.5</h2>
+
+<h2 id="25-codetools-0-2-15-backports-1-1-0-scales-0-4-1-assertthat-0-2-0">[25] codetools_0.2-15 backports_1.1.0  scales_0.4.1     assertthat_0.2.0</h2>
+
+<h2 id="29-checkpoint-0-4-0-rmd2md-0-1-1-colorspace-1-3-2-stringi-1-1-5">[29] checkpoint_0.4.0 rmd2md_0.1.1     colorspace_1.3-2 stringi_1.1.5</h2>
+
+<h2 id="33-lazyeval-0-2-0-munsell-0-4-3">[33] lazyeval_0.2.0   munsell_0.4.3</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

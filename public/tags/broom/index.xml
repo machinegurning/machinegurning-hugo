@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Broom on A Hugo website</title>
+    <link>/tags/broom/</link>
+    <description>Recent content in Broom on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 27 Mar 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/broom/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Iteratively applying models</title>
+      <link>/2016/03/27/iteratively-applying-models/</link>
+      <pubDate>Sun, 27 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/27/iteratively-applying-models/</guid>
+      <description>{% include _toc.html %}
+I&amp;rsquo;ve been doing a lot of programming in Python recently, and have taken my eye off the #RStats ball of late. With a bit of time to play over the Easter weekend, I&amp;rsquo;ve been reading Hadley&amp;rsquo;s new R for Data Science book.
+One thing I particularly like so far is the [purrr package]() which he describes in the lists chapter. I&amp;rsquo;ve always thought that the sapply,lapply, vapply (etc) commands are rather complicated.</description>
+    </item>
+    
+  </channel>
+</rss>

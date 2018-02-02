@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Test Driven Development - A Hugo website</title>
+<meta property="og:title" content="Test Driven Development - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">12 min read</span>
+    
+
+    <h1 class="article-title">Test Driven Development</h1>
+
+    
+    <span class="article-date">2016/10/27</span>
+    
+
+    <div class="article-content">
+      
+
+<p>I was recently asked to give a talk about Hadley&rsquo;s package <a href="https://github.com/hadley/testthat">testthat</a>.
+Any discussion of testthat cannot be in isolation - we have to put it into the wider software development context.
+I think this is the first time that I have used the words software development on this blog, and for many R users, thinking of their code as software development, may not be familiar.
+In particular, I think that those of us who have come to Data Science or statistical computing from a statistical, especially academic background, tend to have a poor understanding of some common practices among developers that would actually make their lives much easier<sup class="footnote-ref" id="fnref:1"><a rel="footnote" href="#fn:1">1</a></sup>.
+Version control is one I&rsquo;ve talked about before (recognise <a href="http://www.phdcomics.com/comics/archive.php?comicid=1531">this</a>?), but another is unit testing.</p>
+
+<p>Having a second person look over your code: QA or 2i, whatever you want to call it, is an incredibly important part of the analytical process in many organisations.
+Sadly, in my experience this is often done badly, especially if there is not a strong community of R users (assuming we are talking about R - although we needn&rsquo;t be) and a strong idea of &lsquo;what good looks like&rsquo;.</p>
+
+<p>What if we could:</p>
+
+<ol>
+<li>write our code in a way that makes QA much easier, and</li>
+<li>actually automates much of this testing in a more thorough and consistent way, as a matter of course.</li>
+</ol>
+
+<p>As is often the case, software developers have been grappling with this problem for a long time, under much more trying conditions, and <a href="https://en.wikipedia.org/wiki/Test-driven_development">Test Driven Development (TDD)</a> is one approach to doing this.</p>
+
+<p>In this post, I am going to give a very simple example of TDD in an analytical context, using testthat<sup class="footnote-ref" id="fnref:2"><a rel="footnote" href="#fn:2">2</a></sup></p>
+
+<h2 id="a-simple-example">A simple example</h2>
+
+<p>Imagine that we want to normalise a vector, which is a common task for machine learning.</p>
+
+<p>Let&rsquo;s think for a second what we would need to do.
+Mathematically it might look something like this:</p>
+
+<p>$$
+\vec{y} = \frac{\vec{x}-\min{x}}{\max{x}-\min{x}}
+$$</p>
+
+<p>Where:</p>
+
+<ul>
+<li>$\vec{y}$ is our normalised vector,<br /></li>
+<li>$\vec{x}$ is our target vector.<br /></li>
+</ul>
+
+<p>Before setting out to write the code, there are a few things we already expect to be true of $\vec{y}$.
+We can list some of these expectations, for example:</p>
+
+<ul>
+<li>Elements of $\vec{y}$ should all be between $0$ and $1$</li>
+<li>$\vec{y}$ should be the same length as $\vec{x}$</li>
+<li>$\vec{x}$ should be scalar (<code>numeric</code> in R)</li>
+</ul>
+
+<p>Let&rsquo;s try this. First let&rsquo;s create a vector x to play with based on a uniform distribution with a minimum of $10$ and a maximum of $100$</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="first-set-a-seed-so-you-see-what-i-see-1337-is-the-best-seed-obvs">First set a seed, so you see what I see. 1337 is the best seed, obvs.</h1>
+
+<p>set.seed(1337)</p>
+
+<p>x &lt;- runif(100, min = 10, max = 100)</p>
+
+<p>x
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-61-86894-60-82679-16-65912-50-84791-43-59513-39-81857-95-28670"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> 61.86894 60.82679 16.65912 50.84791 43.59513 39.81857 95.28670</h2>
+
+<h2 id="8-35-30056-32-08636-23-14393-98-14873-99-43458-84-46229-27-45841">[8] 35.30056 32.08636 23.14393 98.14873 99.43458 84.46229 27.45841</h2>
+
+<h2 id="15-98-31929-12-27057-97-51496-93-14170-40-52257-32-19215-86-42474">[15] 98.31929 12.27057 97.51496 93.14170 40.52257 32.19215 86.42474</h2>
+
+<h2 id="22-75-16794-14-19562-23-83103-60-63348-98-32831-93-85968-90-87534">[22] 75.16794 14.19562 23.83103 60.63348 98.32831 93.85968 90.87534</h2>
+
+<h2 id="29-52-28139-99-55073-90-84471-19-14559-76-55116-30-62085-80-95286">[29] 52.28139 99.55073 90.84471 19.14559 76.55116 30.62085 80.95286</h2>
+
+<h2 id="36-67-75592-97-18704-77-16716-36-34789-29-35718-75-89200-84-76711">[36] 67.75592 97.18704 77.16716 36.34789 29.35718 75.89200 84.76711</h2>
+
+<h2 id="43-59-39237-69-28600-29-30290-18-26361-37-77561-48-54409-14-59077">[43] 59.39237 69.28600 29.30290 18.26361 37.77561 48.54409 14.59077</h2>
+
+<h2 id="50-43-61292-96-65508-74-03164-65-57352-46-55795-79-67136-35-21346">[50] 43.61292 96.65508 74.03164 65.57352 46.55795 79.67136 35.21346</h2>
+
+<h2 id="57-22-71488-63-00307-57-30615-69-83769-90-69782-32-85174-87-78906">[57] 22.71488 63.00307 57.30615 69.83769 90.69782 32.85174 87.78906</h2>
+
+<h2 id="64-93-87432-21-75408-21-83684-99-97440-57-46373-31-22632-59-55834">[64] 93.87432 21.75408 21.83684 99.97440 57.46373 31.22632 59.55834</h2>
+
+<h2 id="71-43-47002-81-76885-36-83209-15-78632-72-99225-43-14955-22-61422">[71] 43.47002 81.76885 36.83209 15.78632 72.99225 43.14955 22.61422</h2>
+
+<h2 id="78-32-80217-53-02225-63-74990-98-74448-79-33006-13-42352-26-63911">[78] 32.80217 53.02225 63.74990 98.74448 79.33006 13.42352 26.63911</h2>
+
+<h2 id="85-57-33332-90-73812-76-93809-52-15916-31-41670-95-16210-86-16433">[85] 57.33332 90.73812 76.93809 52.15916 31.41670 95.16210 86.16433</h2>
+
+<h2 id="92-65-04514-76-25626-56-25007-70-54470-47-79791-71-16260-33-31253">[92] 65.04514 76.25626 56.25007 70.54470 47.79791 71.16260 33.31253</h2>
+
+<h2 id="99-31-82564-97-39483">[99] 31.82564 97.39483</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Now to normalise:</p>
+
+<p>{% highlight r %}
+y &lt;- (x - min(x))/(max(x) - min(x))</p>
+
+<p>y
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-56552110-0-55363852-0-05003829-0-43985917-0-35716298-0-31410257"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> 0.56552110 0.55363852 0.05003829 0.43985917 0.35716298 0.31410257</h2>
+
+<h2 id="7-0-94655077-0-26258814-0-22593987-0-12397810-0-97918360-0-99384495">[7] 0.94655077 0.26258814 0.22593987 0.12397810 0.97918360 0.99384495</h2>
+
+<h2 id="13-0-82313066-0-17317186-0-98112835-0-00000000-0-97195743-0-92209342">[13] 0.82313066 0.17317186 0.98112835 0.00000000 0.97195743 0.92209342</h2>
+
+<h2 id="19-0-32212959-0-22714600-0-84550657-0-71715643-0-02194941-0-13181252">[19] 0.32212959 0.22714600 0.84550657 0.71715643 0.02194941 0.13181252</h2>
+
+<h2 id="25-0-55143433-0-98123124-0-93027985-0-89625243-0-45620380-0-99516926">[25] 0.55143433 0.98123124 0.93027985 0.89625243 0.45620380 0.99516926</h2>
+
+<h2 id="31-0-89590309-0-07838908-0-73292797-0-20923004-0-78311610-0-63264445">[31] 0.89590309 0.07838908 0.73292797 0.20923004 0.78311610 0.63264445</h2>
+
+<h2 id="37-0-96821844-0-73995157-0-27452984-0-19482167-0-72541216-0-82660628">[37] 0.96821844 0.73995157 0.27452984 0.19482167 0.72541216 0.82660628</h2>
+
+<h2 id="43-0-53728319-0-65009053-0-19420273-0-06833271-0-29080876-0-41359104">[43] 0.53728319 0.65009053 0.19420273 0.06833271 0.29080876 0.41359104</h2>
+
+<h2 id="49-0-02645497-0-35736575-0-96215304-0-70420038-0-60776074-0-39094499">[49] 0.02645497 0.35736575 0.96215304 0.70420038 0.60776074 0.39094499</h2>
+
+<h2 id="55-0-76850451-0-26159511-0-11908611-0-57845241-0-51349610-0-65638084">[55] 0.76850451 0.26159511 0.11908611 0.57845241 0.51349610 0.65638084</h2>
+
+<h2 id="61-0-89422825-0-23466665-0-86106258-0-93044682-0-10813108-0-10907470">[61] 0.89422825 0.23466665 0.86106258 0.93044682 0.10813108 0.10907470</h2>
+
+<h2 id="67-1-00000000-0-51529280-0-21613368-0-53917564-0-35573644-0-79242006">[67] 1.00000000 0.51529280 0.21613368 0.53917564 0.35573644 0.79242006</h2>
+
+<h2 id="73-0-28005069-0-04008659-0-69234916-0-35208241-0-11793841-0-23410150">[73] 0.28005069 0.04008659 0.69234916 0.35208241 0.11793841 0.23410150</h2>
+
+<h2 id="79-0-46465106-0-58696782-0-98597642-0-76461296-0-01314590-0-16383024">[79] 0.46465106 0.58696782 0.98597642 0.76461296 0.01314590 0.16383024</h2>
+
+<h2 id="85-0-51380597-0-89468774-0-73733974-0-45481013-0-21830440-0-94513002">[85] 0.51380597 0.89468774 0.73733974 0.45481013 0.21830440 0.94513002</h2>
+
+<h2 id="91-0-84253737-0-60173620-0-72956548-0-50145473-0-66444222-0-40508302">[91] 0.84253737 0.60173620 0.72956548 0.50145473 0.66444222 0.40508302</h2>
+
+<h2 id="97-0-67148750-0-23992063-0-22296709-0-97058771">[97] 0.67148750 0.23992063 0.22296709 0.97058771</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Now we can test our assumptions:</p>
+
+<p>What is the range of $\vec{y}$</p>
+
+<p>{% highlight r %}
+range(y)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-1"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> 0 1</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>How long is $\vec{y}$?</p>
+
+<p>{% highlight r %}
+length(y)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-100"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> 100</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>What class is $\vec{y}$?</p>
+
+<p>{% highlight r %}
+class(y)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-numeric"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> &ldquo;numeric&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>All good so far, but this is quite long winded, and if we had to check that our code worked every time like this, we would have to write a lot of code.
+Second we would need to manually check our little tests manually, and we might conceivably notice a failed test.
+If we started to litter our code with a lot of these ad-hoc tests, might also start to break another of the tenets of good software development: <em>DRY</em> or *D*on&rsquo;t *R*epeat *Y*ourself.</p>
+
+<h2 id="the-tdd-process">The TDD process</h2>
+
+<p>Now lets do the same again from a TDD perspective.
+Of course, in order to do this, we need to <a href="https://en.wikipedia.org/wiki/Functional_programming">functionalise</a> our code, which may also be something relatively new to a statistical scripter
+The benefits become obvious pretty quick - generalising our code into functions allows us to generalise our code, whilst also hiding away the complexities, and keeping our code nice and tidy.</p>
+
+<p>The TDD process looks something like this:</p>
+
+<ol>
+<li>Write a series of tests</li>
+<li>Run tests and see if the tests pass</li>
+<li>Write the code</li>
+<li>Run tests again</li>
+<li>Repeat</li>
+</ol>
+
+<h3 id="write-a-series-of-tests-run-them">Write a series of tests &amp; Run them</h3>
+
+<p>Just as in the previous section I discussed some of our expectations of what our code will produce, in TDD we formalise these expectations by explicitly writing tests first, before we even start to think about the code in our function.
+We know that our tests will fail first time round, as there is no code to make them pass, but spelling out our expectations of what our function will produce, is an important step in its own right.</p>
+
+<p>This is where testthat comes in.
+Testthat is a unit testing frame work for R (we think of our function as a <em>unit</em> of code), that makes TDD very easy.</p>
+
+<p>So, to re-use my normalisation example: first I define my tests:</p>
+
+<p>A simple test from <code>testthat</code> looks like this:</p>
+
+<p>{% highlight r %}
+library(testthat)</p>
+
+<p>expect_equal(
+  range(normalise(x)),
+  c(0, 1)
+  )
+{% endhighlight %}</p>
+
+<p>This test encapsulates our expectation that after normalisation, our vector will have a minimum of $0$ and maximum of $1$.</p>
+
+<p>Usually we want to package up a series of tests together to test a particular function.
+Here&rsquo;s how we can do that:</p>
+
+<p>{% highlight r %}
+library(testthat)</p>
+
+<p>test_that(
+  &ldquo;Test the normalise function&rdquo;,
+  {</p>
+
+<pre><code># Tests run in their own environment, so we need to recreate a vector to
+# test on:
+
+x &lt;- runif(100, min = 10, max = 100)
+
+# Check that the min = 0 and the max = 1
+
+expect_equal(
+  range(normalise(x)),
+  c(0, 1)
+)
+
+# Check that y has the same length as x
+
+expect_equal(
+  length(normalise(x)),
+  length(x)
+)
+
+# Check that the resulting vector is numeric
+
+expect_is(
+  normalise(x),
+  'numeric'
+)
+
+# Here I go one step further, and check the output against a specific and
+# easily checkable vector. I just did the sums in my head!
+
+test_vector = c(1, 2, 3)
+
+expect_equal(
+  normalise(test_vector),
+  c(0, 0.5, 1)
+  )
+</code></pre>
+
+<p>}
+)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="error-test-failed-test-the-normalise-function">Error: Test failed: &lsquo;Test the normalise function&rsquo;</h2>
+
+<h2 id="could-not-find-function-normalise">* could not find function &ldquo;normalise&rdquo;</h2>
+
+<h2 id="1-expect-equal-range-normalise-x-c-0-1-at-text-15">1: expect_equal(range(normalise(x)), c(0, 1)) at <text>:15</h2>
+
+<h2 id="2-compare-object-expected">2: compare(object, expected, &hellip;)</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So we run this code, and the tests fail.
+Why?
+Because <code>could not find function &quot;normalise&quot;</code>.
+Of course - we have not written it yet!</p>
+
+<h3 id="write-the-code">Write the code</h3>
+
+<p>So lets write our function now.
+We define our function to take one input which should be a vector.</p>
+
+<p>{% highlight r %}
+normalise &lt;- function(x) {</p>
+
+<p># Run the normalisation as before</p>
+
+<p>y &lt;- (x - min(x))/(max(x) - min(x))</p>
+
+<p># Return the y object (if we didn&rsquo;t do this, nothing would happen!)</p>
+
+<p>return(y)</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<h3 id="run-tests-again">Run tests again</h3>
+
+<p>So with that written, lets try again with our tests.</p>
+
+<p>{% highlight r %}
+test_that(
+  &ldquo;Test the normalise function&rdquo;,
+  {</p>
+
+<pre><code># Tests run in their own environment, so we need to recreate a vector to test on:
+
+x &lt;- runif(100, min = 10, max = 100)
+
+# Check that the min = 0 and the max = 1
+
+expect_equal(
+  range(normalise(x)),
+  c(0, 1)
+)
+
+# Check that y has the same length as x
+
+expect_equal(
+  length(normalise(x)),
+  length(x)
+)
+
+# Check that the resulting vector is numeric
+
+expect_is(
+  normalise(x),
+  'numeric'
+)
+
+# Here I go one step further, and check the output against a specific and
+# easily checkable vector. I just did the sums in my head!
+
+test_vector = c(1, 2, 3)
+
+expect_equal(
+  normalise(test_vector),
+  c(0, 0.5, 1)
+  )
+</code></pre>
+
+<p>}
+)
+{% endhighlight %}</p>
+
+<p>This time we don&rsquo;t get anything returned.
+These tests are silent.
+If they pass, they pass silently; if they fail they let us know.
+<strong>So all good</strong>.</p>
+
+<h3 id="repeat">Repeat</h3>
+
+<p>At this point, we might start to think about the other ways that we might test our function.
+What would happen for instance if someone passed something to it that it was not expecting, for example:</p>
+
+<ul>
+<li>A single scalar instead of a vector.</li>
+</ul>
+
+<p>How might we want our function to work in these case?
+Let&rsquo;s say we want to handle this cases very simplistically by just returning an error.
+We expand our test suite to include this:</p>
+
+<p>{% highlight r %}
+test_that(
+  &ldquo;Test the normalise function&rdquo;,
+  {</p>
+
+<pre><code># Tests run in their own environment, so we need to recreate a vector to test on:
+
+x &lt;- runif(100, min = 10, max = 100)
+
+# Check that the min = 0 and the max = 1
+
+expect_equal(
+  range(normalise(x)),
+  c(0, 1)
+)
+
+# Check that y has the same length as x
+
+expect_equal(
+  length(normalise(x)),
+  length(x)
+)
+
+# Check that the resulting vector is numeric
+
+expect_is(
+  normalise(x),
+  'numeric'
+)
+
+# Here I go one step further, and check the output against a specific and
+# easily checkable vector. I just did the sums in my head!
+
+test_vector = c(1, 2, 3)
+
+expect_equal(
+  normalise(test_vector),
+  c(0, 0.5, 1)
+  )
+
+# Add cases where we want to raise a warning
+
+expect_error(
+  normalise(1)
+  )
+</code></pre>
+
+<p>}
+)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="error-test-failed-test-the-normalise-function-1">Error: Test failed: &lsquo;Test the normalise function&rsquo;</h2>
+
+<h2 id="normalise-1-did-not-throw-an-error">* normalise(1) did not throw an error.</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>These tests fail.
+Why?
+The error message says <code>normalise(1) did not throw an error</code>; so we know what we have to do&hellip;</p>
+
+<p>{% highlight r %}
+normalise &lt;- function(x) {</p>
+
+<p># Raise error in input x has length &lt; 1</p>
+
+<p>stopifnot(length(x) &gt; 1)</p>
+
+<p># Run the normalisation as before</p>
+
+<p>y &lt;- (x - min(x))/(max(x) - min(x))</p>
+
+<p># Return the y object (if we didn&rsquo;t do this, nothing would happen!)</p>
+
+<p>return(y)</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<p>Now that we have updated the function, lets run the tests again&hellip;</p>
+
+<p>{% highlight r %}
+test_that(
+  &ldquo;Test the normalise function&rdquo;,
+  {</p>
+
+<pre><code># Tests run in their own environment, so we need to recreate a vector to test on:
+
+x &lt;- runif(100, min = 10, max = 100)
+
+# Check that the min = 0 and the max = 1
+
+expect_equal(
+  range(normalise(x)),
+  c(0, 1)
+)
+
+# Check that y has the same length as x
+
+expect_equal(
+  length(normalise(x)),
+  length(x)
+)
+
+# Check that the resulting vector is numeric
+
+expect_is(
+  normalise(x),
+  'numeric'
+)
+
+# Here I go one step further, and check the output against a specific and
+# easily checkable vector. I just did the sums in my head!
+
+test_vector = c(1, 2, 3)
+
+expect_equal(
+  normalise(test_vector),
+  c(0, 0.5, 1)
+  )
+
+# Add cases where we want to raise a warning
+
+expect_error(
+  normalise(1)
+  )
+</code></pre>
+
+<p>}
+)
+{% endhighlight %}</p>
+
+<p>So all the tests pass silently!</p>
+
+<h2 id="tidying-this-all-up">Tidying this all up</h2>
+
+<p>So this is all a bit long-winded.
+You don&rsquo;t really want to be repeating these long strings of tests over and over again; it would be nice if we could just get these to run automatically, and this is possible using the function <code>testthat::test_dir()</code> which will look into a directory, and run all the tests in that directory beginning with the prefix <code>test_</code>.</p>
+
+<p>Better yet, we write a package, and when we build our package containing our collection of functions, our tests will be run automatically.
+In fact, a good example of how to organise your tests can be seen in the <a href="https://github.com/hadley/testthat/tree/master/tests/testthat">automated tests</a> that ship with the testthat package itself; there are a lot of them!</p>
+
+<p>We can take this even further, and use some code coverage tools (like <a href="https://codecov.io">https://codecov.io</a>) to look at our code and tell us which functions have been tested, and which haven&rsquo;t.
+For example, in my <a href="https://github.com/UKGov-Data-Science/govstyle">govstyle</a> package we can see that around 80% (at time of writing) of the code is covered by tests:</p>
+
+<p><br></p>
+
+<p><a href="https://codecov.io/gh/UKGov-Data-Science/govstyle/tree/4e3ebad092dbec02c2c92be6f1419146ce90b5e4/R"><img src="/figures/2016-10-27-codecov.png" alt="https://codecov.io" /></a></p>
+
+<p><br></p>
+
+<p>Drilling deeper, I can see that of the two functions that make up the package, one of them is only 60% covered:</p>
+
+<p><br></p>
+
+<p><img src="/figures/2016-10-27-codecov1.png" alt="https://codecov.io" /></p>
+
+<p><br></p>
+
+<p>I can even see the offending lines of code, which are in this case an untested <code>if</code> statement:</p>
+
+<p><br></p>
+
+<p><img src="/figures/2016-10-27-codecov2.png" alt="https://codecov.io" /></p>
+
+<p><br></p>
+
+<p>I don&rsquo;t think I need to worry about this too much.</p>
+
+<p>I&rsquo;ve written about package development <a href="http://www.machinegurning.com/rstats/R_classes/">before</a> - and there are a lot of other benefits to writing packages, not least the fact that for teams, it can allow us to enshrine business knowledge into a corpus of code that is inseparable from the documentation of that code.
+It&rsquo;s well worth the relatively modest learning curve.</p>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-3-1-2016-06-21">R version 3.3.1 (2016-06-21)</h2>
+
+<h2 id="platform-x86-64-apple-darwin14-5-0-64-bit">Platform: x86_64-apple-darwin14.5.0 (64-bit)</h2>
+
+<h2 id="running-under-os-x-10-11-6-el-capitan">Running under: OS X 10.11.6 (El Capitan)</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-en-gb-utf-8-en-gb-utf-8-en-gb-utf-8-c-en-gb-utf-8-en-gb-utf-8"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-stats-graphics-grdevices-utils-datasets-methods-base"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> stats     graphics  grDevices utils     datasets  methods   base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-testthat-1-0-2"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> testthat_1.0.2</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-r6-2-1-3-magrittr-1-5-formatr-1-4"><a href="1" title="Props to [Software Carpentry](http://software-carpentry.org/) for righting this wrong.
+">1</a> R6_2.1.3          magrittr_1.5      formatR_1.4</h2>
+
+<h2 id="4-tools-3-3-1-crayon-1-3-2-rmd2md-0-1-2">[4] tools_3.3.1       crayon_1.3.2      rmd2md_0.1.2</h2>
+
+<h2 id="7-stringi-1-1-1-knitr-1-14-stringr-1-1-0">[7] stringi_1.1.1     knitr_1.14        stringr_1.1.0</h2>
+
+<h2 id="10-checkpoint-0-3-16-evaluate-0-9">[10] checkpoint_0.3.16 evaluate_0.9</h2>
+
+<p>{% endhighlight %}</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:1">Props to <a href="http://software-carpentry.org/">Software Carpentry</a> for righting this wrong.
+ <a class="footnote-return" href="#fnref:1"><sup>[return]</sup></a></li>
+<li id="fn:2">There is a great, comprehensive guide to testthat  <a href="https://journal.r-project.org/archive/2011-1/RJournal_2011-1_Wickham.pdf">here</a>.
+ <a class="footnote-return" href="#fnref:2"><sup>[return]</sup></a></li>
+</ol>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

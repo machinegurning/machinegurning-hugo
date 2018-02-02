@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Finding the right blogging platform - A Hugo website</title>
+<meta property="og:title" content="Finding the right blogging platform - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">Finding the right blogging platform</h1>
+
+    
+    <span class="article-date">0001/01/01</span>
+    
+
+    <div class="article-content">
+      <p>I&rsquo;ve had a blog on <a href="http://ivyleavedtoadflax.blogspot.com">blogger</a> for a while now, where I have been wanting to document some of the things I have been doing in <code>R</code> recently. I write in RMarkDown a lot, and it would make sense if I could post directly to my blog from the .html files that are output from RStudio, but I&rsquo;ve been struggling for a way to do it well.</p>
+
+<p>Blogger works in so far as you can copy all the code from the .html file, then paste it into a new blog post. This is actually pretty easy but horribly manual - you need to stop <code>knitr</code> from attaching images directly to the html file (actually this is a setting in the markdown package), then upload the images separately.
+I also host my code on github, so it would be nice to just integrate everything together, withough having to mess around copying nad pasting into boxes. Why can&rsquo;t I just do this from the command line?</p>
+
+<p>I also had a crack with WordPress. There is a package called <a href="http://yihui.name/knitr/demo/wordpress/">RWordPress</a> which looked like it might solve these problems. I had some issues installing this, so these are the steps I took:</p>
+
+<ul>
+<li>install ll <code>xml2-config</code> (on my Ubuntu 14.04 system) using <code>apt-get install xml2-config</code>.</li>
+<li>Manually install XMLRPC from <a href="http://bioconductor.org/packages/release/extra/html/XMLRPC.html">here</a></li>
+<li>Install RWordPress with:
+<code>
+install.packages(
+'RWordPress',
+repos = 'http://www.omegahat.org/R',
+type = 'source'
+)
+</code></li>
+</ul>
+
+<p>There&rsquo;s a thread on SO <a href="http://stackoverflow.com/questions/7765429/unable-to-install-r-package-in-ubuntu-11-04">here</a>.</p>
+
+<p>Anyway, as it turns out, having finally got it installed WordPress is still a bit of a faff, so I have opted instead for using Jekyll.</p>
+
+<p>Jekyll is a really simple platform that can be hosted for free on github, and gives you the most control over your blog, the code for which is available on github. You add new blog posts to the site by pushing .md files to github, which then renders them and displays them like this.</p>
+
+<p>If you want to convert from Rmd files there is a helper function by Jason Bryer and Andy South which I have <a href="https://github.com/ivyleavedtoadflax/ivyleavedtoadflax.github.io/blob/master/Rmd2md.R">adapted </a> which allows you to convert directly from Rmd to md. I used the really nice Minimal Mistakes <a href="http://mmistakes.github.io/">template</a>, which I first saw implement <a href="http://byzantine.github.io/ByzanTineBlog//posts/">here</a>.</p>
+
+<p>Seems to work OK so far, my only word of advice is that MathJax equations do not seem to render inline, and in the Rmd file you must specify all equations within double dollars (<code>$$...$$</code>), rather than single dollars (<code>$...$</code>) for inline LaTeX. This is a little bit of a pain if you want inline equations, but not unsurmountable, and perhaps I will find a way around it in the future.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

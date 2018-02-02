@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on A Hugo website</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 27 Nov 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Classification of spreadsheets</title>
+      <link>/2017/11/27/classification-of-spreadsheets/</link>
+      <pubDate>Mon, 27 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/11/27/classification-of-spreadsheets/</guid>
+      <description>Data tables in the form of spreadsheets are ubiquitous in enterprise. For better or worse, they are the Swiss Army Knife (or cockroaches) for decision support in many organisations.
+Why are they so popular and widely used? That&amp;rsquo;s not the focus of this blog, instead we focus on how you might go about automating the classification of spreadsheets without manually having to open and inspect them. We use some of the techniques we used in previous posts to represent a spreadsheet as a matrix (empty or not-empty cells) and attempt dimension reduction.</description>
+    </item>
+    
+    <item>
+      <title>t-Distributed Stochastic Neighbor Embedding</title>
+      <link>/2017/10/13/t-distributed-stochastic-neighbor-embedding/</link>
+      <pubDate>Fri, 13 Oct 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/10/13/t-distributed-stochastic-neighbor-embedding/</guid>
+      <description>Last time we looked at the classic approach of PCA, this time we look at a relatively modern method called t-Distributed Stochastic Neighbour Embedding (t-SNE). The paper is fairly accessible so we work through it here and attempt to use the method in R on a new data set (there&amp;rsquo;s also a video talk).
+The data science process often starts with visualisation; we want to see the data in an attempt to make sense of it.</description>
+    </item>
+    
+    <item>
+      <title>Principal Component Analysis</title>
+      <link>/2017/09/24/principal-component-analysis/</link>
+      <pubDate>Sun, 24 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/09/24/principal-component-analysis/</guid>
+      <description>Sometimes one gets handed so much data you don&amp;rsquo;t know where to begin! You might not even have an associated response variable to complement the hundreds of explanatory variables provided. Instead of attempting to make predictions we can try to make sense of the data using unsupervised learning techniques.
+This is challenging in contrast to supervised learning, where there is a simple goal for the analysis, here there is no way to check our work because we don&amp;rsquo;t know the true answer (we have no training set to compare our predictions against).</description>
+    </item>
+    
+    <item>
+      <title>Mastering Bayes</title>
+      <link>/2017/06/18/mastering-bayes/</link>
+      <pubDate>Sun, 18 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/06/18/mastering-bayes/</guid>
+      <description>The mind of Homo sapiens is an inference machine. The visual inputs of a darkening sky and distant sound of thunder, combined with the the internal state of your brain (memory), leads to the inevitable output of you taking your umbrella with you.
+However, sometimes our minds lets us down.
+Objective This blog post considers some common malfunctions in our reasoning by using some toy examples where statistics can help and then moves on to the modern problem of deciding which web page is better at increasing the outcome of interest (e.</description>
+    </item>
+    
+    <item>
+      <title>Agent Based Modelling</title>
+      <link>/2017/04/30/agent-based-modelling/</link>
+      <pubDate>Sun, 30 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/04/30/agent-based-modelling/</guid>
+      <description>This blog post draws heavily on the excellent SysMIC course I completed during my PhD.
+Agent based models (ABM) are one of a class of computational models for simulating the actions and interactions of autonomous agents (both individual or collective entities such as organizations or groups). The goal of ABM is to search for explanatory insight into the collective behavior of agents obeying simple rules, typically in natural systems. There are many ways to get hooked on ABM, for me I found the Game of Life intriguing (there are many examples from biological, ecological and socioeconomical systems).</description>
+    </item>
+    
+    <item>
+      <title>Deploying a model</title>
+      <link>/2017/03/17/deploying-a-model/</link>
+      <pubDate>Fri, 17 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/03/17/deploying-a-model/</guid>
+      <description>This blog post draws heavily on Chapter 10 in the excellent Practical Data Science with R.
+To understand the different layers of a full-stack development it can be useful to produce a reference deployment of your model. This can be a good way to jump-start deployment as it can allow experienced engineers (who are better suited to true production deployment) to tinker and experiment with your work, test corner cases and build acceptance tests.</description>
+    </item>
+    
+    <item>
+      <title>Shiny interactive map app development</title>
+      <link>/2017/02/25/shiny-interactive-map-app-development/</link>
+      <pubDate>Sat, 25 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/02/25/shiny-interactive-map-app-development/</guid>
+      <description>I&amp;rsquo;ve been developing my mapping skills in R for a couple of months now. I started off using a couple of different packages but was quickly drawn to leaflet which allows one to create interactive web maps with the JavaScript Leaflet Library. It has loads of great features out of the box and will meet most of your mapping needs (if old fashioned people reject your interactive map you can also provide a static version using the mapshot function in the mapview package available on CRAN).</description>
+    </item>
+    
+    <item>
+      <title>It&#39;s if_else statements all the way down...</title>
+      <link>/2017/02/23/its-if_else-statements-all-the-way-down.../</link>
+      <pubDate>Thu, 23 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/02/23/its-if_else-statements-all-the-way-down.../</guid>
+      <description>I&amp;rsquo;ve been developing a package where I needed a function to take numerous different actions (different [mutations]()) depending on the values of different variables within each row of a dataframe. I started off by using a series of nested dplyr::if_else functions inside of a dplyr::mutate call. I ended up with a bit of a mess, perhaps a dozen or so if_else calls&amp;hellip; that&amp;rsquo;s when I got some abuse from my colleague following a Github pull request.</description>
+    </item>
+    
+    <item>
+      <title>Dealing with dates</title>
+      <link>/2017/01/28/dealing-with-dates/</link>
+      <pubDate>Sat, 28 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/28/dealing-with-dates/</guid>
+      <description>In the past I have worked with a number of timeseries of sensor data that I collected using raspberry pis, arduinos, and esp8266 modules. It&amp;rsquo;s not something I do regularly enough to remember the best way to do it, so I&amp;rsquo;m writing this post as a reminder to myself, and perhaps someone will benefit from my aide-memoire.
+In previous posts I have combined data from two sensors I built, both based on raspberry pis (e.</description>
+    </item>
+    
+    <item>
+      <title>Monster Hunting with XGBoost</title>
+      <link>/2017/01/04/monster-hunting-with-xgboost/</link>
+      <pubDate>Wed, 04 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/04/monster-hunting-with-xgboost/</guid>
+      <description>Kaggle&amp;rsquo;s bread-and-butter is its Machine Learning, or Predictive Analytics competitions. The processes used in these scenarios encompass a very small fraction of the Data Science process. However, this gameified version of Data Science can be engaging and may be an interesting hook for some newcomers, as it side-steps some of the more time consuming data wrangling processes. I introduce it here to help those who are looking for a Data Science related resolution or goal.</description>
+    </item>
+    
+    <item>
+      <title>Newyearal Networks</title>
+      <link>/2017/01/03/newyearal-networks/</link>
+      <pubDate>Tue, 03 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/03/newyearal-networks/</guid>
+      <description>One of my New Year resolutions is to get to grips with deep learning. I thought a good place to start would be a refresher into &amp;lsquo;shallow&amp;rsquo; neural networks, and that is what this post and the one that follows it will be about. I&amp;rsquo;ll go through the maths behind a quick dirty neural network, and implement it in R.
+I&amp;rsquo;m using as my sources the tome Elements of Statistical Learning, Andrew Ng&amp;rsquo;s excellent machine learning course on coursera, and a short course I have been doing on Udemy: Deep Learning in Python.</description>
+    </item>
+    
+    <item>
+      <title>A Plain Markdown Post</title>
+      <link>/2016/12/30/a-plain-markdown-post/</link>
+      <pubDate>Fri, 30 Dec 2016 21:49:57 -0700</pubDate>
+      
+      <guid>/2016/12/30/a-plain-markdown-post/</guid>
+      <description>This is a post written in plain Markdown (*.md) instead of R Markdown (*.Rmd). The major differences are:
+ You cannot run any R code in a plain Markdown document, whereas in an R Markdown document, you can embed R code chunks (```{r}); A plain Markdown post is rendered through Blackfriday, and an R Markdown document is compiled by rmarkdown and Pandoc.  There are many differences in syntax between Blackfriday&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s Markdown.</description>
+    </item>
+    
+    <item>
+      <title>Genetic programming in space</title>
+      <link>/2016/11/14/genetic-programming-in-space/</link>
+      <pubDate>Mon, 14 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/11/14/genetic-programming-in-space/</guid>
+      <description>Genetic Programming (GP) is a collection of techniques from evolutionary computing (EC) for the automatic generation of computer programs that perform a user-defined task. Starting with a high-level problem definition, GP creates a population of random programs that are progressively refined through variation and selection until a satisfactory solution is found. A lack of foresight does not prevent this blind watchmaker from arriving at a sensible design solution for modelling the data as demonstrated in this post.</description>
+    </item>
+    
+    <item>
+      <title>Test Driven Development</title>
+      <link>/2016/10/27/test-driven-development/</link>
+      <pubDate>Thu, 27 Oct 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/10/27/test-driven-development/</guid>
+      <description>I was recently asked to give a talk about Hadley&amp;rsquo;s package testthat. Any discussion of testthat cannot be in isolation - we have to put it into the wider software development context. I think this is the first time that I have used the words software development on this blog, and for many R users, thinking of their code as software development, may not be familiar. In particular, I think that those of us who have come to Data Science or statistical computing from a statistical, especially academic background, tend to have a poor understanding of some common practices among developers that would actually make their lives much easier1.</description>
+    </item>
+    
+    <item>
+      <title>Sold!</title>
+      <link>/2016/10/23/sold/</link>
+      <pubDate>Sun, 23 Oct 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/10/23/sold/</guid>
+      <description>There seems nothing the British press likes more than a good house price story. Accordingly we use the Kaggle dataset on house prices as a demonstration of the data science workflow. With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home (every dataset has a story, see here for details). I found this dataset particularly interesting, as it informs someone new to he housing market as to what variables one should ask questions about if one were to buy a house.</description>
+    </item>
+    
+    <item>
+      <title>Sparking your interest in a dry subject</title>
+      <link>/2016/09/19/sparking-your-interest-in-a-dry-subject/</link>
+      <pubDate>Mon, 19 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/09/19/sparking-your-interest-in-a-dry-subject/</guid>
+      <description>I recently attended the conference Effective Applications of the R language in London. One of the many excellent speakers described how one can use Spark to apply some simple Machine Learning to larger data sets and then extend the range of potential models by simply adding water.
+We explore some of the main features and how to get started in this blog. Spark is a general purpose cluster computing system.</description>
+    </item>
+    
+    <item>
+      <title>The Fast and the Furiously Frugal</title>
+      <link>/2016/09/08/the-fast-and-the-furiously-frugal/</link>
+      <pubDate>Thu, 08 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/09/08/the-fast-and-the-furiously-frugal/</guid>
+      <description>Fast and frugal trees I&amp;rsquo;ve praised the utility of decision trees in other scenarios especially where accountability and transparency of decision making is important. Here we explore why decision trees are a good introduction to Machine Learning and its ability to spot patterns in data providing insight. Decision trees are arguably easier to interpret and more inline with human thinking than some other ML methods, thus we write a post here to use a fast and frugal tree method, providing a quick solution to a classification problem.</description>
+    </item>
+    
+    <item>
+      <title>Regime Switching Model</title>
+      <link>/2016/07/29/regime-switching-model/</link>
+      <pubDate>Fri, 29 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/07/29/regime-switching-model/</guid>
+      <description>I&amp;rsquo;m a sucker for statistical methods and Machine Learning particularly anything with a cool sounding name. When reading about Crouching Tiger Hidden Markov Models in an earlier post I stumbled across a topic called regime detection.
+In economics latent Markov models, are so called Regime switching models. Regime Detection comes in handy when you are trying to decide which strategy to deploy. For example there are periods (regimes) when Trend Following strategies, like an autoregressive integrated moving average model (ARIMA) or exponential smoothing state space models (ETS) forecasting work better and there are periods when other strategies might be better.</description>
+    </item>
+    
+    <item>
+      <title>A pipe dream</title>
+      <link>/2016/07/08/a-pipe-dream/</link>
+      <pubDate>Fri, 08 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/07/08/a-pipe-dream/</guid>
+      <description>This is the first part of a two part series of blog posts on how to solve and / or optimise complex decision making elucidated using a simple hypothetical problem.
+Decision makers are faced with complex policy decisions where they are expected to maximise immediate utility for stakeholder value but not at the expense of future stakeholders&amp;rsquo; interests. The effect of the current action determined through policy thus contributes to both current utility and to future utility through its effect on the future state of the system.</description>
+    </item>
+    
+    <item>
+      <title>Phat Maps</title>
+      <link>/2016/06/22/phat-maps/</link>
+      <pubDate>Wed, 22 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/06/22/phat-maps/</guid>
+      <description>There be dragons here! I&amp;rsquo;ve never drawn a map in R, let&amp;rsquo;s change that by using R bloggers as a guide. This post introduces some basic web-scraping to get some relevant data that can then be visualised on a map of the United Kingdom. Obesity in the UK is a significant health concern and we map an aspect of it here.
+First we start by loading the relevant packages. See the session info at the end for full details.</description>
+    </item>
+    
+    <item>
+      <title>Discrete Time Markov Chains</title>
+      <link>/2016/06/02/discrete-time-markov-chains/</link>
+      <pubDate>Thu, 02 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/06/02/discrete-time-markov-chains/</guid>
+      <description>Markov chains Markov chains, named after Andrey Markov, are mathematical systems that hop from one &amp;ldquo;state&amp;rdquo; (a situation or set of values) to another. See here for an excellent introduction.
+The second time I used a Markov chain method resulted in a publication (the first was when I simulated Brownian motion with a coin for GCSE coursework). At the time I was completing it as part of the excellent and highly recommended Sysmic course so that it could contribute to a chapter in my thesis and as a journal article.</description>
+    </item>
+    
+    <item>
+      <title>map_df()</title>
+      <link>/2016/05/30/map_df/</link>
+      <pubDate>Mon, 30 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/30/map_df/</guid>
+      <description>I&amp;rsquo;m using Hadley&amp;rsquo;s purrr package more and more, and its beginning to change the way I program in R, much like dplyr did.
+map() is a great function and one of its incarnations that I really like is map_df().This will apply a function to elements of a list, and then bind the dataframes together (assuming they can be combined). It also allows us to specify additional columns for our final dataframe which takes the names of the elements of the list.</description>
+    </item>
+    
+    <item>
+      <title>Nearest neighbour methods</title>
+      <link>/2016/05/27/nearest-neighbour-methods/</link>
+      <pubDate>Fri, 27 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/27/nearest-neighbour-methods/</guid>
+      <description>{% include _toc.html %}
+In my last post, I started working through some examples given by Hastie et al in Elements of Statistical learning. I looked at using a linear model for classification across a randomly generated training set. In this post I&amp;rsquo;ll use nearest neighbour methods to create a non-linear decision boundary over the same data.
+Nearest neighbour algorithm There are much more learned folk than I who give good explanations of the maths behind nearest neighbours, so I won&amp;rsquo;t spend too long on the theory.</description>
+    </item>
+    
+    <item>
+      <title>The Game of Kaggle</title>
+      <link>/2016/05/21/the-game-of-kaggle/</link>
+      <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/21/the-game-of-kaggle/</guid>
+      <description>{% include _toc.html %}
+The Player of Games What&amp;rsquo;s the best way to teach oneself machine learning? Is it to do an online course, write a blog or compete in online programming competitions?
+This blog post describes my first interaction with / or game of Kaggle.
+Kaggle history In 2010, Kaggle was founded as a platform for predictive modelling and analytics competitions on which companies and researchers post their data and statisticians and data miners from all over the world compete to produce the best models.</description>
+    </item>
+    
+    <item>
+      <title>Getting to grips with &#39;Elements of statistical learning&#39;</title>
+      <link>/2016/05/08/getting-to-grips-with-elements-of-statistical-learning/</link>
+      <pubDate>Sun, 08 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/08/getting-to-grips-with-elements-of-statistical-learning/</guid>
+      <description>{% include _toc.html %}
+Last week I joined a reading group for the weighty tome Elements of Statistical Learning. I really like the idea of this group; interesting as it is - it can be hard to maintain the drive to wade through a text like this. Working through it week on week with a group of like-minded people is a great way to overcome this.
+Linear models In this post I implement in R some of the ideas that are presented in the first 2 chapters of Elements of Statistical Learning, namely: least squares.</description>
+    </item>
+    
+    <item>
+      <title>Predicting virtual hat sales in Dota 2</title>
+      <link>/2016/04/24/predicting-virtual-hat-sales-in-dota-2/</link>
+      <pubDate>Sun, 24 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/04/24/predicting-virtual-hat-sales-in-dota-2/</guid>
+      <description>{% include _toc.html %}
+{% highlight r %} #LIBRARY - check if packages are installed and load them library(dplyr) library(rvest) library(zoo) library(forecast) {% endhighlight %} &amp;gt; &amp;ldquo;Prediction is very difficult, especially if it&amp;rsquo;s about the future.&amp;rdquo; - Niels Bohr
+As a scientist I&amp;rsquo;m experienced in designing controlled experiments to produce tidy dataframes. Ideally we end up with each row in the dataframe representing a unique observation at the level of the experimental unit.</description>
+    </item>
+    
+    <item>
+      <title>The magic of neural networks</title>
+      <link>/2016/04/10/the-magic-of-neural-networks/</link>
+      <pubDate>Sun, 10 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/04/10/the-magic-of-neural-networks/</guid>
+      <description>{% include _toc.html %}
+Education is a key factor affecting long term economic progress. Success in the core subjects provide a linguistic and numeric scaffold for other subjects later in students&amp;rsquo; academic careers.The growth in school educational databases facilitates the use of Data Mining and Machine Learning practises to improve outcomes in these subjects by identifying factors that are indicative of failure (or success). Predicting outcomes allows educators to take corrective measures for weak students mitigating the risk of failure.</description>
+    </item>
+    
+    <item>
+      <title>The Hadley Effect</title>
+      <link>/2016/04/07/the-hadley-effect/</link>
+      <pubDate>Thu, 07 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/04/07/the-hadley-effect/</guid>
+      <description>Last week Matt G tweeted about a quick blog post I wrote about iteratively applying models using some of Hadley&amp;rsquo;s packages, to which Hadley replied:
+@mammykins_ @m_a_upson the only thing it&amp;#39;s missing is that you should store related data frames and models as list columns of s data frame
+&amp;mdash; Hadley Wickham (@hadleywickham) April 2, 2016 
+Now this blog is pretty new, and we haven&amp;rsquo;t made much of an effort to promote it.</description>
+    </item>
+    
+    <item>
+      <title>Iteratively applying models</title>
+      <link>/2016/03/27/iteratively-applying-models/</link>
+      <pubDate>Sun, 27 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/27/iteratively-applying-models/</guid>
+      <description>{% include _toc.html %}
+I&amp;rsquo;ve been doing a lot of programming in Python recently, and have taken my eye off the #RStats ball of late. With a bit of time to play over the Easter weekend, I&amp;rsquo;ve been reading Hadley&amp;rsquo;s new R for Data Science book.
+One thing I particularly like so far is the [purrr package]() which he describes in the lists chapter. I&amp;rsquo;ve always thought that the sapply,lapply, vapply (etc) commands are rather complicated.</description>
+    </item>
+    
+    <item>
+      <title>Assessing classifier performance</title>
+      <link>/2016/03/24/assessing-classifier-performance/</link>
+      <pubDate>Thu, 24 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/24/assessing-classifier-performance/</guid>
+      <description>{% include _toc.html %}
+Introduction  Actual class values
+ Predicted class values
+ Estimated probability of the prediction
+  These are three main types of data that are used to evaluate a classifier. We have used the first two types in previous blogs where we constructed a confusion matrix to compare the actual class values and the predicted class when applying the trained model on the test data with a support vector machines classifier model.</description>
+    </item>
+    
+    <item>
+      <title>Logistic regression for student performance prediction</title>
+      <link>/2016/03/15/logistic-regression-for-student-performance-prediction/</link>
+      <pubDate>Tue, 15 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/15/logistic-regression-for-student-performance-prediction/</guid>
+      <description>{% include _toc.html %}
+Introduction Classification problems occur often, perhaps even more so than regression problems. Consider the Cortez student maths attainment data discussed in previous posts. The response variable, final grade of the year (range 0-20), G3 can be classified into a binary pass or fail variable called final, based on a threshold mark. We used a decision tree approach to model this data before which provided 95% accuracy and had the benefit of interpretability.</description>
+    </item>
+    
+    <item>
+      <title>Support vector machines for forest fire prediction</title>
+      <link>/2016/03/15/support-vector-machines-for-forest-fire-prediction/</link>
+      <pubDate>Tue, 15 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/15/support-vector-machines-for-forest-fire-prediction/</guid>
+      <description>{% include _toc.html %}
+Introduction This post is based on a paper by Cortez &amp;amp; Morais (2007). Forest fires are a major environmental issue, creating economical and ecological damage while endangering human lives. Fast detection is a key element for controlling such phenomenon. To achieve this, one alternative is to use automatic tools based on local sensors, such as microclimate and weather data provided by meteorological stations.
+All this data holds valuable information, such as trends and patterns, which can be used to improve decision making.</description>
+    </item>
+    
+    <item>
+      <title>Lookup tables</title>
+      <link>/2016/03/13/lookup-tables/</link>
+      <pubDate>Sun, 13 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/13/lookup-tables/</guid>
+      <description>{% include _toc.html %}
+Character matching provides a powerful way to make lookup tables. There are more concise functions available in packages like dplyr that achieve the same end but it is useful to understand how they are implemented with basic subsetting.
+{% highlight r %} library(dplyr) {% endhighlight %}
+We start off by building an example dataframe.
+{% highlight r %} set.seed(1337) # we use rnorm
+pupil_data &amp;lt;- data.</description>
+    </item>
+    
+    <item>
+      <title>Student performance in Portugal</title>
+      <link>/2016/03/01/student-performance-in-portugal/</link>
+      <pubDate>Tue, 01 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/01/student-performance-in-portugal/</guid>
+      <description>{% include _toc.html %}
+Education is a key factor affecting long term economic progress. Success in the core languages provide a linguistic and numeric scaffold for other subjects later in students&amp;rsquo; academic careers.The growth in school educational databases facilitates the use of Data Mining and Machine Learning practises to improve outcomes in these subjects by identifying factors that are indicative of failure. Predicting outcomes allows educators to take corrective measures for weak students mitigating the risk of failure.</description>
+    </item>
+    
+    <item>
+      <title>Measuring light with a Raspberry Pi</title>
+      <link>/2016/02/22/measuring-light-with-a-raspberry-pi/</link>
+      <pubDate>Mon, 22 Feb 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/02/22/measuring-light-with-a-raspberry-pi/</guid>
+      <description>{% include _toc.html %}
+I&amp;rsquo;ve been working through a year&amp;rsquo;s worth of sensor data that I collected using Raspberry Pis. In the last post on this subject I compared my temperature records with records from a local weather station. In this post I&amp;rsquo;m going to look at the light measurements. I have two main questions I would like to answer:
+ Can the light patterns be used to explain the temperature patterns noted in my temperature post.</description>
+    </item>
+    
+    <item>
+      <title>Raspberry Pi MQTT broker</title>
+      <link>/2016/02/16/raspberry-pi-mqtt-broker/</link>
+      <pubDate>Tue, 16 Feb 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/02/16/raspberry-pi-mqtt-broker/</guid>
+      <description>In my last post I started meddling with the ESP8266 module as a low cost (and smaller) alternative to an Arduino or Raspberry Pi for creating home sensors.
+I was toying with the idea of sending measurements to a database using a RESTful API on the existing Postgres database I use to host measurements on Amazon Web Services.
+After a bit of reading, I&amp;rsquo;ve realised that there is a better solution: MQTT, a lightweight protocol designed for machine to machine (M2M) communication for sensors, and similar low powered and simple devices.</description>
+    </item>
+    
+    <item>
+      <title>IoT with the ESP8266</title>
+      <link>/2016/02/01/iot-with-the-esp8266/</link>
+      <pubDate>Mon, 01 Feb 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/02/01/iot-with-the-esp8266/</guid>
+      <description>I&amp;rsquo;ve been playing around with Arduinos and Raspberry Pis (mostly the latter) for a couple of years now. I&amp;rsquo;ve mostly been interested in producing Wi-Fi enables sensors that can measure things like temperature, and electricity usage throughout the home. I&amp;rsquo;m currently part way through a number of posts in which I have been analysing a year&amp;rsquo;s worth of data collected using some of these sensors, in the last post I dealt with a year&amp;rsquo;s worth of [temperature measurements]().</description>
+    </item>
+    
+    <item>
+      <title>Sensing temperature with a Raspberry Pi</title>
+      <link>/2016/01/15/sensing-temperature-with-a-raspberry-pi/</link>
+      <pubDate>Fri, 15 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/01/15/sensing-temperature-with-a-raspberry-pi/</guid>
+      <description>In my last post I started to delve into a year of sensor data that I have been collecting with my Raspberry Pi sensors. I made some general observations about the data, and went through the process of cleaning it.
+In this post I&amp;rsquo;ll taking a deeper look at the temperature data. I currently have three temperatrue sensors: two internal (one a DS18B20, and a second within an DHT22 combined temperature and humidity sensor) and one external (another DS18B20).</description>
+    </item>
+    
+    <item>
+      <title>Measuring obsession</title>
+      <link>/2015/12/24/measuring-obsession/</link>
+      <pubDate>Thu, 24 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/12/24/measuring-obsession/</guid>
+      <description>I like measuring things. There&amp;rsquo;s something about distilling life&amp;rsquo;s patterns into numbers which is deeply satisfying. I can&amp;rsquo;t explain it. But this is, at least in part, why I became a scientist.
+About a year ago, I started exercising this obsession on my everyday life, and built a number of sensors out of Raspberry Pis to monitor the goings on in my house. This has variously fluctuated between one and three Pis, but at present I have two, one monitoring internal and external temperature, and internal light and humidity levels, and one measuring electricity usage by counting the pulses of the LED on my proprietary electricity meter.</description>
+    </item>
+    
+    <item>
+      <title>Unsupervised learning with K-means</title>
+      <link>/2015/11/11/unsupervised-learning-with-k-means/</link>
+      <pubDate>Wed, 11 Nov 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/11/11/unsupervised-learning-with-k-means/</guid>
+      <description>K means is one of the simplest algorithms for unsupervised learning. It works iteratively to cluster together similar values in a dataset of one to many dimensions ($X\in\mathbb{R}^{m \times n}$). The algorithmic steps are simple, it relies only on arithmetic means, so it&amp;rsquo;s pretty simple to understand, but can also be quite powerful. Because it relies on random sampling to initiate the algorithm it can be quite slow however, as there is a need to complete many replications to get a robust result.</description>
+    </item>
+    
+    <item>
+      <title>Reproducible journal articles</title>
+      <link>/2015/10/10/reproducible-journal-articles/</link>
+      <pubDate>Sat, 10 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/10/10/reproducible-journal-articles/</guid>
+      <description>A few months ago, I wrote a post about my experiences of writing up a PhD thesis reproducible using $\LaTeX$ and R via knitr. Since then I have started to write up much of my PhD work into academic papers for peer review, so in this post I&amp;rsquo;m documenting a number of new lessons I have learnt over the last five months. I&amp;rsquo;m working on four papers at present, one of which is under review, and I hope to make the source code available as these appear in print.</description>
+    </item>
+    
+    <item>
+      <title>Visualising FAO data</title>
+      <link>/2015/08/30/visualising-fao-data/</link>
+      <pubDate>Sun, 30 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/30/visualising-fao-data/</guid>
+      <description>I&amp;rsquo;ve been working on a chapter of a book looking at weather and production data for a major crop across the globe. One of the things I need to produce is a bubble map showing the relative production for each producing country worldwide, and region specific maps for each of the major production growing region.
+There is a great package for doing this called rworldmap. In this little post I present the code I used to produce figures for the book using rworldmap.</description>
+    </item>
+    
+    <item>
+      <title>Growing up</title>
+      <link>/2015/08/16/growing-up/</link>
+      <pubDate>Sun, 16 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/16/growing-up/</guid>
+      <description>I&amp;rsquo;ve been playing with implementations of linear and logistic regression over the last couple of months, following the exercises from a machine learning course that I have been doing. So far I have been writing things in a very functional way, constantly defining specific functions to do what are essentially generic things.
+I&amp;rsquo;ve also started to write a couple of my own packages, one of which I have published on github and zenodo.</description>
+    </item>
+    
+    <item>
+      <title>Elastic-net regularisation</title>
+      <link>/2015/08/08/elastic-net-regularisation/</link>
+      <pubDate>Sat, 08 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/08/elastic-net-regularisation/</guid>
+      <description>A more formalised implementation of regularisation A short while ago I published a post based on an exercise from Andrew Ng&amp;rsquo;s Machine Learning course on Coursera. In that post I implemented regularisation for a vectorised implementation of linear regression. In reality when approaching a machine learning problem, I wouldn&amp;rsquo;t want to rely on functions I have written myself when there are fully formed packages supporting these techniques. So in this post I&amp;rsquo;m going to reproduce the analysis from my previous post but using the R package glmnet.</description>
+    </item>
+    
+    <item>
+      <title>SylvaSense Part II</title>
+      <link>/2015/08/01/sylvasense-part-ii/</link>
+      <pubDate>Sat, 01 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/01/sylvasense-part-ii/</guid>
+      <description>Gypsum blocks In my previous post I was looking into building my own gypsum block soil moisture sensors. All the component parts have now arrived, and so I&amp;rsquo;ve now produced three sensors. In this post I&amp;rsquo;ll explain how I made them, show some preliminary data, and talk a bit about how much they cost.
+I&amp;rsquo;m using 3 mm A3 stainless steel studding to form the electrodes across which the arduino will measure resistance.</description>
+    </item>
+    
+    <item>
+      <title>SylvaSense Part I</title>
+      <link>/2015/07/28/sylvasense-part-i/</link>
+      <pubDate>Tue, 28 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/07/28/sylvasense-part-i/</guid>
+      <description>A bit of context I&amp;rsquo;ve been playing a lot with raspberry pis over the last couple of years. I&amp;rsquo;m now the proud owner of an original Raspberry Pi B, A, two A+s, and a brand spanking new Pi 2. Currently I have one sitting next to my electricity meter reading LED pulses from the meter, charting my electricity consumption, and a second running an external and internal temperature sensor, light, and humidity sensors.</description>
+    </item>
+    
+    <item>
+      <title>Regularised linear regression</title>
+      <link>/2015/07/26/regularised-linear-regression/</link>
+      <pubDate>Sun, 26 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/07/26/regularised-linear-regression/</guid>
+      <description>In this post I reproduce an example similar to an exercise I did for the coursera MOOC course in machine learning written by Andrew Ng. I&amp;rsquo;m compelting the course musing R, not the requisite matlab. In the next couple of posts I&amp;rsquo;m going to complete the equivalent of exercise 5.
+The exercise was about creating a vectorised implementation of regularised linear regression, and using this to test some theory relating to the diagnosis of bias (underfitting) and variance (overfitting).</description>
+    </item>
+    
+    <item>
+      <title>Hello R Markdown</title>
+      <link>/2015/07/23/hello-r-markdown/</link>
+      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
+      
+      <guid>/2015/07/23/hello-r-markdown/</guid>
+      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
+    </item>
+    
+    <item>
+      <title>Too hot to cycle?</title>
+      <link>/2015/05/25/too-hot-to-cycle/</link>
+      <pubDate>Mon, 25 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/05/25/too-hot-to-cycle/</guid>
+      <description>Last year I played around a bit with the New York Citibike data, and looked a little bit at the different use patterns among among the sexes, and between subscribers and ad hoc users of the service.
+Being an Englishman, I was also wondering if there were differences between the patterns of bike usage on different sides of the Atlantic, so I recently got hold of the 20 million odd records of Barclay Bike data from the Transport for London open data portal.</description>
+    </item>
+    
+    <item>
+      <title>Writing a PhD thesis in LaTeX and R</title>
+      <link>/2015/04/20/writing-a-phd-thesis-in-latex-and-r/</link>
+      <pubDate>Mon, 20 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/04/20/writing-a-phd-thesis-in-latex-and-r/</guid>
+      <description>About a year into the PhD thesis writing process, I decided to make a switch from a widely known WhatYouSeeisWhatYouGet word processor, into $\LaTeX$. It all started with a black line at the bottom of the page. It appeared one day while I was writing a riveting chapter on soil carbon, and looked like a border on top of the footer. I don&amp;rsquo;t know where it came from, and no matter what I tried, I couldn&amp;rsquo;t get rid of it.</description>
+    </item>
+    
+    <item>
+      <title>Handwriting recognition with logistic regression</title>
+      <link>/2015/04/14/handwriting-recognition-with-logistic-regression/</link>
+      <pubDate>Tue, 14 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/04/14/handwriting-recognition-with-logistic-regression/</guid>
+      <description>In my previous post I completed an exercise using logistic regression to generate complicated non-linear decision boundaries. In this exercise I&amp;rsquo;m going to use much of the same code for handwriting recognition. These exercises are all part of Andrew Ng&amp;rsquo;s Machine Learning course on coursera. All the exercises are done in Matlab/Octave, but I&amp;rsquo;ve been stubborn and have worked solutions in R instead.
+The Data For this exercise the dataset comprises 5000 training examples where each examples is a $20 \times 20$ pixel grayscale image of a digit between 0-9.</description>
+    </item>
+    
+    <item>
+      <title>Non-linear classification with logistic regression</title>
+      <link>/2015/04/10/non-linear-classification-with-logistic-regression/</link>
+      <pubDate>Fri, 10 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/04/10/non-linear-classification-with-logistic-regression/</guid>
+      <description>In my last post I compared vectorised logistic regression solved with an optimisation algorithm with a generalised linear model. I tested it out on a very simple dataset which could be classified using a linear boundary. In this post I&amp;rsquo;m following the next part of Andrew Ng&amp;rsquo;s Machine Learning course on coursera and implementing regularisation and feature mapping to allow me to map non-linear decision boundaries using logistic regression. And of course, I&amp;rsquo;m doing it in R, not Matlab or Octave.</description>
+    </item>
+    
+    <item>
+      <title>Implementing vectorised logistic regression</title>
+      <link>/2015/04/06/implementing-vectorised-logistic-regression/</link>
+      <pubDate>Mon, 06 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/04/06/implementing-vectorised-logistic-regression/</guid>
+      <description>I&amp;rsquo;ve been doing Andrew Ng&amp;rsquo;s excellent Machine Learning course on coursera. The second exercise is to implement from scratch vectorised logistic regression for classification. Submissions to the exercises have to be made in Octave or Matlab; in this post I give the solution using R.
+Andrew Ng uses the algorithm fminunc in Matlab/Octave to optimise the logistic regression solution. In R you can use the optim function, but I have been using the ucminf function provided in the package ucminf.</description>
+    </item>
+    
+    <item>
+      <title>Multivariate linear regression</title>
+      <link>/2015/03/30/multivariate-linear-regression/</link>
+      <pubDate>Mon, 30 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/03/30/multivariate-linear-regression/</guid>
+      <description>So this time I&amp;rsquo;m going to implement gradient descent for multivariate linear regression, but also using feature scaling. I&amp;rsquo;m using teh dataset provided in the machine learning course, which describes the cost of houses based on two parameters: the size in square feet, and the number of rooms, and giving prices in dollars.
+First I&amp;rsquo;ll load the data and take a look at it.
+{% highlight r %} library(dplyr) library(magrittr) library(ggplot2)</description>
+    </item>
+    
+    <item>
+      <title>Gradient descent in R</title>
+      <link>/2015/03/29/gradient-descent-in-r/</link>
+      <pubDate>Sun, 29 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/03/29/gradient-descent-in-r/</guid>
+      <description>I&amp;rsquo;m currently working on the excellent Machine Learning course by Andrew Ng available on coursera. I&amp;rsquo;ve been working through the exercises using R, not matlab or octave as is requried in the course. This is the first programming exercise - implementing linear regression using the gradient descent algorithm rather than the normal equation method.
+Gradient descent for a function with one parameter Rather than calculating the optimal solution for the linear regression with a single algorithm, in this exercise we use gradient descent to iteratively find a solution.</description>
+    </item>
+    
+    <item>
+      <title>Linear regression with gradient descent</title>
+      <link>/2015/03/29/linear-regression-with-gradient-descent/</link>
+      <pubDate>Sun, 29 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/03/29/linear-regression-with-gradient-descent/</guid>
+      <description>For the implementation of gradient descent for linear regression I draw from Digithead&amp;rsquo;s blog post.
+Andrew Ng defines gradient descent for linear regression as:
+$$ \begin{multline} \text{repeat until convergence} {\
+\theta_0:=\theta0 - \alpha\frac{1}{m}\sum{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})\
+\theta_1:=\theta1 - \alpha\frac{1}{m}\sum{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})\cdot x^{i}\
+} \end{multline} $$
+Where $\alpha$ is the training rate, $m$ is the number of training examples, and the term on the right is the familiar squared error term after multiplication with the partial derivative $\frac{\delta}{\delta\theta_0}$ or $\frac{\delta}{\delta\theta_1}$ as appropriate.</description>
+    </item>
+    
+    <item>
+      <title>Lorem Ipsum</title>
+      <link>/2015/01/01/lorem-ipsum/</link>
+      <pubDate>Thu, 01 Jan 2015 13:09:13 -0600</pubDate>
+      
+      <guid>/2015/01/01/lorem-ipsum/</guid>
+      <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</description>
+    </item>
+    
+    <item>
+      <title>LondonR 2014 - ggvis</title>
+      <link>/2014/11/25/londonr-2014---ggvis/</link>
+      <pubDate>Tue, 25 Nov 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/2014/11/25/londonr-2014---ggvis/</guid>
+      <description>I went to my first LondonR meeting tonight hosted by Mango solutions. Some really great talks - especially presentatiosn by Matt Sundquist of plotly.
+Mango solutions also presented a good introduction to ggvis and some of the interactive elements. I&amp;rsquo;ve included my notes from the event below. Note that the visualisations from ggvis will not render properly here. You will need to reproduce the document in RStudio to see them.</description>
+    </item>
+    
+    <item>
+      <title>Do women take the scenic route or do men cycle faster?</title>
+      <link>/2014/11/16/do-women-take-the-scenic-route-or-do-men-cycle-faster/</link>
+      <pubDate>Sun, 16 Nov 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/2014/11/16/do-women-take-the-scenic-route-or-do-men-cycle-faster/</guid>
+      <description>In my previous post I started looking at the NY CitiBike data, and the differences between the way men and women use the service. It&amp;rsquo;s clear men use the service more, and that women&amp;rsquo;s journeys are generally longer; however it&amp;rsquo;s not clear if this is because they simply travel slower, or because they aren&amp;rsquo;t always taking the most direct route.
+This is a difficult question to answer. Whilst it is easier to know whether the journey time from A to B is longer for men or women, it is not easy to know if the journey was direct.</description>
+    </item>
+    
+    <item>
+      <title>Is CitiBike an old boy&#39;s club?</title>
+      <link>/2014/11/02/is-citibike-an-old-boys-club/</link>
+      <pubDate>Sun, 02 Nov 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/2014/11/02/is-citibike-an-old-boys-club/</guid>
+      <description>One of the first things you notice when drilling down into the New York Citibike data, is that there are a lot more male users than female. It&amp;rsquo;s quite a striking difference between the sexes, and has been picked up in the media. In this post I&amp;rsquo;m going to look at the way Citibike usage differs across the sexes.
+There are two types of Citibike users: long-term Subscribers to the service, and short term Customers who might only buy a weekly pass.</description>
+    </item>
+    
+    <item>
+      <title>Finding the right blogging platform</title>
+      <link>/1/01/01/finding-the-right-blogging-platform/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/finding-the-right-blogging-platform/</guid>
+      <description>I&amp;rsquo;ve had a blog on blogger for a while now, where I have been wanting to document some of the things I have been doing in R recently. I write in RMarkDown a lot, and it would make sense if I could post directly to my blog from the .html files that are output from RStudio, but I&amp;rsquo;ve been struggling for a way to do it well.
+Blogger works in so far as you can copy all the code from the .</description>
+    </item>
+    
+  </channel>
+</rss>

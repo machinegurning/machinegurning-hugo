@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Multivariate linear regression - A Hugo website</title>
+<meta property="og:title" content="Multivariate linear regression - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">7 min read</span>
+    
+
+    <h1 class="article-title">Multivariate linear regression</h1>
+
+    
+    <span class="article-date">2015/03/30</span>
+    
+
+    <div class="article-content">
+      
+
+<p>So this time I&rsquo;m going to implement gradient descent for multivariate linear regression, but also using feature scaling. I&rsquo;m using teh dataset provided in the machine learning course, which describes the cost of houses based on two parameters: the size in square feet, and the number of rooms, and giving prices in dollars.</p>
+
+<p>First I&rsquo;ll load the data and take a look at it.</p>
+
+<p>{% highlight r %}
+library(dplyr)
+library(magrittr)
+library(ggplot2)</p>
+
+<p>&ldquo;ex1data2.txt&rdquo; %&gt;%
+  read.csv(
+    header = FALSE,
+    col.names = c(&ldquo;size&rdquo;,&ldquo;n_rooms&rdquo;,&ldquo;price&rdquo;)
+    ) %&gt;%
+  dplyr::mutate(
+    n_rooms = factor(n_rooms)
+    ) -&gt; house_prices</p>
+
+<p>house_prices %&gt;% head
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="size-n-rooms-price">size n_rooms  price</h2>
+
+<h2 id="1-2104-3-399900">1 2104       3 399900</h2>
+
+<h2 id="2-1600-3-329900">2 1600       3 329900</h2>
+
+<h2 id="3-2400-3-369000">3 2400       3 369000</h2>
+
+<h2 id="4-1416-2-232000">4 1416       2 232000</h2>
+
+<h2 id="5-3000-4-539900">5 3000       4 539900</h2>
+
+<h2 id="6-1985-4-299900">6 1985       4 299900</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So we have two $x$&rsquo;s: <code>size</code> and <code>n_rooms</code></p>
+
+<p>Let&rsquo;s also plot it out of interest:</p>
+
+<p>{% highlight r %}
+p &lt;- house_prices %&gt;%
+  ggplot(
+    aes(
+      x = size,
+      y = price,
+      colour = n_rooms
+      )
+    ) +
+  geom_point()+
+  scale_x_continuous(expression(Size~(ft^2)))+
+  scale_y_continuous(
+    &ldquo;Price (1000 $)&rdquo;,
+    breaks = seq(2e+05,7e+05,1e+05),
+    labels = seq(20,70,10)
+    )</p>
+
+<p>p
+{% endhighlight %}</p>
+
+<p><a href="/figures/plot_multiple_regression-1.png"><img src="/figures/plot_multiple_regression-1.png" alt="plot of chunk plot_multiple_regression" /></a></p>
+
+<h3 id="feature-normalisation-scaling">Feature normalisation/scaling</h3>
+
+<p>To copy the exercise document:</p>
+
+<blockquote>
+<p>Your task here is to complete the code in featureNormalize.m to</p>
+
+<ul>
+<li>Subtract the mean value of each feature from the dataset.</li>
+<li>After subtracting the mean, additionally scale (divide) the feature values
+by their respective “standard deviations.”</li>
+</ul>
+</blockquote>
+
+<p>and in the file featureNormalize.m provided with the course material, we get:</p>
+
+<blockquote>
+<p>First, for each feature dimension, compute the mean
+of the feature and subtract it from the dataset,
+storing the mean value in mu. Next, compute the
+standard deviation of each feature and divide
+each feature by it&rsquo;s standard deviation, storing
+the standard deviation in sigma.</p>
+
+<p>Note that X is a matrix where each column is a
+feature and each row is an example. You need
+to perform the normalization separately for
+each feature.</p>
+</blockquote>
+
+<p>I&rsquo;ll have a go at implementing that in R.</p>
+
+<p>{% highlight r %}
+feature_scale &lt;- function(x) {</p>
+
+<p># Convert all factors to numeric
+  # Note that this will also allow the conversion of string features</p>
+
+<p>for (i in 1:ncol(x)) {
+    x[,i] %&gt;% as.numeric -&gt; x[,i]
+    }</p>
+
+<p># Set up matrices to take outputs</p>
+
+<p>mu &lt;- matrix(nrow = 1, ncol = ncol(x))
+  sigma &lt;- matrix(nrow = 1, ncol = ncol(x))
+  scaled &lt;- matrix(nrow = nrow(x), ncol = ncol(x))</p>
+
+<p># Define feature scaling function</p>
+
+<p>scale &lt;- function(feature) {
+    (feature - mean(feature)) / sd(feature)
+    }</p>
+
+<p># Run this for each of the features</p>
+
+<p>for (i in 1:ncol(x)) {</p>
+
+<pre><code>mu[,i] &lt;- mean(x[,i])    
+sigma[,i] &lt;- sd(x[,i])
+scaled[,i] &lt;- scale(x[,i])
+
+}
+</code></pre>
+
+<p># And output them together as a list</p>
+
+<p>list(
+    mu = mu,
+    sigma = sigma,
+    scaled = scaled
+    )<br />
+  }
+{% endhighlight %}</p>
+
+<p>Ok so let&rsquo;s try this on our features in the housing dataset.</p>
+
+<p>{% highlight r %}
+scaled_features &lt;- feature_scale(house_prices[,-3])
+{% endhighlight %}</p>
+
+<p>We can have a look to see what this has done to our values. Originally the ranges for the features were:</p>
+
+<p>{% highlight r %}
+house_prices %$% size %&gt;% range
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-852-4478">[1]  852 4478</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>and</p>
+
+<p>{% highlight r %}
+house_prices %$% n_rooms %&gt;% as.character %&gt;% as.numeric %&gt;% range<br />
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-1-5">[1] 1 5</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>&hellip;so quite a difference.</p>
+
+<p>After feature scaling these ranges are:</p>
+
+<p>{% highlight r %}
+scaled_features %$% scaled %&gt;% extract(,1) %&gt;% range
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-1-445423-3-117292">[1] -1.445423  3.117292</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>and</p>
+
+<p>{% highlight r %}
+scaled_features %$% scaled %&gt;% extract(,2) %&gt;% range<br />
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-2-851859-2-404508">[1] -2.851859  2.404508</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>&hellip;so now much closer.</p>
+
+<h3 id="gradient-descent">Gradient descent</h3>
+
+<p>In the multivariate case, the cost function can also be written in the vectorised form:</p>
+
+<p>$$
+J(\theta)=\frac{1}{2m}(X\theta-\vec{y})^T(X\theta-\vec{y})
+$$
+Where:
+$$
+X=\begin{bmatrix}
+(x^{(1)})^T <br />
+(x^{(2)})^T <br />
+(x^{(3)})^T <br />
+\vdots <br />
+(x^{(m)})^T
+\end{bmatrix}\vec{y}=\begin{bmatrix}
+y^{(1)} <br />
+y^{(2)}<br />
+y^{(3)} <br />
+\vdots <br />
+y^{(m)}
+\end{bmatrix}
+$$</p>
+
+<p>{% highlight r %}
+grad &lt;- function(alpha, j, X, y, theta) {</p>
+
+<h1 id="j-function-x-y-theta">J &lt;- function(X, y, theta) {</h1>
+
+<h1 id="sum-x-theta-y-2-2-length-y">sum( (X %*% theta - y)^2 ) / (2*length(y))</h1>
+
+<h1 id="toc_15">}</h1>
+
+<p># The cost function vectorises to:</p>
+
+<p>J &lt;- function(X, y, theta) {
+    (<sup>1</sup>&frasl;<sub>2</sub>*length(y)) * t((X %<em>% theta - y)) %</em>% (X %*% theta - y)
+    }</p>
+
+<p>theta_history &lt;&lt;- matrix(nrow = j, ncol = ncol(X) + 1)</p>
+
+<p>for (i in 1:j) {<br />
+    error &lt;- (X %<em>% theta - y)
+    delta &lt;- t(X) %</em>% error / length(y)
+    theta &lt;- theta - alpha * delta
+    theta_history[i,] &lt;&lt;- c(theta,J(X, y, theta))</p>
+
+<pre><code>if (i &gt; 1) {
+
+  # Here I define a function to calculate when we have roughly reached convergence.
+
+  if (
+    isTRUE(
+      all.equal(
+        theta_history[i,3],
+        theta_history[i-1,3]
+        #tolerance = # can set a tolerance here if required.
+          )
+      )
+    ) {
+
+    theta_history &lt;&lt;- theta_history[1:i,]
+    break
+
+    }
+  }
+
+}
+</code></pre>
+
+<p>list(
+    theta = theta,
+    cost = theta_history[i,3],
+    iterations = i
+    )</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<p>Here I use the <code>grad()</code> gradient descent function I defined in my post about <a href="http://ivyleavedtoadflax.github.io//linear_regression/">linear regression with gradient descent</a>.</p>
+
+<p>First set up the inputs:</p>
+
+<p>{% highlight r %}
+X &lt;- matrix(ncol = ncol(house_prices)-1,nrow = nrow(house_prices))
+X[,1:2] &lt;- cbind(house_prices$size, house_prices$n_rooms)
+X &lt;- cbind(1, X)
+y &lt;- matrix(house_prices$price, ncol = 1)
+theta &lt;- matrix(rep(0,3), ncol = 1)
+{% endhighlight %}</p>
+
+<p>And simply apply the function, but on the raw data <em>without</em> feature scaling.</p>
+
+<p>{% highlight r %}
+multi_lin_reg &lt;- grad(
+  alpha = 0.1,
+  j = 1000,
+  X = X,
+  y = y,
+  theta = theta
+  ) %&gt;% print
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="theta">$theta</h2>
+
+<h2 id="1">[,1]</h2>
+
+<h2 id="1-nan">[1,]  NaN</h2>
+
+<h2 id="2-nan">[2,]  NaN</h2>
+
+<h2 id="3-nan">[3,]  NaN</h2>
+
+<h2 id="cost">$cost</h2>
+
+<h2 id="1-nan-1">[1] NaN</h2>
+
+<h2 id="iterations">$iterations</h2>
+
+<h2 id="1-57">[1] 57</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Hmm ok so that didn&rsquo;t seem to work. Just out of interest, let&rsquo;s plot the history:</p>
+
+<p>{% highlight r %}
+plot(theta_history[,4],type=&ldquo;l&rdquo;)
+{% endhighlight %}</p>
+
+<p><a href="/figures/plot_theta_history-1.png"><img src="/figures/plot_theta_history-1.png" alt="plot of chunk plot_theta_history" /></a></p>
+
+<p>Definitely something not working there. Ok so now I&rsquo;ll try it <em>with</em> feature scaling.</p>
+
+<p>{% highlight r %}
+X[,2:3] &lt;- feature_scale(X[,2:3])[[3]]</p>
+
+<p>multi_lin_reg &lt;- grad(
+  alpha = 0.1,
+  j = 1000,
+  X = X,
+  y = y,
+  theta = theta
+  ) %&gt;% print
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="theta-1">$theta</h2>
+
+<h2 id="1-1">[,1]</h2>
+
+<h2 id="1-340412-660">[1,] 340412.660</h2>
+
+<h2 id="2-110631-048">[2,] 110631.048</h2>
+
+<h2 id="3-6649-472">[3,]  -6649.472</h2>
+
+<h2 id="cost-1">$cost</h2>
+
+<h2 id="1-6649-472">[1] -6649.472</h2>
+
+<h2 id="iterations-1">$iterations</h2>
+
+<h2 id="1-389">[1] 389</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>And to plot it:</p>
+
+<p>{% highlight r %}
+plot(theta_history[,4],type=&ldquo;l&rdquo;)
+{% endhighlight %}</p>
+
+<p><a href="/figures/plot_theta_history1-1.png"><img src="/figures/plot_theta_history1-1.png" alt="plot of chunk plot_theta_history1" /></a></p>
+
+<p>Great, convergence after 389 iterations. All seems well, but I want to compare this with a multiple linear regression the traditional way:</p>
+
+<p>{% highlight r %}
+model &lt;- lm(
+  price ~ size + n_rooms,
+  data = house_prices %&gt;% mutate(n_rooms = as.integer(n_rooms))
+  )
+coef(model)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="intercept-size-n-rooms">(Intercept)        size     n_rooms</h2>
+
+<h2 id="89597-9095-139-2107-8738-0191">89597.9095    139.2107  -8738.0191</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>The parameters don&rsquo;t match, but this is because we have scaled the features. The output from the two models will be the same. Here I check by combining the two predictions into the <code>house_prices</code> dataframe, and comparing them with <code>identical()</code>.</p>
+
+<p>{% highlight r %}
+house_prices %&lt;&gt;%
+  dplyr::mutate(</p>
+
+<pre><code># Vectorised method of theta transpose X
+
+vector_pred = (X %*% multi_lin_reg$theta),
+
+# Traditional statistical method of y = a + bx + cx
+
+pred = coef(model)[1] + (coef(model)[2] * size) + (coef(model)[3]*as.integer(n_rooms))
+)
+</code></pre>
+
+<p>identical(
+  c(house_prices$vector_pred),
+  c(house_prices$pred)
+  )
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-false">[1] FALSE</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Ok not identical, how come?</p>
+
+<p>{% highlight r %}
+(house_prices$pred - house_prices$vector_pred) %&gt;% mean
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-3-244767e-10">[1] 3.244767e-10</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So they differ by a pretty small amount. Try the comparison more sensibly:</p>
+
+<p>{% highlight r %}
+all.equal(
+  c(house_prices$vector_pred),
+  c(house_prices$pred)
+  )
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-true">[1] TRUE</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>And now let&rsquo;s plot the actual data with predictions from the multiple regression.</p>
+
+<p>{% highlight r %}
+house_prices %&gt;%
+  ggplot(
+    aes(
+      x = size,
+      y = price,
+      colour = n_rooms
+      )
+    ) +
+  geom_point() +
+  geom_point(
+    aes(
+      x = size,
+      y = vector_pred
+      ),
+    shape = 2,
+    )
+{% endhighlight %}</p>
+
+<p><a href="/figures/plot_multiple_regression_predictions-1.png"><img src="/figures/plot_multiple_regression_predictions-1.png" alt="plot of chunk plot_multiple_regression_predictions" /></a></p>
+
+<p>Pretty close to a single regression model, but you can see that there are slightly different slopes for each number of rooms.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

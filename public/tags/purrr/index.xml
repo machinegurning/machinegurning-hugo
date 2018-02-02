@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Purrr on A Hugo website</title>
+    <link>/tags/purrr/</link>
+    <description>Recent content in Purrr on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 30 May 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/purrr/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>map_df()</title>
+      <link>/2016/05/30/map_df/</link>
+      <pubDate>Mon, 30 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/30/map_df/</guid>
+      <description>I&amp;rsquo;m using Hadley&amp;rsquo;s purrr package more and more, and its beginning to change the way I program in R, much like dplyr did.
+map() is a great function and one of its incarnations that I really like is map_df().This will apply a function to elements of a list, and then bind the dataframes together (assuming they can be combined). It also allows us to specify additional columns for our final dataframe which takes the names of the elements of the list.</description>
+    </item>
+    
+    <item>
+      <title>Iteratively applying models</title>
+      <link>/2016/03/27/iteratively-applying-models/</link>
+      <pubDate>Sun, 27 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/27/iteratively-applying-models/</guid>
+      <description>{% include _toc.html %}
+I&amp;rsquo;ve been doing a lot of programming in Python recently, and have taken my eye off the #RStats ball of late. With a bit of time to play over the Easter weekend, I&amp;rsquo;ve been reading Hadley&amp;rsquo;s new R for Data Science book.
+One thing I particularly like so far is the [purrr package]() which he describes in the lists chapter. I&amp;rsquo;ve always thought that the sapply,lapply, vapply (etc) commands are rather complicated.</description>
+    </item>
+    
+  </channel>
+</rss>

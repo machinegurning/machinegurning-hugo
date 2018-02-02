@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Maps on A Hugo website</title>
+    <link>/tags/maps/</link>
+    <description>Recent content in Maps on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 25 Feb 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/maps/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Shiny interactive map app development</title>
+      <link>/2017/02/25/shiny-interactive-map-app-development/</link>
+      <pubDate>Sat, 25 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/02/25/shiny-interactive-map-app-development/</guid>
+      <description>I&amp;rsquo;ve been developing my mapping skills in R for a couple of months now. I started off using a couple of different packages but was quickly drawn to leaflet which allows one to create interactive web maps with the JavaScript Leaflet Library. It has loads of great features out of the box and will meet most of your mapping needs (if old fashioned people reject your interactive map you can also provide a static version using the mapshot function in the mapview package available on CRAN).</description>
+    </item>
+    
+    <item>
+      <title>Phat Maps</title>
+      <link>/2016/06/22/phat-maps/</link>
+      <pubDate>Wed, 22 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/06/22/phat-maps/</guid>
+      <description>There be dragons here! I&amp;rsquo;ve never drawn a map in R, let&amp;rsquo;s change that by using R bloggers as a guide. This post introduces some basic web-scraping to get some relevant data that can then be visualised on a map of the United Kingdom. Obesity in the UK is a significant health concern and we map an aspect of it here.
+First we start by loading the relevant packages. See the session info at the end for full details.</description>
+    </item>
+    
+  </channel>
+</rss>

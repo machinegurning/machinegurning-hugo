@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Science on A Hugo website</title>
+    <link>/tags/science/</link>
+    <description>Recent content in Science on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 10 Oct 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/science/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Reproducible journal articles</title>
+      <link>/2015/10/10/reproducible-journal-articles/</link>
+      <pubDate>Sat, 10 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/10/10/reproducible-journal-articles/</guid>
+      <description>A few months ago, I wrote a post about my experiences of writing up a PhD thesis reproducible using $\LaTeX$ and R via knitr. Since then I have started to write up much of my PhD work into academic papers for peer review, so in this post I&amp;rsquo;m documenting a number of new lessons I have learnt over the last five months. I&amp;rsquo;m working on four papers at present, one of which is under review, and I hope to make the source code available as these appear in print.</description>
+    </item>
+    
+  </channel>
+</rss>

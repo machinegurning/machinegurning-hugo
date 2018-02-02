@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Monster Hunting with XGBoost - A Hugo website</title>
+<meta property="og:title" content="Monster Hunting with XGBoost - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">10 min read</span>
+    
+
+    <h1 class="article-title">Monster Hunting with XGBoost</h1>
+
+    
+    <span class="article-date">2017/01/04</span>
+    
+
+    <div class="article-content">
+      
+
+<p>Kaggle&rsquo;s bread-and-butter is its Machine Learning, or Predictive Analytics competitions. The processes used in these scenarios encompass a very small fraction of the Data Science process.
+However, this <a href="https://www.kaggle.com/c/ghouls-goblins-and-ghosts-boo">gameified version of Data Science</a> can be engaging and may be an interesting hook for some newcomers, as it side-steps some of the more time consuming data wrangling processes.
+I introduce it here to help those who are looking for a Data Science related resolution or goal.</p>
+
+<p>In order to boost one&rsquo;s position up the Kaggle leader board one should employ algorithms that have conistently scored highly or won competitions (through fine tuning of parameters).
+Broadly, Kaggle competitions are won through use of <a href="https://en.wikipedia.org/wiki/Deep_learning">Deep Learning</a> or <a href="http://homes.cs.washington.edu/~tqchen/2016/03/10/story-and-lessons-behind-the-evolution-of-xgboost.html">Extreme Gradient Boosting</a> (XGBoost) methods (<a href="https://arxiv.org/abs/1603.02754">Chen &amp; Guestrin, 2016</a>).</p>
+
+<p>We introduce a gradient boosted tree using the <a href="http://stat-computing.org/awards/jmc/winners.html">award winning</a> <code>xgboost</code> which comes with lots of tuneable parameters to allow optimisation of a model.
+Following the <a href="https://en.wikipedia.org/wiki/Unix_philosophy">Unix philosophy</a>, <code>xgboost</code> performs one thing well and is easily integrated with other data science packages or processes.
+To demonstrate, we also introduce  using <code>caret</code> to create simple dummy (binary) variables prior to model building.</p>
+
+<p>There are lots of excellent tutorials for using <code>xgboost</code> in R, however I found there was a dearth of blogs explaining how to prepare one&rsquo;s data for use with <code>xgboost</code>, particularly when already split into training and test data sets, as is the norm for Kaggle competitions.</p>
+
+<h1 id="data">Data</h1>
+
+<p>The data can be downloaded from the <a href="https://www.kaggle.com/c/ghouls-goblins-and-ghosts-boo/data">Kaggle Halloween competition page</a>.
+We use this classifciation problem as the competition has now closed, thus avoiding any spoilers.
+We read in the training data to train our learner or model in order to predict the class of the test data.</p>
+
+<p>{% highlight r %}
+train &lt;- readr::read_csv(file  = &ldquo;data/2017-01-04-train.csv&rdquo;,
+                       col_names = TRUE)  #  this is a bad name as train is also a function in caret</p>
+
+<p>test &lt;- readr::read_csv(&ldquo;data/2017-01-04-test.csv&rdquo;)
+{% endhighlight %}</p>
+
+<p>Inspecting the data reveals some of the characteristics of the Monsters and how they relate.
+Perhaps there is enough of a difference to predict the class of a Monster by its characteristics alone?
+Some <code>id</code>s are missing, presumably they make up the set of Monsters we are tasked with classifying correctly in the test set.
+We also notice how there are three types of Monster, this is a multi-level classification problem.</p>
+
+<p>{% highlight r %}
+glimpse(train)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="observations-371">Observations: 371</h2>
+
+<h2 id="variables-7">Variables: 7</h2>
+
+<h2 id="id-int-0-1-2-4-5-7-8-11-12-19-22-23-25-27">$ id            <int> 0, 1, 2, 4, 5, 7, 8, 11, 12, 19, 22, 23, 25, 27,&hellip;</h2>
+
+<h2 id="bone-length-dbl-0-3545122-0-5755599-0-4678755-0-7766525-0-56">$ bone_length   <dbl> 0.3545122, 0.5755599, 0.4678755, 0.7766525, 0.56&hellip;</h2>
+
+<h2 id="rotting-flesh-dbl-0-3508390-0-4258684-0-3543304-0-5087225-0-87">$ rotting_flesh <dbl> 0.3508390, 0.4258684, 0.3543304, 0.5087225, 0.87&hellip;</h2>
+
+<h2 id="hair-length-dbl-0-4657609-0-5314014-0-8116161-0-6367656-0-41">$ hair_length   <dbl> 0.4657609, 0.5314014, 0.8116161, 0.6367656, 0.41&hellip;</h2>
+
+<h2 id="has-soul-dbl-0-7811417-0-4398989-0-7912250-0-8844637-0-63">$ has_soul      <dbl> 0.7811417, 0.4398989, 0.7912250, 0.8844637, 0.63&hellip;</h2>
+
+<h2 id="color-chr-clear-green-black-black-green-gr">$ color         <chr> &ldquo;clear&rdquo;, &ldquo;green&rdquo;, &ldquo;black&rdquo;, &ldquo;black&rdquo;, &ldquo;green&rdquo;, &ldquo;gr&hellip;</h2>
+
+<h2 id="type-chr-ghoul-goblin-ghoul-ghoul-ghost-g">$ type          <chr> &ldquo;Ghoul&rdquo;, &ldquo;Goblin&rdquo;, &ldquo;Ghoul&rdquo;, &ldquo;Ghoul&rdquo;, &ldquo;Ghost&rdquo;, &ldquo;G&hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="graphical-data-analysis">Graphical Data Analysis</h2>
+
+<p>Let&rsquo;s visualise these relationships and try to spot any patterns.
+Here I draw just one graphic which conveys a lot of information.
+Plotting it took minimal effort, don&rsquo;t waste time making it pretty!
+Spend time making various plots and looking at the data from many perspectives to work out which variables are likely to be useful in classifying the Monsters correctly.</p>
+
+<p>{% highlight r %}
+ggpairs(train,
+    columns = , c(&ldquo;bone_length&rdquo;, &ldquo;rotting_flesh&rdquo;, &ldquo;hair_length&rdquo;, &ldquo;has_soul&rdquo;),
+    mapping = ggplot2::aes(color = type),
+    lower = list(continuous = wrap(&ldquo;density&rdquo;, alpha = 0.5), combo = &ldquo;box&rdquo;),
+    # upper = list(continuous = wrap(&ldquo;points&rdquo;, alpha = 0.3), combo = wrap(&ldquo;dot&rdquo;, alpha = 0.4)),
+    title = &ldquo;Monsters!&rdquo;,
+    axisLabels = &ldquo;show&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-04-splom-1.svg" alt="plot of chunk 2017-01-04-splom" /></p>
+
+<p>First look at the density plots on the diagonals which are &ldquo;sorta&rdquo; histograms for the associated variable (read off the column or row, they are the same).
+Helpfully they lie between zero and one, no need to <a href="http://www.machinegurning.com/rstats/student-performance/">normalise</a>, thanks Kaggle!
+The lower panel visualises all interactions and may indicate which ones are useful for distinguishing between Monster classes (read off from the y axis and the x axis to identify the interaction being plotted).
+We can even quantify these correlations as shown in the top panel for those of us who prefer numbers to graphics (&ldquo;Boo!&rdquo; said the Ghost).
+The corporeal monsters appear more similar than their ethereal counterpart.
+Eyeballing this it looks like linear discriminant analysis (LDA) might perform well (Spoiler alert; using default <code>mlr</code> LDA outperforms default XGBoost).</p>
+
+<h2 id="dummy-variables">Dummy variables</h2>
+
+<p>The algorithm can&rsquo;t deal with multi-level factors so we express our colour variable as a series of dummy variables.</p>
+
+<p>{% highlight r %}
+train_tedious &lt;- train %&gt;%
+  mutate(color = as.factor(color), type = as.factor(type)) %&gt;%
+  mutate(black = if_else(color == &ldquo;black&rdquo;, 1, 0),
+         blood = if_else(color == &ldquo;blood&rdquo;, 1, 0),
+         blue = if_else(color == &ldquo;blue&rdquo;, 1, 0),
+         clear = if_else(color == &ldquo;clear&rdquo;, 1, 0),
+         green = if_else(color == &ldquo;green&rdquo;, 1, 0),
+         white = if_else(color == &ldquo;white&rdquo;, 1, 0)
+  )
+{% endhighlight %}</p>
+
+<p>Hadely would not approve; I repeated myself! Instead write your own function or better yet, rely on others&rsquo; tested code (see <code>caret::dummyVars</code> which creates a full set of dummy variables).
+I use the above method as it&rsquo;s more explicit for the reader.</p>
+
+<h2 id="create-additional-variables-using-expert-knowledge">Create additional variables using expert knowledge</h2>
+
+<p>We don&rsquo;t know much about the biology of these Monster species, if we did we could create new variables that might help us to train a better model.
+An excellent example of this is the use of the <code>xgboost</code> to help classify success or failure of <a href="https://github.com/TimSalimans/HiggsML">Higgs Boson production in the Large Hadron Collider</a>, where this second place entry describes standard normalisation (transformation of skewed variables) as well as feature engineering using physics knowledge.</p>
+
+<h2 id="xgboost-compatible">XGBoost compatible</h2>
+
+<p><code>xgboost</code> likes numbers; we convert the Monster type or label of our Monsters to a number using the following conversion.
+We then put the data into a matrix for handling by this <a href="https://www.r-bloggers.com/an-introduction-to-xgboost-r-package/">fast and efficient algorithm</a>, after dropping the variables we no longer need.
+Then we construct a <code>xgb.DMatrix</code> object from our matrix.</p>
+
+<p>{% highlight r %}
+label &lt;- as.integer(train_tedious$type) - 1 #  range from 0 to number of classes</p>
+
+<h1 id="ghost-1-ghoul-2-goblin-3">Ghost, 1 Ghoul, 2 Goblin, 3</h1>
+
+<p>dat &lt;- as.matrix(select(train_tedious, -id, -color, -type),
+              nrow = dim(train_tedious)[1], ncol = dim(train_tedious)[2] - 3,
+              byrow = FALSE)</p>
+
+<p>dtrain &lt;- xgb.DMatrix(data = dat, label = label)
+{% endhighlight %}</p>
+
+<h2 id="training-the-model">Training the model</h2>
+
+<p>We train the model using a specified objective.
+The nice thing about this function is we can specify our own objective if we need to.
+The key point here is we specify the the objective argument as being <code>multi:softmax</code>, to handle the multi-class nature, there be three Monster types.
+The most critical step to using this algorithm is understanding, or at least being aware, of the <a href="https://www.analyticsvidhya.com/blog/2016/01/xgboost-algorithm-easy-steps/">customisable parameters available</a>, this allows fine tuning of one&rsquo;s model and helps you avoid issues such as overfitting for example (by adjusting <code>eta</code> argument).</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="train-model">train model</h1>
+
+<p>bst_DMatrix &lt;- xgboost(data = dtrain,
+                       nthread = 2, nround = 5,
+                       objective = &ldquo;multi:softmax&rdquo;,
+                       num_class = 3, seed = 1337)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-train-merror-0-105121">[1]  train-merror:0.105121</h2>
+
+<h2 id="2-train-merror-0-083558">[2]  train-merror:0.083558</h2>
+
+<h2 id="3-train-merror-0-061995">[3]  train-merror:0.061995</h2>
+
+<h2 id="4-train-merror-0-067385">[4]  train-merror:0.067385</h2>
+
+<h2 id="5-train-merror-0-053908">[5]  train-merror:0.053908</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Try increasing the maximum number of iterations (<code>nrounds</code>), this reduces the training error at the risk of overfitting.
+You can add and adjust the <code>eta</code> argument to mitigate this (default = 0.3). Turn all the nobs and see what happens (taking heed of the help in R of course; <code>?xgboost()</code>).</p>
+
+<h2 id="variable-or-feature-importance">Variable or feature importance</h2>
+
+<p>Let&rsquo;s inspect which features are worth including in our model.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="feature-importance">feature importance</h1>
+
+<p>importance_matrix &lt;- xgb.importance(
+  names(dplyr::select(train, -id, -color, -type)),
+  model = bst_DMatrix
+)</p>
+
+<p>xgb.plot.importance(importance_matrix)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2017-01-04-barplot-1.svg" alt="plot of chunk 2017-01-04-barplot" /></p>
+
+<p>All of our features seem to be fairly relevant.
+You could try removing the least important and rerunning the model and see whether it reduces the error.</p>
+
+<h2 id="testing-the-model">Testing the model</h2>
+
+<p>We prepare the test data from Kaggle in a similar way to our training set, except we obviously don&rsquo;t need to remove the Monster type.</p>
+
+<p>{% highlight r %}
+test &lt;- test %&gt;%
+  mutate(color = as.factor(color)) %&gt;%
+  mutate(black = if_else(color == &ldquo;black&rdquo;, 1, 0),
+         blood = if_else(color == &ldquo;blood&rdquo;, 1, 0),
+         blue = if_else(color == &ldquo;blue&rdquo;, 1, 0),
+         clear = if_else(color == &ldquo;clear&rdquo;, 1, 0),
+         green = if_else(color == &ldquo;green&rdquo;, 1, 0),
+         white = if_else(color == &ldquo;white&rdquo;, 1, 0)
+  )</p>
+
+<h1 id="make-test">make test</h1>
+
+<p>dat_test &lt;- as.matrix(select(test, -id, -color),
+                 nrow = dim(train)[1],
+                 ncol = dim(train)[2] - 3,
+                 byrow = FALSE)</p>
+
+<p>dtest &lt;- xgb.DMatrix(data = dat_test)</p>
+
+<h1 id="predict">predict</h1>
+
+<p>pred &lt;- predict(bst_DMatrix, dtest)
+{% endhighlight %}</p>
+
+<h2 id="convert-for-kaggle-submission">Convert for Kaggle Submission</h2>
+
+<p>Remember how we changed the Monster labels to numeric for the training, we now need to convert them back again to make our predictions interpretable.</p>
+
+<p>{% highlight r %}</p>
+
+<h2 id="write-for-submission-to-kaggle">Write for submission to Kaggle</h2>
+
+<p>testid &lt;- as_tibble(test$id) %&gt;%
+  rename(id = value)</p>
+
+<p>submission &lt;- pred %&gt;%  #  $class
+  as_tibble() %&gt;%
+  rename(type = value) %&gt;%
+  bind_cols(testid) %&gt;%
+  select(id, type) %&gt;%
+  mutate(type = if_else(type == 0, &ldquo;Ghost&rdquo;,
+                        false = if_else(type == 1, &ldquo;Ghoul&rdquo;, &ldquo;Goblin&rdquo;))) %&gt;%
+  mutate(type = as.factor(type))</p>
+
+<h1 id="write-csv-x-submission-path-submission-xgboost-csv">write_csv(x = submission, path = &ldquo;submission_xgboost.csv&rdquo;)</h1>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>There&rsquo;s plenty of good XGBoost posts around but there was a dearth of posts dealing with the Kaggle situation; when the data is pre-split into training and test with the test classes hidden.
+This post demonstrates how to implement the famous XGBoost algorithm in R using data from an <a href="https://www.kaggle.com/c/ghouls-goblins-and-ghosts-boo">old learning Kaggle competition</a>.
+Hopefully this will XGBoost your position on the Kaggle leaderboards! To extend this code, <a href="https://www.kaggle.com/amberthomas/ghouls-goblins-and-ghosts-boo/ghosts-goblins-and-ghouls-oh-my#">try creating new features from the interactions of the variables</a> and training your model using these.</p>
+
+<p>{% highlight r %}
+devtools::session_info()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="setting-value">setting  value</h2>
+
+<h2 id="version-r-version-3-3-2-2016-10-31">version  R version 3.3.2 (2016-10-31)</h2>
+
+<h2 id="system-x86-64-linux-gnu">system   x86_64, linux-gnu</h2>
+
+<h2 id="ui-rstudio-1-0-44">ui       RStudio (1.0.44)</h2>
+
+<h2 id="language-en-gb-en">language en_GB:en</h2>
+
+<h2 id="collate-en-gb-utf-8">collate  en_GB.UTF-8</h2>
+
+<h2 id="tz-gb">tz       GB</h2>
+
+<h2 id="date-2017-01-14">date     2017-01-14</h2>
+
+<h2 id="package-version-date">package      * version  date</h2>
+
+<h2 id="algdesign-1-1-7-3-2014-10-15">AlgDesign      1.1-7.3  2014-10-15</h2>
+
+<h2 id="assertthat-0-1-2013-12-06">assertthat     0.1      2013-12-06</h2>
+
+<h2 id="car-2-1-4-2016-12-02">car            2.1-4    2016-12-02</h2>
+
+<h2 id="caret-6-0-73-2016-11-10">caret        * 6.0-73   2016-11-10</h2>
+
+<h2 id="checkpoint-0-3-18-2016-10-31">checkpoint     0.3.18   2016-10-31</h2>
+
+<h2 id="coda-0-18-1-2015-10-16">coda           0.18-1   2015-10-16</h2>
+
+<h2 id="codetools-0-2-15-2016-10-05">codetools      0.2-15   2016-10-05</h2>
+
+<h2 id="colorspace-1-3-1-2016-11-18">colorspace     1.3-1    2016-11-18</h2>
+
+<h2 id="data-table-1-9-8-2016-11-25">data.table     1.9.8    2016-11-25</h2>
+
+<h2 id="dbi-0-5-1-2016-09-10">DBI            0.5-1    2016-09-10</h2>
+
+<h2 id="devtools-1-12-0-2016-06-24">devtools       1.12.0   2016-06-24</h2>
+
+<h2 id="digest-0-6-10-2016-08-02">digest         0.6.10   2016-08-02</h2>
+
+<h2 id="dplyr-0-5-0-2016-06-24">dplyr        * 0.5.0    2016-06-24</h2>
+
+<h2 id="emoa-0-5-0-2012-09-25">emoa           0.5-0    2012-09-25</h2>
+
+<h2 id="estimability-1-2-2016-11-19">estimability   1.2      2016-11-19</h2>
+
+<h2 id="evaluate-0-10-2016-10-11">evaluate       0.10     2016-10-11</h2>
+
+<h2 id="foreach-1-4-3-2015-10-13">foreach        1.4.3    2015-10-13</h2>
+
+<h2 id="ggally-1-3-0-2016-11-13">GGally       * 1.3.0    2016-11-13</h2>
+
+<h2 id="ggplot2-2-2-0-2016-11-11">ggplot2      * 2.2.0    2016-11-11</h2>
+
+<h2 id="ggthemes-3-3-0-2016-11-24">ggthemes     * 3.3.0    2016-11-24</h2>
+
+<h2 id="govstyle-0-1-1-2016-12-17">govstyle     * 0.1.1    2016-12-17</h2>
+
+<h2 id="gtable-0-2-0-2016-02-26">gtable         0.2.0    2016-02-26</h2>
+
+<h2 id="highr-0-6-2016-05-09">highr          0.6      2016-05-09</h2>
+
+<h2 id="iterators-1-0-8-2015-10-13">iterators      1.0.8    2015-10-13</h2>
+
+<h2 id="knitr-1-15-1-2016-11-22">knitr          1.15.1   2016-11-22</h2>
+
+<h2 id="labeling-0-3-2014-08-23">labeling       0.3      2014-08-23</h2>
+
+<h2 id="lattice-0-20-34-2016-09-06">lattice      * 0.20-34  2016-09-06</h2>
+
+<h2 id="lazyeval-0-2-0-2016-06-12">lazyeval       0.2.0    2016-06-12</h2>
+
+<h2 id="lme4-1-1-12-2016-04-16">lme4           1.1-12   2016-04-16</h2>
+
+<h2 id="lsmeans-2-25-2016-11-19">lsmeans        2.25     2016-11-19</h2>
+
+<h2 id="magrittr-1-5-2014-11-22">magrittr     * 1.5      2014-11-22</h2>
+
+<h2 id="mass-7-3-45-2015-11-10">MASS           7.3-45   2015-11-10</h2>
+
+<h2 id="matrix-1-2-7-1-2016-09-01">Matrix         1.2-7.1  2016-09-01</h2>
+
+<h2 id="matrixmodels-0-4-1-2015-08-22">MatrixModels   0.4-1    2015-08-22</h2>
+
+<h2 id="mco-1-0-15-1-2014-11-29">mco            1.0-15.1 2014-11-29</h2>
+
+<h2 id="memoise-1-0-0-2016-01-29">memoise        1.0.0    2016-01-29</h2>
+
+<h2 id="mgcv-1-8-16-2016-11-07">mgcv           1.8-16   2016-11-07</h2>
+
+<h2 id="minqa-1-2-4-2014-10-09">minqa          1.2.4    2014-10-09</h2>
+
+<h2 id="modelmetrics-1-1-0-2016-08-26">ModelMetrics   1.1.0    2016-08-26</h2>
+
+<h2 id="multcomp-1-4-6-2016-07-14">multcomp       1.4-6    2016-07-14</h2>
+
+<h2 id="munsell-0-4-3-2016-02-13">munsell        0.4.3    2016-02-13</h2>
+
+<h2 id="mvtnorm-1-0-5-2016-02-02">mvtnorm        1.0-5    2016-02-02</h2>
+
+<h2 id="nlme-3-1-128-2016-05-10">nlme           3.1-128  2016-05-10</h2>
+
+<h2 id="nloptr-1-0-4-2014-08-04">nloptr         1.0.4    2014-08-04</h2>
+
+<h2 id="nnet-7-3-12-2016-02-02">nnet           7.3-12   2016-02-02</h2>
+
+<h2 id="pbkrtest-0-4-6-2016-01-27">pbkrtest       0.4-6    2016-01-27</h2>
+
+<h2 id="plyr-1-8-4-2016-06-08">plyr           1.8.4    2016-06-08</h2>
+
+<h2 id="prettyunits-1-0-2-2015-07-13">prettyunits    1.0.2    2015-07-13</h2>
+
+<h2 id="progress-1-1-2-2016-12-14">progress       1.1.2    2016-12-14</h2>
+
+<h2 id="purrr-0-2-2-2016-06-18">purrr        * 0.2.2    2016-06-18</h2>
+
+<h2 id="quantreg-5-29-2016-09-04">quantreg       5.29     2016-09-04</h2>
+
+<h2 id="r6-2-2-0-2016-10-05">R6             2.2.0    2016-10-05</h2>
+
+<h2 id="randomforest-4-6-12-2015-10-07">randomForest   4.6-12   2015-10-07</h2>
+
+<h2 id="rcolorbrewer-1-1-2-2014-12-07">RColorBrewer   1.1-2    2014-12-07</h2>
+
+<h2 id="rcpp-0-12-8-2016-11-17">Rcpp           0.12.8   2016-11-17</h2>
+
+<h2 id="readr-1-0-0-2016-08-03">readr        * 1.0.0    2016-08-03</h2>
+
+<h2 id="reshape-0-8-6-2016-10-21">reshape        0.8.6    2016-10-21</h2>
+
+<h2 id="reshape2-1-4-2-2016-10-22">reshape2       1.4.2    2016-10-22</h2>
+
+<h2 id="rgp-0-4-1-2014-08-08">rgp          * 0.4-1    2014-08-08</h2>
+
+<h2 id="rmd2md-0-1-2-2016-10-23">rmd2md       * 0.1.2    2016-10-23</h2>
+
+<h2 id="rpart-4-1-10-2015-06-29">rpart          4.1-10   2015-06-29</h2>
+
+<h2 id="rsm-2-8-2016-10-16">rsm            2.8      2016-10-16</h2>
+
+<h2 id="rstudioapi-0-6-2016-06-27">rstudioapi     0.6      2016-06-27</h2>
+
+<h2 id="sandwich-2-3-4-2015-09-24">sandwich       2.3-4    2015-09-24</h2>
+
+<h2 id="scales-0-4-1-2016-11-09">scales         0.4.1    2016-11-09</h2>
+
+<h2 id="sparsem-1-74-2016-11-10">SparseM        1.74     2016-11-10</h2>
+
+<h2 id="spot-1-1-0-2016-06-09">SPOT         * 1.1.0    2016-06-09</h2>
+
+<h2 id="stringi-1-1-2-2016-10-01">stringi        1.1.2    2016-10-01</h2>
+
+<h2 id="stringr-1-1-0-2016-08-19">stringr        1.1.0    2016-08-19</h2>
+
+<h2 id="survival-2-39-4-2016-05-11">survival       2.39-4   2016-05-11</h2>
+
+<h2 id="th-data-1-0-7-2016-01-28">TH.data        1.0-7    2016-01-28</h2>
+
+<h2 id="tibble-1-2-2016-08-26">tibble       * 1.2      2016-08-26</h2>
+
+<h2 id="tidyr-0-6-0-2016-08-12">tidyr        * 0.6.0    2016-08-12</h2>
+
+<h2 id="tidyverse-1-0-0-2016-09-09">tidyverse    * 1.0.0    2016-09-09</h2>
+
+<h2 id="withr-1-0-2-2016-06-20">withr          1.0.2    2016-06-20</h2>
+
+<h2 id="xgboost-0-6-4-2017-01-05">xgboost      * 0.6-4    2017-01-05</h2>
+
+<h2 id="xtable-1-8-2-2016-02-05">xtable         1.8-2    2016-02-05</h2>
+
+<h2 id="zoo-1-7-13-2016-05-03">zoo            1.7-13   2016-05-03</h2>
+
+<h2 id="source">source</h2>
+
+<h2 id="cran-r-3-3-2">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-1">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-2">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-3">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-4">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-1">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-3-2-5">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-6">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-1">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-7">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-2">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-3">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-8">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-9">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-10">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-4">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-11">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-12">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-13">CRAN (R 3.3.2)</h2>
+
+<h2 id="github-ukgovdatascience-govstyle-2ef672b">Github (ukgovdatascience/govstyle@2ef672b)</h2>
+
+<h2 id="cran-r-3-2-3-5">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-6">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-7">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-14">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-8">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-1-1">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-3-2-15">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-16">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-17">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-9">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-5">CRAN (R 3.2.5)</h2>
+
+<h2 id="cran-r-3-3-1-2">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-3-2-18">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-19">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-10">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-20">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-21">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-22">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-23">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-11">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-24">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-1-3">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-3-2-25">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-5-1">CRAN (R 3.2.5)</h2>
+
+<h2 id="cran-r-3-3-2-26">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-12">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-27">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-28">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-13">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-29">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-14">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-30">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-15">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-31">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-16">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-32">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-1-4-2">cran (@1.4.2)</h2>
+
+<h2 id="cran-r-3-3-2-33">CRAN (R 3.3.2)</h2>
+
+<h2 id="github-ivyleavedtoadflax-rmd2md-3fa6541">Github (ivyleavedtoadflax/rmd2md@3fa6541)</h2>
+
+<h2 id="cran-r-3-2-1">CRAN (R 3.2.1)</h2>
+
+<h2 id="cran-r-3-3-2-34">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-17">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-35">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-36">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-37">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-3-2-38">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-18">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-19">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-1-4">CRAN (R 3.3.1)</h2>
+
+<h2 id="cran-r-3-3-2-39">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-20">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-21">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-22">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-2-3-23">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-40">CRAN (R 3.3.2)</h2>
+
+<h2 id="cran-r-3-2-3-24">CRAN (R 3.2.3)</h2>
+
+<h2 id="cran-r-3-3-2-41">CRAN (R 3.3.2)</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

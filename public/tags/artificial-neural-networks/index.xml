@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Artificial Neural Networks on A Hugo website</title>
+    <link>/tags/artificial-neural-networks/</link>
+    <description>Recent content in Artificial Neural Networks on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 03 Jan 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/artificial-neural-networks/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Newyearal Networks</title>
+      <link>/2017/01/03/newyearal-networks/</link>
+      <pubDate>Tue, 03 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/03/newyearal-networks/</guid>
+      <description>One of my New Year resolutions is to get to grips with deep learning. I thought a good place to start would be a refresher into &amp;lsquo;shallow&amp;rsquo; neural networks, and that is what this post and the one that follows it will be about. I&amp;rsquo;ll go through the maths behind a quick dirty neural network, and implement it in R.
+I&amp;rsquo;m using as my sources the tome Elements of Statistical Learning, Andrew Ng&amp;rsquo;s excellent machine learning course on coursera, and a short course I have been doing on Udemy: Deep Learning in Python.</description>
+    </item>
+    
+  </channel>
+</rss>

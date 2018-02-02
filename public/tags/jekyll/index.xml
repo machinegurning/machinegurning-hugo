@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jekyll on A Hugo website</title>
+    <link>/tags/jekyll/</link>
+    <description>Recent content in Jekyll on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    
+	<atom:link href="/tags/jekyll/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Finding the right blogging platform</title>
+      <link>/1/01/01/finding-the-right-blogging-platform/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/1/01/01/finding-the-right-blogging-platform/</guid>
+      <description>I&amp;rsquo;ve had a blog on blogger for a while now, where I have been wanting to document some of the things I have been doing in R recently. I write in RMarkDown a lot, and it would make sense if I could post directly to my blog from the .html files that are output from RStudio, but I&amp;rsquo;ve been struggling for a way to do it well.
+Blogger works in so far as you can copy all the code from the .</description>
+    </item>
+    
+  </channel>
+</rss>

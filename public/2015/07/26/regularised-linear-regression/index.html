@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Regularised linear regression - A Hugo website</title>
+<meta property="og:title" content="Regularised linear regression - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">10 min read</span>
+    
+
+    <h1 class="article-title">Regularised linear regression</h1>
+
+    
+    <span class="article-date">2015/07/26</span>
+    
+
+    <div class="article-content">
+      
+
+<p>In this post I reproduce an example similar to an exercise I did for the <a href="http://www.coursera.org">coursera</a> <a href="http://en.wikipedia.org/wiki/Massive_open_online_course">MOOC</a> course in machine learning written by Andrew Ng. I&rsquo;m compelting the course musing R, not the requisite matlab. In the next couple of posts I&rsquo;m going to complete the equivalent of exercise 5.</p>
+
+<p>The exercise was about creating a vectorised implementation of regularised linear regression, and using this to test some theory relating to the diagnosis of bias (underfitting) and variance (overfitting). I will use a different, but similar dataset to avoid publishing the solutions here.</p>
+
+<h3 id="what-is-regularisation-all-about">What is regularisation all about?</h3>
+
+<p>Regularisation helps us to deal with the problem of overfitting by reducing the weight given to a particular feature $x$. This allows us to retain more features while not giving undue weight to one in particular. Regularisation is mediated by a parameter $\lambda$, as can be seen in the cost function:</p>
+
+<p>$$
+J(\theta)=\frac{1}{2m}\Big(\sum^{m}<em>{i=1}(h</em>{\theta}(x^{(i)}-y^{(i)})^2\Big)+\frac{\lambda}{2m}\Big(\sum^{n}_{j=1}\theta^2_j\Big)
+$$</p>
+
+<p>The first term is essentially the mean-squared-error term, whilst the additive term multiplies the sum of the square of the parameters ($\theta$) by $\lambda$ over $2m$, where $m$ is the number of training examples. Since the objective is to minimise $J(\theta)$ ($\underset{\theta}{\text{min}}J(\theta)$) using a large $\lambda$ will require small values of $\theta_j$ in order to acheive a minima.</p>
+
+<h3 id="getting-some-data">Getting some data</h3>
+
+<p>In this example I&rsquo;m using data from the well worn <code>mtcars</code> dataset which is included in the datasets package, instead of the data given in the course. For the first example presented here, I limit myself to just the first five columns of this dataset, which are: <code>mpg</code>, <code>cyl</code>, <code>disp</code>, and <code>hp</code>, or: miles per gallon, number of cylinders, displacement ($\text{in}^2$), and gross horsepower (run <code>?mtcars</code> for a data description). In this example, I want to predict <code>mpg</code> using <code>cyl</code>, <code>disp</code>, and <code>hp</code> as features.</p>
+
+<p>Plotting each individually gives us a sense that they all have pretty correlations with <code>mpg</code>, but it&rsquo;s also obvious that the features are correlated: e.g. <code>disp</code> and <code>hp</code>.</p>
+
+<p><a href="/figures/2015-07-08-plot-mtcars-1.png"><img src="/figures/2015-07-08-plot-mtcars-1.png" alt="plot of chunk 2015-07-08-plot-mtcars" /></a></p>
+
+<p>We can also see that the range of values that the features take vary quite a lot. Whilst <code>cyl</code> $\leq{8}$, <code>disp</code> tends to measured in the hundreds of $\text{in}^2$.</p>
+
+<p>{% highlight r %}
+mtcars[1:4] %&gt;% summary
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="mpg-cyl-disp-hp">mpg             cyl             disp             hp</h2>
+
+<h2 id="min-10-40-min-4-000-min-71-1-min-52-0">Min.   :10.40   Min.   :4.000   Min.   : 71.1   Min.   : 52.0</h2>
+
+<h2 id="1st-qu-15-43-1st-qu-4-000-1st-qu-120-8-1st-qu-96-5">1st Qu.:15.43   1st Qu.:4.000   1st Qu.:120.8   1st Qu.: 96.5</h2>
+
+<h2 id="median-19-20-median-6-000-median-196-3-median-123-0">Median :19.20   Median :6.000   Median :196.3   Median :123.0</h2>
+
+<h2 id="mean-20-09-mean-6-188-mean-230-7-mean-146-7">Mean   :20.09   Mean   :6.188   Mean   :230.7   Mean   :146.7</h2>
+
+<h2 id="3rd-qu-22-80-3rd-qu-8-000-3rd-qu-326-0-3rd-qu-180-0">3rd Qu.:22.80   3rd Qu.:8.000   3rd Qu.:326.0   3rd Qu.:180.0</h2>
+
+<h2 id="max-33-90-max-8-000-max-472-0-max-335-0">Max.   :33.90   Max.   :8.000   Max.   :472.0   Max.   :335.0</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>There are 32 rows in the data set, and for this example I will make a 60/20/20 split on the dataset for train/cross-validate/test, giving 19 rows in the test set, and 6 and 7 in the cross-validation and test sets respectively.</p>
+
+<p>At this point is has already become a little difficult to display all the features on a simple two dimensional plot, so I&rsquo;ll use a combination of colour and shape.</p>
+
+<p><a href="/figures/2015-07-08-plot-all-data1-1.png"><img src="/figures/2015-07-08-plot-all-data1-1.png" alt="plot of chunk 2015-07-08-plot-all-data1" /></a></p>
+
+<p>So each split of the data has retained some semblance of the curvature present in the training set.</p>
+
+<h3 id="regularised-linear-regression">Regularised linear regression</h3>
+
+<p>To run the linear regression, I&rsquo;ll build on the vectorised linear regression implementation I implemented <a href="http://ivyleavedtoadflax.github.io//rstats/linear_regression/">here</a>, but this time including a regularisation term.</p>
+
+<p>A vectorised implementation of the cost function is given below. Note I&rsquo;ve used <code>tcrossprod(theta, X)</code> as this function was about 1.5 times quicker than the equivalent <code>X %*% theta</code> in my tests, and both return the result of $\theta^TX$.</p>
+
+<p>The cost function is not applied to $\theta_0$ as this relates to the intercept parameter.</p>
+
+<p>{% highlight r %}
+J &lt;- function(X, y, theta, lambda) {</p>
+
+<p>m &lt;- length(y)</p>
+
+<p>theta1 &lt;- theta</p>
+
+<p># Ensure that regularisation is not operating on \theta_0</p>
+
+<p>theta1[1] &lt;- 0</p>
+
+<p>error &lt;- tcrossprod(theta,X)
+  error &lt;- as.vector(error) - y
+  error1 &lt;- crossprod(error,error)</p>
+
+<p>reg &lt;- (lambda/(2*m)) * crossprod(theta1, theta1)</p>
+
+<p>cost &lt;- (1/(2 * m)) * error1 + reg</p>
+
+<p>return(cost)</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<p>The gradient function is given below, and is the same as that given in my previous post on <a href="./regularised-logistic-regression/">regularised logistic regression</a> Note that once again the regularisation term excludes $\theta_0$.</p>
+
+<p>$$
+\left{
+\begin{array}{ll}<br />
+    \displaystyle\frac{\delta J(\theta)}{\delta\theta<em>0}=\frac{1}{m}\sum</em>{i=1}^m(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j &amp; \text{for}\ j=0 <br />
+    &amp; <br />
+    \displaystyle\frac{\delta J(\theta)}{\delta\theta<em>j}=\left(\frac{1}{m}\sum</em>{i=1}^n(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j\right) + \frac{\lambda}{m}\theta_j &amp; \text{for}\ j\geq1
+\end{array}\right .
+$$</p>
+
+<p>{% highlight r %}
+gR &lt;- function(X, y, theta, lambda) {</p>
+
+<p>theta1 &lt;- theta
+  theta1[1] &lt;- 0</p>
+
+<p>m &lt;- length(y)</p>
+
+<p>error &lt;- tcrossprod(theta,X)
+  error &lt;- as.vector(error) - y
+  error &lt;- (1/m) * crossprod(error,X)</p>
+
+<p>reg &lt;- (lambda/(m)) * theta1</p>
+
+<p>delta &lt;- error + reg</p>
+
+<p>return(delta)</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<h3 id="optimisation-algorithm">Optimisation algorithm</h3>
+
+<p>As an optimisation algorithm, I&rsquo;m use the <code>optim</code> function which ships with the <code>stats</code> package in vanilla R. Previously I used the <code>ucminf</code> function, and these two take the same arguments, so switching out the algorithms in the code is very simple. As default I have stuck to the <a href="https://en.wikipedia.org/wiki/Broyden%E2%80%93Fletcher%E2%80%93Goldfarb%E2%80%93Shanno_algorithm">BFGS</a> method, and to $\lambda=0$, i.e. no regularisation.</p>
+
+<p>I&rsquo;ve also just included the parameters as they are, so any solutions are going to be strictly linear, and therefore many not be a very good fit.</p>
+
+<p>{% highlight r %}
+X &lt;- cbind(1,train$cyl,train$disp,train$hp)
+y &lt;- train$mpg</p>
+
+<p>theta &lt;- rep(1, ncol(X))
+lambda &lt;- 0</p>
+
+<p>ucminf_out &lt;- optim(
+  par = theta,
+  fn = function(t) J(X, y, t, lambda),
+  gr = function(t) gR(X, y, t, lambda),
+  method = &ldquo;BFGS&rdquo;
+  )
+{% endhighlight %}</p>
+
+<p>So far so good, this seems to work:</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="par">$par</h2>
+
+<h2 id="1-30-25511907-2-38150554-0-01374584-0-01450777">[1] 30.25511907 -2.38150554 -0.01374584 -0.01450777</h2>
+
+<h2 id="value">$value</h2>
+
+<h2 id="1-3-948106">[1] 3.948106</h2>
+
+<h2 id="counts">$counts</h2>
+
+<h2 id="function-gradient">function gradient</h2>
+
+<h2 id="71-28">71       28</h2>
+
+<h2 id="convergence">$convergence</h2>
+
+<h2 id="1-0">[1] 0</h2>
+
+<h2 id="message">$message</h2>
+
+<h2 id="null">NULL</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>The output from <code>optim</code> differs slightly from <code>ucminf</code>; here a convergence of $0$ indicates success, and includes the number of times the cost function and gradient functions were called (<code>$counts</code>). The output also gives the final cost (<code>$value</code>) associated with the parameters (<code>$par</code>). For the most part, we are only interested in the parameters themselves, which we can plug into <code>ggplot</code> to overlay the model onto the training set.</p>
+
+<p>Let&rsquo;s compare the training data with the new predictions from the model trained on that data.</p>
+
+<p><a href="/figures/2015-07-08-plot-linear-model-2.png"><img src="/figures/2015-07-08-plot-linear-model-1.png" alt="plot of chunk 2015-07-08-plot-linear-model" /> <img src="/figures/2015-07-08-plot-linear-model-2.png" alt="plot of chunk 2015-07-08-plot-linear-model" /></a></p>
+
+<p>So based on these plots, it should be pretty clear that the simple multiple regression is too simple to represent the curvature we can see in the data.</p>
+
+<p>We can calculate the error related to this model using the sum of the squared differences between the expected and the observed:</p>
+
+<p>$$
+J<em>{train}(\theta)=\frac{1}{2m}\sqrt{\sum^m</em>{i=1}(h_\theta(x^{(i)})-y^{(i)})^2}
+$$</p>
+
+<p>{% highlight r %}
+J_train &lt;- function(predicted, actual) {</p>
+
+<p>m &lt;- length(y)</p>
+
+<p>error &lt;- predicted - actual
+  error &lt;- crossprod(error, error)</p>
+
+<p>return(
+      (1/m) * error
+  )</p>
+
+<p>}
+{% endhighlight %}</p>
+
+<p>Applying this function to the existing model gives a training error of $7.90$.</p>
+
+<h2 id="polynomials">Polynomials</h2>
+
+<p>So one way of taking account of the curvature in the data is to add features to the data, for example polynomials of the input matrix $X$.</p>
+
+<p>Part of the coursera exercise is to create a function to produce polynomials of different features (explanatory variables), but R has a built in polynomial function in the stats package: <code>poly</code> which is $50\%$ faster than the equivalent function that I wrote, so I&rsquo;ll stick to this.</p>
+
+<p>Since we have three features, using three degrees of polynomial will result in $19$ features in total on $19$ training examples. One feature for every training example sounds like a lot, and will almost certainly lead to over-fitting, so it should be a good way of demonstrating regularisation.</p>
+
+<p>The plot below shows the results from models trained on first (i.e. no polynomial) to third order polynomials on the training set (red points are the predicted values).</p>
+
+<p><a href="/figures/2015-07-08-plot-degree-facet-1.png"><img src="/figures/2015-07-08-plot-degree-facet-1.png" alt="plot of chunk 2015-07-08-plot-degree-facet" /></a></p>
+
+<p>So as before, the first model has made a linear prediction, whilst including second and third order polynomials takes into account the curvature at least in the <code>disp</code> $\times$ <code>mpg</code> relationship. Note that the model including the third order polynomials has achieved close to 100% accuracy, because there is one feature per training example.</p>
+
+<p>Comparing the model errors confirms this assessment. The training error for the third order polynomial is almost zero, whilst the second order polynomial provides an improvement over the simple linear model.</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="source-local-data-frame-3-x-2">Source: local data frame [3 x 2]</h2>
+
+<h2 id="degree-error">degree       error</h2>
+
+<h2 id="1-1-7-896211930">1      1 7.896211930</h2>
+
+<h2 id="2-2-2-197951280">2      2 2.197951280</h2>
+
+<h2 id="3-3-0-001151986">3      3 0.001151986</h2>
+
+<p>{% endhighlight %}</p>
+
+<h3 id="cross-validation">Cross validation</h3>
+
+<p>So what happens when we apply these models onto the cross-validation dataset. If intuition holds true, the second order model should provide the best fit, whilst the third order model should show signs of having been overfit on the training data.</p>
+
+<p><a href="/figures/2015-07-08-plot-cross-degree-facet-1.png"><img src="/figures/2015-07-08-plot-cross-degree-facet-1.png" alt="plot of chunk 2015-07-08-plot-cross-degree-facet" /></a></p>
+
+<p>So as predicted, it looks like the third order polynomial model is the worst, as is shown when calculating the error:</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="source-local-data-frame-3-x-2-1">Source: local data frame [3 x 2]</h2>
+
+<h2 id="degree-error-1">degree     error</h2>
+
+<h2 id="1-1-1-740409">1      1  1.740409</h2>
+
+<h2 id="2-2-5-333678">2      2  5.333678</h2>
+
+<h2 id="3-3-18-912658">3      3 18.912658</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Interestingly, the simplest model, without any curvature performs the best on this cross validation set, when no regularisation is specified. This may not be surprising given that it is such a small subset of the data.</p>
+
+<h3 id="regularisation">Regularisation</h3>
+
+<p>So what happens when we apply regularisation?. I&rsquo;ll start with the extreme example: applying regularisation to the the over-fitted model with third order polynomials. Since I am trying here to reduce the impact that particular features have on the model, intuitively this should mean that I will need a relatively large $\lambda$.</p>
+
+<p>Let&rsquo;s start with $\lambda = {10,100,1000,10000,100000,1000000}$, and look what happens to the prediction of <code>mpg</code> from the training set. As $\lambda$ increases, the prediction becomes increasingly more generalised, and fits the training set less perfectly&hellip;</p>
+
+<p><a href="/figures/2015-07-08-train-regularisation-complicated-1.png"><img src="/figures/2015-07-08-train-regularisation-complicated-1.png" alt="plot of chunk 2015-07-08-train-regularisation-complicated" /></a></p>
+
+<p>And when applied to the cross validation set, increasing $\lambda$ improves the fit of predictions to the cross validation set.</p>
+
+<p><a href="/figures/2015-07-08-cross-regularisation-complicated-1.png"><img src="/figures/2015-07-08-cross-regularisation-complicated-1.png" alt="plot of chunk 2015-07-08-cross-regularisation-complicated" /></a></p>
+
+<p>And what about the error? Plotting the training error versus cross-validation error will give us an impression of what effect the regularisation parameter is having.</p>
+
+<p><a href="/figures/2015-07-08-error-plot-complicated-1.png"><img src="/figures/2015-07-08-error-plot-complicated-1.png" alt="plot of chunk 2015-07-08-error-plot-complicated" /></a></p>
+
+<p>So it looks like a value of around $10^7$ will minimise both the training and cross-validation error. This is a pretty large $\lambda$ - but this may not be surprising given that a three order polynomial generates $19$ features for just $19$ training examples, i.e $m=k$.</p>
+
+<p>I&rsquo;m interested to know what would have happened if I had chosen to run with the second order polynomial model. Using the same choices for $\lambda$ is not appropriate for this model, as there are only $9$ features, so this time I have chosen a smaller range of $\lambda$, but retained $10^7$ just to see what would happen.</p>
+
+<p><a href="/figures/2015-07-08-train-regularisation-simple-1.png"><img src="/figures/2015-07-08-train-regularisation-simple-1.png" alt="plot of chunk 2015-07-08-train-regularisation-simple" /></a></p>
+
+<p>So in this case, setting $\lambda = 10^7$ is a step too far, and results in a model that is too simple, and loses the curvature evident in the data.</p>
+
+<p>And the error?</p>
+
+<p><a href="/figures/2015-07-08-error-plot-simple-1.png"><img src="/figures/2015-07-08-error-plot-simple-1.png" alt="plot of chunk 2015-07-08-error-plot-simple" /></a></p>
+
+<p>As predicted, $\lambda$ needs to be set much lower, between $10$ and $100$ to obtain the best solution for the training and cross-validation set. Interestingly the cross-validation error continues to drop until about $\lambda=10000$ which coincides with the model failing to predict curvature in the data as above.</p>
+
+<h3 id="wrapping-up">Wrapping up</h3>
+
+<p>So the final question remains. How will these two models perform against each other: a more complicated model with a very high $\lambda$, or a simpler model with a lower $\lambda$?</p>
+
+<p>There is almost no difference between the performance of the models on the test set; both do a reasonable job; the third order polynomial model gives an error of 1.03, which is very similar to the error given by the simpler model 1.00.</p>
+
+<p><a href="/figures/2015-07-08-test-regularisation-1.png"><img src="/figures/2015-07-08-test-regularisation-1.png" alt="plot of chunk 2015-07-08-test-regularisation" /></a></p>
+
+<p>Of course, I should point out that something is probably going wrong if the number of features ($k$) equals the number of training examples ($m$); it&rsquo;s as overfitted as a model can get; but it demonstrates the power of regularisation, and it is heartening to see that a simpler model can perform just as well.</p>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-2-0-2015-04-16">R version 3.2.0 (2015-04-16)</h2>
+
+<h2 id="platform-x86-64-unknown-linux-gnu-64-bit">Platform: x86_64-unknown-linux-gnu (64-bit)</h2>
+
+<h2 id="running-under-ubuntu-14-04-2-lts">Running under: Ubuntu 14.04.2 LTS</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-methods-stats-graphics-grdevices-utils-datasets-base">[1] methods   stats     graphics  grDevices utils     datasets  base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-rcolorbrewer-1-1-2-tidyr-0-2-0-ggplot2-1-0-1">[1] RColorBrewer_1.1-2 tidyr_0.2.0        ggplot2_1.0.1</h2>
+
+<h2 id="4-ucminf-1-1-3-boot-1-3-16-magrittr-1-5">[4] ucminf_1.1-3       boot_1.3-16        magrittr_1.5</h2>
+
+<h2 id="7-dplyr-0-4-1-testthat-0-9-1-knitr-1-10">[7] dplyr_0.4.1        testthat_0.9.1     knitr_1.10</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-rcpp-0-11-5-mass-7-3-40-munsell-0-4-2-colorspace-1-2-6">[1] Rcpp_0.11.5      MASS_7.3-40      munsell_0.4.2    colorspace_1.2-6</h2>
+
+<h2 id="5-stringr-1-0-0-plyr-1-8-2-tools-3-2-0-parallel-3-2-0">[5] stringr_1.0.0    plyr_1.8.2       tools_3.2.0      parallel_3.2.0</h2>
+
+<h2 id="9-grid-3-2-0-gtable-0-1-2-dbi-0-3-1-lazyeval-0-1-10">[9] grid_3.2.0       gtable_0.1.2     DBI_0.3.1        lazyeval_0.1.10</h2>
+
+<h2 id="13-assertthat-0-1-digest-0-6-8-reshape2-1-4-1-formatr-1-2">[13] assertthat_0.1   digest_0.6.8     reshape2_1.4.1   formatR_1.2</h2>
+
+<h2 id="17-evaluate-0-7-labeling-0-3-stringi-0-4-1-scales-0-2-4">[17] evaluate_0.7     labeling_0.3     stringi_0.4-1    scales_0.2.4</h2>
+
+<h2 id="21-proto-0-3-10">[21] proto_0.3-10</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

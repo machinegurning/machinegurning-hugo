@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Minibian on A Hugo website</title>
+    <link>/tags/minibian/</link>
+    <description>Recent content in Minibian on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 16 Feb 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/minibian/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Raspberry Pi MQTT broker</title>
+      <link>/2016/02/16/raspberry-pi-mqtt-broker/</link>
+      <pubDate>Tue, 16 Feb 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/02/16/raspberry-pi-mqtt-broker/</guid>
+      <description>In my last post I started meddling with the ESP8266 module as a low cost (and smaller) alternative to an Arduino or Raspberry Pi for creating home sensors.
+I was toying with the idea of sending measurements to a database using a RESTful API on the existing Postgres database I use to host measurements on Amazon Web Services.
+After a bit of reading, I&amp;rsquo;ve realised that there is a better solution: MQTT, a lightweight protocol designed for machine to machine (M2M) communication for sensors, and similar low powered and simple devices.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Citibike on A Hugo website</title>
+    <link>/tags/citibike/</link>
+    <description>Recent content in Citibike on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 25 May 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/citibike/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Too hot to cycle?</title>
+      <link>/2015/05/25/too-hot-to-cycle/</link>
+      <pubDate>Mon, 25 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/05/25/too-hot-to-cycle/</guid>
+      <description>Last year I played around a bit with the New York Citibike data, and looked a little bit at the different use patterns among among the sexes, and between subscribers and ad hoc users of the service.
+Being an Englishman, I was also wondering if there were differences between the patterns of bike usage on different sides of the Atlantic, so I recently got hold of the 20 million odd records of Barclay Bike data from the Transport for London open data portal.</description>
+    </item>
+    
+    <item>
+      <title>Do women take the scenic route or do men cycle faster?</title>
+      <link>/2014/11/16/do-women-take-the-scenic-route-or-do-men-cycle-faster/</link>
+      <pubDate>Sun, 16 Nov 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/2014/11/16/do-women-take-the-scenic-route-or-do-men-cycle-faster/</guid>
+      <description>In my previous post I started looking at the NY CitiBike data, and the differences between the way men and women use the service. It&amp;rsquo;s clear men use the service more, and that women&amp;rsquo;s journeys are generally longer; however it&amp;rsquo;s not clear if this is because they simply travel slower, or because they aren&amp;rsquo;t always taking the most direct route.
+This is a difficult question to answer. Whilst it is easier to know whether the journey time from A to B is longer for men or women, it is not easy to know if the journey was direct.</description>
+    </item>
+    
+    <item>
+      <title>Is CitiBike an old boy&#39;s club?</title>
+      <link>/2014/11/02/is-citibike-an-old-boys-club/</link>
+      <pubDate>Sun, 02 Nov 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/2014/11/02/is-citibike-an-old-boys-club/</guid>
+      <description>One of the first things you notice when drilling down into the New York Citibike data, is that there are a lot more male users than female. It&amp;rsquo;s quite a striking difference between the sexes, and has been picked up in the media. In this post I&amp;rsquo;m going to look at the way Citibike usage differs across the sexes.
+There are two types of Citibike users: long-term Subscribers to the service, and short term Customers who might only buy a weekly pass.</description>
+    </item>
+    
+  </channel>
+</rss>

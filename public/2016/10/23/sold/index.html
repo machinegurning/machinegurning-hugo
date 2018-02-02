@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Sold! - A Hugo website</title>
+<meta property="og:title" content="Sold! - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">12 min read</span>
+    
+
+    <h1 class="article-title">Sold!</h1>
+
+    
+    <span class="article-date">2016/10/23</span>
+    
+
+    <div class="article-content">
+      
+
+<p>There seems nothing the British press likes more than a good house price story. Accordingly we use the <a href="https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data">Kaggle dataset</a> on house prices as a demonstration of the data science workflow. With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home (every dataset has a story, see here for <a href="https://ww2.amstat.org/publications/jse/v19n3/decock.pdf">details</a>). I found this dataset particularly interesting, as it informs someone new to he housing market as to what variables one should ask questions about if one were to buy a house.</p>
+
+<p>We start by downloading the data from Kaggle and reading the training data into R using the <code>readr</code> package, a subset of the excellent package of packages that is the <code>tidyverse</code>. We check the variables or features are the appropriate data class.</p>
+
+<p>{% highlight r %}
+library(tidyverse)
+train &lt;- readr::read_csv(file  = &ldquo;./data/2016-10-23-train.csv&rdquo;,
+                       col_names = TRUE)
+test &lt;- readr::read_csv(file  = &ldquo;./data/2016-10-23-test.csv&rdquo;,
+                       col_names = TRUE)</p>
+
+<h1 id="problems-with-the-names-of-some-variables-having-ticks">problems with the names of some variables having `ticks</h1>
+
+<p>names(train) &lt;- make.names(names(train))
+names(test) &lt;- make.names(names(test))</p>
+
+<h1 id="variable-type">VARIABLE TYPE &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-</h1>
+
+<h1 id="note-from-documentation-all-character-class-are-factor-variables-no-strings">note from documentation, all character class are factor variables, no strings</h1>
+
+<h1 id="we-identify-and-select-all-character-variables-and-get-their-names">We identify and select all character variables and get their names</h1>
+
+<p>is_char &lt;- sapply(train, is.character)
+to_correct &lt;- names(select(train, which(is_char)))</p>
+
+<h1 id="correct-data-type-of-variable">Correct data type of variable</h1>
+
+<h1 id="use-mutate-each-which-is-the-standard-evaluation-version-to-change-variable-classes">use mutate<em>each</em>, which is the standard evaluation version, to change variable classes</h1>
+
+<p>train_correct_type &lt;- train %&gt;%
+  mutate<em>each</em>(funs(factor), to_correct)</p>
+
+<p>#glimpse(train_correct_type)
+{% endhighlight %}</p>
+
+<p>Inspection of some of our factors reveals that unsurprisingly the levels of the factor have not been ordered correctly. However, the ordering has not been explicitly set, as that is not the default for <code>factor</code>. This loses us information, for example if we compare what R thinks is the case and what should be the case, we see a discrepancy. R defaults to use alphabetical order. If we were to set the levels correctly for each factor this could improve our predictions.</p>
+
+<p>{% highlight r %}
+levels(train_correct_type$BsmtQual)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-ex-fa-gd-ta">[1] &ldquo;Ex&rdquo; &ldquo;Fa&rdquo; &ldquo;Gd&rdquo; &ldquo;TA&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+is.ordered(train_correct_type$BsmtQual)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-false">[1] FALSE</h2>
+
+<p>{% endhighlight %}</p>
+
+<p><code>BsmtQual</code>: Evaluates the height of the basement</p>
+
+<p>| Code | Description | Inches |
+|:&mdash;&mdash;&ndash;:|:&mdash;&mdash;&mdash;-:|:&mdash;&mdash;&mdash;-:|
+|   Ex   |  Excellent  |    100+   |
+|  Gd    |  Good       |   90-99   |
+|    TA  |    Typical  |     80-89   |
+|   Fa   |    Fair     |   70-79  |
+|   Po   |    Poor     |  &lt;70   |
+|   NA   |    No Basement|  NA |</p>
+
+<h3 id="missing-data">Missing data</h3>
+
+<blockquote>
+<p>Every messy data is messy in its own way - Hadley Wickham</p>
+</blockquote>
+
+<p>There is missing data for a variety of combinations of the variables. The visualising indicator matrices for missing values is a shortcut (<code>visna()</code>). The columns represent the missing data and the rows the missing patterns. Here we have plenty of missing patterns. The bars beneath the columns show the proportions of missingness by variable and the bars on the right show the relative frequencies of the patterns. Most of the data is complete.</p>
+
+<p>The missing data is found in about a dozen or so of the variables (those on the left). The variables that contribute to the bulk of the data (note the heavy skew of the dodgy variables). <code>PoolQC</code>, <code>MiscFeature</code>, <code>Alley</code> and <code>Fence</code> tend to be missing. These variables warrant closer inspection of the supporting documentation to suggest why this might be the case.</p>
+
+<p>{% highlight r %}
+extracat::visna(train_correct_type, sort = &ldquo;b&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-10-23_visna-1.svg" alt="plot of chunk 2016-10-23_visna" /></p>
+
+<h3 id="keep-it-simple">Keep it simple</h3>
+
+<p>For now, we will keep things simple by ignoring all categorical variables and dropping them. We also remove the artificial <code>Id</code> variable.</p>
+
+<p>{% highlight r %}
+nums &lt;- sapply(train_correct_type, is.numeric)
+train_no_factors &lt;- train_correct_type[, nums]  #  drop all factors</p>
+
+<p>train_no_factors &lt;- train_no_factors %&gt;%
+  select(-Id) %&gt;%  #  IMPORTANT drop id variable, don&rsquo;t want to predict on this!
+  na.omit()</p>
+
+<p>glimpse(train_no_factors)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="observations-1-121">Observations: 1,121</h2>
+
+<h2 id="variables-37">Variables: 37</h2>
+
+<h2 id="mssubclass-int-60-20-60-70-60-50-20-50-190-20-60-20">$ MSSubClass    <int> 60, 20, 60, 70, 60, 50, 20, 50, 190, 20, 60, 20,&hellip;</h2>
+
+<h2 id="lotfrontage-int-65-80-68-60-84-85-75-51-50-70-85-91">$ LotFrontage   <int> 65, 80, 68, 60, 84, 85, 75, 51, 50, 70, 85, 91, &hellip;</h2>
+
+<h2 id="lotarea-int-8450-9600-11250-9550-14260-14115-10084-61">$ LotArea       <int> 8450, 9600, 11250, 9550, 14260, 14115, 10084, 61&hellip;</h2>
+
+<h2 id="overallqual-int-7-6-7-7-8-5-8-7-5-5-9-7-7-4-5-5">$ OverallQual   <int> 7, 6, 7, 7, 8, 5, 8, 7, 5, 5, 9, 7, 7, 4, 5, 5, &hellip;</h2>
+
+<h2 id="overallcond-int-5-8-5-5-5-5-5-5-6-5-5-5-8-5-5-6">$ OverallCond   <int> 5, 8, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5, 8, 5, 5, 6, &hellip;</h2>
+
+<h2 id="yearbuilt-int-2003-1976-2001-1915-2000-1993-2004-1931">$ YearBuilt     <int> 2003, 1976, 2001, 1915, 2000, 1993, 2004, 1931, &hellip;</h2>
+
+<h2 id="yearremodadd-int-2003-1976-2002-1970-2000-1995-2005-1950">$ YearRemodAdd  <int> 2003, 1976, 2002, 1970, 2000, 1995, 2005, 1950, &hellip;</h2>
+
+<h2 id="masvnrarea-int-196-0-162-0-350-0-186-0-0-0-286-306">$ MasVnrArea    <int> 196, 0, 162, 0, 350, 0, 186, 0, 0, 0, 286, 306, &hellip;</h2>
+
+<h2 id="bsmtfinsf1-int-706-978-486-216-655-732-1369-0-851-906">$ BsmtFinSF1    <int> 706, 978, 486, 216, 655, 732, 1369, 0, 851, 906,&hellip;</h2>
+
+<h2 id="bsmtfinsf2-int-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0">$ BsmtFinSF2    <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="bsmtunfsf-int-150-284-434-540-490-64-317-952-140-134">$ BsmtUnfSF     <int> 150, 284, 434, 540, 490, 64, 317, 952, 140, 134,&hellip;</h2>
+
+<h2 id="totalbsmtsf-int-856-1262-920-756-1145-796-1686-952-991">$ TotalBsmtSF   <int> 856, 1262, 920, 756, 1145, 796, 1686, 952, 991, &hellip;</h2>
+
+<h2 id="x1stflrsf-int-856-1262-920-961-1145-796-1694-1022-1077">$ X1stFlrSF     <int> 856, 1262, 920, 961, 1145, 796, 1694, 1022, 1077&hellip;</h2>
+
+<h2 id="x2ndflrsf-int-854-0-866-756-1053-566-0-752-0-0-1142">$ X2ndFlrSF     <int> 854, 0, 866, 756, 1053, 566, 0, 752, 0, 0, 1142,&hellip;</h2>
+
+<h2 id="lowqualfinsf-int-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0">$ LowQualFinSF  <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="grlivarea-int-1710-1262-1786-1717-2198-1362-1694-1774">$ GrLivArea     <int> 1710, 1262, 1786, 1717, 2198, 1362, 1694, 1774, &hellip;</h2>
+
+<h2 id="bsmtfullbath-int-1-0-1-1-1-1-1-0-1-1-1-0-0-0-1-0">$ BsmtFullBath  <int> 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, &hellip;</h2>
+
+<h2 id="bsmthalfbath-int-0-1-0-0-0-0-0-0-0-0-0-0-0-0-0-0">$ BsmtHalfBath  <int> 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="fullbath-int-2-2-2-1-2-1-2-2-1-1-3-2-1-2-1-1">$ FullBath      <int> 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 3, 2, 1, 2, 1, 1, &hellip;</h2>
+
+<h2 id="halfbath-int-1-0-1-0-1-1-0-0-0-0-0-0-0-0-1-0">$ HalfBath      <int> 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, &hellip;</h2>
+
+<h2 id="bedroomabvgr-int-3-3-3-3-4-1-3-2-2-3-4-3-2-2-3-3">$ BedroomAbvGr  <int> 3, 3, 3, 3, 4, 1, 3, 2, 2, 3, 4, 3, 2, 2, 3, 3, &hellip;</h2>
+
+<h2 id="kitchenabvgr-int-1-1-1-1-1-1-1-2-2-1-1-1-1-2-1-1">$ KitchenAbvGr  <int> 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1, &hellip;</h2>
+
+<h2 id="totrmsabvgrd-int-8-6-6-7-9-5-7-8-5-5-11-7-5-6-6-6">$ TotRmsAbvGrd  <int> 8, 6, 6, 7, 9, 5, 7, 8, 5, 5, 11, 7, 5, 6, 6, 6,&hellip;</h2>
+
+<h2 id="fireplaces-int-0-1-1-1-1-0-1-2-2-0-2-1-0-0-0-0">$ Fireplaces    <int> 0, 1, 1, 1, 1, 0, 1, 2, 2, 0, 2, 1, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="garageyrblt-int-2003-1976-2001-1998-2000-1993-2004-1931">$ GarageYrBlt   <int> 2003, 1976, 2001, 1998, 2000, 1993, 2004, 1931, &hellip;</h2>
+
+<h2 id="garagecars-int-2-2-2-3-3-2-2-2-1-1-3-3-2-2-2-1">$ GarageCars    <int> 2, 2, 2, 3, 3, 2, 2, 2, 1, 1, 3, 3, 2, 2, 2, 1, &hellip;</h2>
+
+<h2 id="garagearea-int-548-460-608-642-836-480-636-468-205-384">$ GarageArea    <int> 548, 460, 608, 642, 836, 480, 636, 468, 205, 384&hellip;</h2>
+
+<h2 id="wooddecksf-int-0-298-0-0-192-40-255-90-0-0-147-160">$ WoodDeckSF    <int> 0, 298, 0, 0, 192, 40, 255, 90, 0, 0, 147, 160, &hellip;</h2>
+
+<h2 id="openporchsf-int-61-0-42-35-84-30-57-0-4-0-21-33-112">$ OpenPorchSF   <int> 61, 0, 42, 35, 84, 30, 57, 0, 4, 0, 21, 33, 112,&hellip;</h2>
+
+<h2 id="enclosedporch-int-0-0-0-272-0-0-0-205-0-0-0-0-0-0-0">$ EnclosedPorch <int> 0, 0, 0, 272, 0, 0, 0, 205, 0, 0, 0, 0, 0, 0, 0,&hellip;</h2>
+
+<h2 id="x3ssnporch-int-0-0-0-0-0-320-0-0-0-0-0-0-0-0-0-0">$ X3SsnPorch    <int> 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0&hellip;</h2>
+
+<h2 id="screenporch-int-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0">$ ScreenPorch   <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="poolarea-int-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0">$ PoolArea      <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &hellip;</h2>
+
+<h2 id="miscval-int-0-0-0-0-0-700-0-0-0-0-0-0-0-500-0">$ MiscVal       <int> 0, 0, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 500, 0,&hellip;</h2>
+
+<h2 id="mosold-int-2-5-9-2-12-10-8-4-1-2-7-8-7-10-6">$ MoSold        <int> 2, 5, 9, 2, 12, 10, 8, 4, 1, 2, 7, 8, 7, 10, 6, &hellip;</h2>
+
+<h2 id="yrsold-int-2008-2007-2008-2006-2008-2009-2007-2008">$ YrSold        <int> 2008, 2007, 2008, 2006, 2008, 2009, 2007, 2008, &hellip;</h2>
+
+<h2 id="saleprice-int-208500-181500-223500-140000-250000-143000">$ SalePrice     <int> 208500, 181500, 223500, 140000, 250000, 143000, &hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<h3 id="outliers">Outliers</h3>
+
+<p>Let&rsquo;s look for any unusual outliers that may affect our fitted model during training. As <code>SalePrice</code> is our response variable and what we are trying to predict, we get a quick overview using the scatterplot matrix for numeric data. We don&rsquo;t plot it here but provide the code for you to explore (it takes a minute to compute).</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="p1-ggally-ggpairs-train-no-factors">p1 &lt;- GGally::ggpairs(train_no_factors)</h1>
+
+<h1 id="p1">p1</h1>
+
+<p>{% endhighlight %}</p>
+
+<p>Let&rsquo;s take a closer look at <code>GrLiveArea</code>, there seem to be four outliers. Accordingly, I would recommend removing any houses with more than 4000 square feet from the data set (which eliminates these five unusual observations).</p>
+
+<p>{% highlight r %}
+plot(train_no_factors$SalePrice, train_no_factors$GrLivArea)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-10-23_sp-1.svg" alt="plot of chunk 2016-10-23_sp" /></p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="remove-outliers">remove outliers</h1>
+
+<p>train &lt;- train_correct_type %&gt;%
+  filter(GrLivArea &lt; 4000)
+{% endhighlight %}</p>
+
+<h2 id="inspecting-numeric-variables-correlated-with-the-response-variable">Inspecting numeric variables correlated with the response variable</h2>
+
+<p>{% highlight r %}
+corrplot::corrplot(cor(train_no_factors), method = &ldquo;circle&rdquo;, type = &ldquo;lower&rdquo;, diag = FALSE,
+                   order = &ldquo;FPC&rdquo;, tl.cex = 0.6, tl.col = &ldquo;black&rdquo;) #  plot matrix and ordered by first principal component
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-10-23_corrplot-1.svg" alt="plot of chunk 2016-10-23_corrplot" /></p>
+
+<p>This display of the correlation matrix shows the most important variables associated with <code>SalePrice</code>. This provides a good starting point for modelling and or feature selection. For example <code>OverallCond</code> shows poor correlation with <code>SalePrice</code>, perhaps we need to adjust this variable to improve its information content. Or perhaps people ignore the condition and think of the property as a fixer upper opportunity. As you can see there is huge depth to the data and it would be easy to feel overwhelmed. Fortunately, we&rsquo;re not trying to win the competition, just produce some OK predictions quickly.</p>
+
+<blockquote>
+<p>Premature optimization is the root of all evil - Donald Knuth</p>
+</blockquote>
+
+<h2 id="regression">Regression</h2>
+
+<p>To simplify the problem and celebrate the <code>mlr</code> package release (or at least my discovery of it), I implement some of the packages tools for regression and feature selection here. For a detailed tutorial, which this post draws heavily from, see the <a href="https://mlr-org.github.io/mlr-tutorial/release/html/index.html">mlr home page</a>. Also some Kagglers have also contributed many and varied <a href="https://www.kaggle.com/shankarpandala/house-prices-advanced-regression-techniques/housing-prices-predicition-in-r">useful ideas</a> about this problem.</p>
+
+<h3 id="machine-learning-tasks">Machine Learning Tasks</h3>
+
+<p>Learning tasks encapsulate the data set and further relevant information about a machine learning problem, for example the name of the target variable for supervised problems, in this case <code>SalePrice</code>.</p>
+
+<p>{% highlight r %}
+library(mlr)</p>
+
+<h1 id="first-row-is-id">first row is Id</h1>
+
+<p>regr_task &lt;- makeRegrTask(id = &ldquo;hprices&rdquo;, data = train[, 2:81], target = &ldquo;SalePrice&rdquo;)
+regr_task
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="supervised-task-hprices">Supervised task: hprices</h2>
+
+<h2 id="type-regr">Type: regr</h2>
+
+<h2 id="target-saleprice">Target: SalePrice</h2>
+
+<h2 id="observations-1456">Observations: 1456</h2>
+
+<h2 id="features">Features:</h2>
+
+<h2 id="numerics-factors-ordered">numerics  factors  ordered</h2>
+
+<h2 id="36-43-0">36       43        0</h2>
+
+<h2 id="missings-true">Missings: TRUE</h2>
+
+<h2 id="has-weights-false">Has weights: FALSE</h2>
+
+<h2 id="has-blocking-false">Has blocking: FALSE</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="this-tells-us-are-factors-arn-t-ordered">This tells us are factors arn&rsquo;t ordered.</h1>
+
+<p>{% endhighlight %}</p>
+
+<p>As you can see, the Task records the type of the learning problem and basic information about the data set, e.g., the types of the features (numeric vectors, factors or ordered factors), the number of observations, or whether missing values are present.</p>
+
+<h3 id="constructing-a-learner">Constructing a Learner</h3>
+
+<p>A learner in <code>mlr</code> is generated by calling <code>makeLearner</code>. In the constructor we specify the learning method we want to use. Moreover, you can:
+* Set hyperparameters.
+* Control the output for later prediction, e.g., for classification whether you want a factor of predicted class labels or probabilities.
+* Set an ID to name the object (some methods will later use this ID to name results or annotate plots).</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="x-listlearners">x &lt;- listLearners()</h1>
+
+<h1 id="x-class">x$class</h1>
+
+<h2 id="generate-the-learner">Generate the learner</h2>
+
+<p>lrn &lt;- makeLearner(&ldquo;regr.gbm&rdquo;, par.vals = list(n.trees = 1400, interaction.depth = 3))
+{% endhighlight %}</p>
+
+<h3 id="train">Train</h3>
+
+<p>Training a learner means fitting a model to a given data set. In <code>mlr</code> this can be done by calling function <code>train</code> on a Learner and a suitable Task.
+ `</p>
+
+<p>{% highlight r %}</p>
+
+<h2 id="train-the-learner">Train the learner</h2>
+
+<p>mod &lt;- train(lrn, regr_task)
+mod
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="model-for-learner-id-regr-gbm-learner-class-regr-gbm">Model for learner.id=regr.gbm; learner.class=regr.gbm</h2>
+
+<h2 id="trained-on-task-id-hprices-obs-1456-features-79">Trained on: task.id = hprices; obs = 1456; features = 79</h2>
+
+<h2 id="hyperparameters-distribution-gaussian-keep-data-false-n-trees-1400-interaction-depth-3">Hyperparameters: distribution=gaussian,keep.data=FALSE,n.trees=1400,interaction.depth=3</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Function train returns an object of class <code>WrappedModel</code>, which encapsulates the fitted model, i.e., the output of the underlying R learning method. Additionally, it contains some information about the Learner, the Task, the features and observations used for training, and the training time. A <code>WrappedModel</code> can subsequently be used to make a prediction for new observations.</p>
+
+<h3 id="predictions">Predictions</h3>
+
+<p>{% highlight r %}
+task_pred &lt;- predict(mod, newdata = test[ , 2:80])
+task_pred
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="prediction-1459-observations">Prediction: 1459 observations</h2>
+
+<h2 id="predict-type-response">predict.type: response</h2>
+
+<h2 id="threshold">threshold:</h2>
+
+<h2 id="time-0-08">time: 0.08</h2>
+
+<h2 id="response">response</h2>
+
+<h2 id="1-141094-3">1 141094.3</h2>
+
+<h2 id="2-149261-0">2 149261.0</h2>
+
+<h2 id="3-154408-4">3 154408.4</h2>
+
+<h2 id="4-155348-1">4 155348.1</h2>
+
+<h2 id="5-203935-5">5 203935.5</h2>
+
+<h2 id="6-157606-6">6 157606.6</h2>
+
+<p>{% endhighlight %}</p>
+
+<h3 id="submission">Submission</h3>
+
+<p>Submissions are evaluated on Root-Mean-Squared-Error (RMSE) between the logarithm of the predicted value and the logarithm of the observed sales price. (Taking logs means that errors in predicting expensive houses and cheap houses will affect the result equally.)</p>
+
+<p>{% highlight r %}
+submission &lt;- as_tibble(list(Id = test$Id, SalePrice = task_pred$data$response))
+head(submission)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="a-tibble-6-2"># A tibble: 6 × 2</h2>
+
+<h2 id="id-saleprice">Id SalePrice</h2>
+
+<h2 id="int-dbl"><int>     <dbl></h2>
+
+<h2 id="1-1461-141094-3">1  1461  141094.3</h2>
+
+<h2 id="2-1462-149261-0">2  1462  149261.0</h2>
+
+<h2 id="3-1463-154408-4">3  1463  154408.4</h2>
+
+<h2 id="4-1464-155348-1">4  1464  155348.1</h2>
+
+<h2 id="5-1465-203935-5">5  1465  203935.5</h2>
+
+<h2 id="6-1466-157606-6">6  1466  157606.6</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="save">SAVE</h1>
+
+<p>readr::write_csv(submission, path = &ldquo;submission_mlr.csv&rdquo;)
+{% endhighlight %}</p>
+
+<p>We then <a href="https://twitter.com/mammykins_/status/790228462623723520">submit this on Kaggle</a>!</p>
+
+<h2 id="feature-engineering">Feature engineering</h2>
+
+<p>We likely want to code categorical variables into dummy variables and think about how to combine or use the available variables for this regression problem to further reduce our RMSE below 0.27. There are also some tools for feature filtering in <code>mlr</code>.</p>
+
+<p>For details on how to do that see the <code>mlr</code> <a href="https://mlr-org.github.io/mlr-tutorial/release/html/feature_selection/index.html">tutorials pages</a>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Following house prices is a national obsession. Here we elucidate an alternative dataset to the traditional <code>MASS::Boston</code> suburban house values with a more contemporary, comprehensive and complicated data set. This contributes to the Kaggle learning experience by providing Kagglers with a mild introduction into Machine Learning with R, specifically the <code>mlr</code> package. We predict house prices with a respectable 0.27 RMSE using out of the box approaches. Feature selection will help nudge the accuracy towards the dizzying heights of the Kaggle scoreboard albeit with a high demand on the Kaggler&rsquo;s time and insight.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Bischl, B., Lang, M., Richter, J., Bossek, J., Judt, L., Kuehn, T., . Kotthoff, L. (2015). mlr: Machine Learning in R, 17, 1-5. Retrieved from <a href="http://cran.r-project.org/package=mlr">http://cran.r-project.org/package=mlr</a></li>
+<li>Cock, D. De. (2011). Ames , Iowa : Alternative to the Boston Housing Data as an End of Semester Regression Project, 19(3), 1-15.</li>
+</ul>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-2-3-2015-12-10">R version 3.2.3 (2015-12-10)</h2>
+
+<h2 id="platform-x86-64-pc-linux-gnu-64-bit">Platform: x86_64-pc-linux-gnu (64-bit)</h2>
+
+<h2 id="running-under-ubuntu-16-04-1-lts">Running under: Ubuntu 16.04.1 LTS</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-stats-graphics-grdevices-utils-datasets-methods-base">[1] stats     graphics  grDevices utils     datasets  methods   base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-mlr-2-9-stringi-1-1-2-paramhelpers-1-9-bbmisc-1-10">[1] mlr_2.9          stringi_1.1.2    ParamHelpers_1.9 BBmisc_1.10</h2>
+
+<h2 id="5-dplyr-0-5-0-purrr-0-2-2-readr-1-0-0-tidyr-0-6-0">[5] dplyr_0.5.0      purrr_0.2.2      readr_1.0.0      tidyr_0.6.0</h2>
+
+<h2 id="9-tibble-1-2-ggplot2-2-1-0-tidyverse-1-0-0">[9] tibble_1.2       ggplot2_2.1.0    tidyverse_1.0.0</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-parallelmap-1-3-rcpp-0-12-7-formatr-1-4">[1] parallelMap_1.3    Rcpp_0.12.7        formatR_1.4</h2>
+
+<h2 id="4-plyr-1-8-4-iterators-1-0-8-tools-3-2-3">[4] plyr_1.8.4         iterators_1.0.8    tools_3.2.3</h2>
+
+<h2 id="7-digest-0-6-10-corrplot-0-77-extracat-1-7-4">[7] digest_0.6.10      corrplot_0.77      extracat_1.7-4</h2>
+
+<h2 id="10-evaluate-0-9-gtable-0-2-0-checkmate-1-8-1">[10] evaluate_0.9       gtable_0.2.0       checkmate_1.8.1</h2>
+
+<h2 id="13-lattice-0-20-33-foreach-1-4-3-shiny-0-14-1">[13] lattice_0.20-33    foreach_1.4.3      shiny_0.14.1</h2>
+
+<h2 id="16-dbi-0-5-1-parallel-3-2-3-gbm-2-1-1">[16] DBI_0.5-1          parallel_3.2.3     gbm_2.1.1</h2>
+
+<h2 id="19-hexbin-1-27-1-tsp-1-1-4-stringr-1-1-0">[19] hexbin_1.27.1      TSP_1.1-4          stringr_1.1.0</h2>
+
+<h2 id="22-knitr-1-14-ggvis-0-4-3-grid-3-2-3">[22] knitr_1.14         ggvis_0.4.3        grid_3.2.3</h2>
+
+<h2 id="25-data-table-1-9-6-r6-2-2-0-survival-2-38-3">[25] data.table_1.9.6   R6_2.2.0           survival_2.38-3</h2>
+
+<h2 id="28-rmarkdown-1-0-9016-reshape2-1-4-1-magrittr-1-5">[28] rmarkdown_1.0.9016 reshape2_1.4.1     magrittr_1.5</h2>
+
+<h2 id="31-splines-3-2-3-scales-0-4-0-backports-1-0-3">[31] splines_3.2.3      scales_0.4.0       backports_1.0.3</h2>
+
+<h2 id="34-codetools-0-2-14-htmltools-0-3-5-assertthat-0-1">[34] codetools_0.2-14   htmltools_0.3.5    assertthat_0.1</h2>
+
+<h2 id="37-checkpoint-0-3-16-rmd2md-0-1-1-xtable-1-8-2">[37] checkpoint_0.3.16  rmd2md_0.1.1       xtable_1.8-2</h2>
+
+<h2 id="40-mime-0-5-colorspace-1-2-6-httpuv-1-3-3">[40] mime_0.5           colorspace_1.2-6   httpuv_1.3.3</h2>
+
+<h2 id="43-lazyeval-0-2-0-munsell-0-4-3-chron-2-3-47">[43] lazyeval_0.2.0     munsell_0.4.3      chron_2.3-47</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

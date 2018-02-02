@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>SylvaSense Part II - A Hugo website</title>
+<meta property="og:title" content="SylvaSense Part II - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">8 min read</span>
+    
+
+    <h1 class="article-title">SylvaSense Part II</h1>
+
+    
+    <span class="article-date">2015/08/01</span>
+    
+
+    <div class="article-content">
+      
+
+<h3 id="gypsum-blocks">Gypsum blocks</h3>
+
+<p>In my previous post I was looking into building my own gypsum block soil moisture sensors. All the component parts have now arrived, and so I&rsquo;ve now produced three sensors. In this post I&rsquo;ll explain how I made them, show some preliminary data, and talk a bit about how much they cost.</p>
+
+<p>I&rsquo;m using 3 mm A3 stainless steel studding to form the electrodes across which the arduino will measure resistance. Once this arrived, I cut two rods 75 mm in length, and spaced the plastic 3d printed components at a slightly shorter distance than the height of the hair curlers.</p>
+
+<p><a href="/figures/2015-08-01-assembly.jpg"><img src="/figures/2015-08-01-assembly.jpg" alt="" /></a></p>
+
+<p><em>Assembled 3d printed components and stainless steel studding next to a 35 mm hair curler.</em></p>
+
+<p>Once assembled, I then wrapped the whole contraption in silver foil, leaving a gap at the top to allow me to fill it with plaster of Paris.</p>
+
+<p><a href="/figures/2015-08-01-casting1.jpg"><img src="/figures/2015-08-01-casting1.jpg" alt="" /></a></p>
+
+<p><em>Starting to cast the sensor.</em></p>
+
+<p>Pay attention to the manufacturers recommendations on the mix for the plaster of Paris. I used 1 part water to 1.5 parts plaster of Paris. This gives a nice free flowing mix, but use it quickly, as it will soon thicken, and the risk of air bubbles being trapped in a the viscosity is greater.</p>
+
+<p>The first time I did this I just let the plaster pour out over the top. Once this had hardened up a little, I then removed the excess with a knife.</p>
+
+<p>Having removed the excess you are left with a nice looking block. It takes a good few hours for plaster to fully harden, but within an hour you can start to pick the thing up and manipulate it, and remove the excess plaster.</p>
+
+<p><a href="/figures/2015-08-01-completed-sensor1.jpg"><img src="/figures/2015-08-01-completed-sensor1.jpg" alt="" /></a></p>
+
+<p><em>A completed sensor having been cleaned up, and allowed to dry out.</em></p>
+
+<h3 id="temperature-dependence">Temperature dependence</h3>
+
+<p>So somewhere about now, having cast my first sensor, I had a conversation with a colleague at work who mentioned that he was undertaking a project on the relationship between resistivity and soil moisture content. The relationship was strictly non-linear he mentioned, which is not a huge surprise, but he also mentioned that resistance is very strongly correlated to temperature.</p>
+
+<p>So, in order to get a handle on this, I decided to try to embed a temperature sensor within the new sensors I was producing. Actually, I decided to go the whole hog and embed two temperature sensors into each gypsum block. I have some ds18b20 sensors, which are great little digital temperature sensors that work on the 1-wire system. I&rsquo;m no expert here - just Google it, there are plenty of tutorials for these sensors.</p>
+
+<p><a href="/figures/2015-08-01-ds18b20.jpg"><img src="/figures/2015-08-01-ds18b20.jpg" alt="" /></a></p>
+
+<p><em>The ds18b20, a versatile three legged digital onewire temperature sensor. Each unit costs about £1.</em></p>
+
+<p>The first things is to make sure that the ds18b20s are completely waterproof. You can buy stainless steel cased ds18b20s, but they tend to be in the region of a few pounds, when a single un-shielded sensor should cost around a pound, and it is easy enough to waterproof them. I started by soldering on wires onto each leg of the sensor, then wrapping these with an individual layer of heat shrink, and then a further layer of heat shrink to wrap the three legs together. Then I coated the entire sensor in epoxy resin, just to ensure that any gaps between the heat shrink are totally covered. This may be overkill, but I am going to bury this thing underground where it is likely to get saturated with water - I don&rsquo;t want to take the risk of the sensor shorting out and packing up.</p>
+
+<p><a href="/figures/2015-08-01-ds18b20-position.jpg"><img src="/figures/2015-08-01-ds18b20-position.jpg" alt="" /></a></p>
+
+<p><em>Holding temperature sensors in place with croccodile clips ready for casting in plaster of Paris.</em></p>
+
+<p>Having totally waterproofed four sensors, I then positioned these on the sensor in such a way that they would not interfere with the shortest distance between the two electrodes, and then cast the rest of the sensor around them, thus embedding them in the gypsum.</p>
+
+<h3 id="initial-data">Initial data</h3>
+
+<p>So that was yesterday. One of the nice things about making soil moisture sensors is that you can start to take readings off them right away in order to judge when the gypsum is completely dry. I&rsquo;ve also started to take readings off one of the temperature sensors. This could be interesting, as the hardening of gypsum is an exothermic reaction.</p>
+
+<p>So what can my first 40 hours on these sensors say? We first of all, I know that the first gypsum sensor I cast had reached some sort of equilibrium resistance when I started sensing, and has now been steady for the last 40 hours sitting next to a dehumidifier. The other two sensors show much lower resistance, until about 12 hours in, when I decided to sit them next to the dehumidifier. After that, resistance increased as the sensors began to dry out, and climbed steadily towards the resistance of the dry sensor, reaching it around 21 hours in.</p>
+
+<p><a href="/figures/2015-08-01-datalog-1.png"><img src="/figures/2015-08-01-datalog-1.png" alt="plot of chunk 2015-08-01-datalog" /></a></p>
+
+<p><em>The first 40 hours of data, showing two freshly cast sensors slowly drying out over 20 hours to reach an equilibrium resistance.</em></p>
+
+<p>Looking at the temperature story: temp0 is the sensor within a gypsum block, whilst temp1 is sitting next to it in the open. First off, it&rsquo;s pretty warm next to that dehumidifier, and you can see the spike when I turned it on at around 10 hours in. What&rsquo;s interesting is that the temperature in the internal temperature sensor remained pretty stable at around $21^{\circ}$C until around hour 17. Nothing special happened at that point, but the temperature shot up by about $7^{\circ}$C, and it is now sitting pretty close to the external temperature. Perhaps it reached some threshold where the evaporative cooling no longer held sway. Note that the embedded sensor was a little closer to the dehumidifier outlet, and so stayed a bit warmer than the external sensor after around 20 hours, but when I decided to switch the thing off at around 30 hours, both sensors drop off pretty rapidly to a fair constant $25^{\circ}$C - yes a hot room!.</p>
+
+<p>At any rate, what I can say is: it&rsquo;s working! Once I get all the sensors dried to an equilibrium, I&rsquo;ll start to do some trials in soil.</p>
+
+<h3 id="costs">Costs</h3>
+
+<p>I&rsquo;ve had a go at totaling up the costs of an individual sensor. I haven&rsquo;t tried too hard to account for consumables like wire, and resin, but the cost of these is pretty negligible. With the two ds18b20 temperature sensors that I have installed in my prototype sensors the cost is roughly £3.54 each. If you only used one temperature sensor (perfectly reasonable) the costs would be £2.44 each, and with no temperature sensors, £1.34 each.</p>
+
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Source</th>
+<th>Quantity</th>
+<th>Price</th>
+<th>Unit Price</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Hair curlers</td>
+<td><a href="http://www.amazon.co.uk/gp/product/B0119BJ1I0?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o07_s00">Amazon</a></td>
+<td>6</td>
+<td>£1.99</td>
+<td>£0.33</td>
+</tr>
+
+<tr>
+<td>Plaster of Paris</td>
+<td><a href="http://www.amazon.co.uk/gp/product/B009K4S1PS?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o09_s00">Amazon</a></td>
+<td>1</td>
+<td>£4.90<sup class="footnote-ref" id="fnref:1"><a rel="footnote" href="#fn:1">1</a></sup></td>
+<td>£0.33</td>
+</tr>
+
+<tr>
+<td>Studding<sup class="footnote-ref" id="fnref:2"><a rel="footnote" href="#fn:2">2</a></sup></td>
+<td><a href="http://www.amazon.co.uk/gp/product/B00SJHFUQ0?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o06_s00">Amazon</a></td>
+<td>13</td>
+<td>£1.69</td>
+<td>£0.13</td>
+</tr>
+
+<tr>
+<td>Nuts</td>
+<td><a href="http://www.amazon.co.uk/gp/product/B00A6G3G2C?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o00_s00">Amazon</a></td>
+<td>8<sup class="footnote-ref" id="fnref:3"><a rel="footnote" href="#fn:3">3</a></sup></td>
+<td>£1.44</td>
+<td>£0.18</td>
+</tr>
+
+<tr>
+<td>Washers</td>
+<td><a href="http://www.amazon.co.uk/gp/product/B00ET7RCXS?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o01_s00">Amazon</a></td>
+<td>8<sup class="footnote-ref" id="fnref:3"><a rel="footnote" href="#fn:3">3</a></sup></td>
+<td>£1.90</td>
+<td>£0.24</td>
+</tr>
+
+<tr>
+<td>DS18B20</td>
+<td><a href="http://www.amazon.co.uk/gp/product/B00BJY8S8C?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o02_s00">Amazon</a></td>
+<td>10</td>
+<td>£11.00</td>
+<td>£2.20</td>
+</tr>
+
+<tr>
+<td>3D printing<sup class="footnote-ref" id="fnref:4"><a rel="footnote" href="#fn:4">4</a></sup></td>
+<td>Colleague</td>
+<td>6</td>
+<td>£0.42</td>
+<td>£0.14</td>
+</tr>
+
+<tr>
+<td>Total</td>
+<td></td>
+<td></td>
+<td></td>
+<td>£3.54</td>
+</tr>
+</tbody>
+</table>
+
+<h4 id="additional-requriements">Additional requriements</h4>
+
+<p>There are also a number of other costs which I haven&rsquo;t tried too hard to quantify:</p>
+
+<ul>
+<li>Heat shrink - you could buy a pack like <a href="http://www.amazon.co.uk/dp/B00CHKUCWW/ref=sr_1_3?s=electronics&amp;ie=UTF8&amp;qid=1438728427&amp;sr=1-3&amp;keywords=heat+shrink">this</a> for £4.98, and never need to buy more!</li>
+<li>Epoxy resin - this is necessary for waterproofing temperature sensors. I used some <a href="http://www.westsystem.com/">WEST system</a> resin and hardener I had left over from building canoe paddles (yes&hellip;another story), but you could use some other proprietary equivalent in smaller quantities.</li>
+<li>Wire - you will need some wire. I used solid core for most things, but much of this I got from off cuts I found discarded on the pavement near where a telephone engineer had been working.</li>
+<li>Arduino - I have an official arduino uno from Italy, but I also have started to use cheaper Chinese reproductions. You can&rsquo;t argue with <a href="http://www.amazon.co.uk/gp/product/B00QPUEFNW?psc=1&amp;redirect=true&amp;ref_=oh_aui_detailpage_o05_s00">£3.16</a>.</li>
+<li>SD card logger - I actually bought one from <a href="http://www.adafruit.com/">Adafruit</a> which is great, but you can also find cheaper Chinese alternatives if your budget prefers.</li>
+<li>Realtime clock - the arduino doesn&rsquo;t know what time it is, so you will need one of <a href="http://www.amazon.co.uk/gp/product/B00K67X496?psc=1&amp;redirect=true&amp;ref_=oh_aui_search_detailpage">these</a>. Again I have used a Chinese reproduction.</li>
+</ul>
+
+<p>So on the whole, I would say that you can set up a series of soil moisture sensors, and the necessary arduino hardware to monitor it for under £20, and I&rsquo;m sure there is scope to reduce these costs further. It is not necessary for example, to include temperature sensors as I have done, but they should make it easier at a later date for correcting for the temperature dependence of the soil moisture readings: plus they give you an extra data stream of soil temperature, which might be of interest in its own right. This is of course, assuming that they will work in the soil, I&rsquo;ll test them out in a later post.</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:1">I&rsquo;m conservatively guessing that I can get about 15 gypsum blocks out of this 1 kg tub.
+ <a class="footnote-return" href="#fnref:1"><sup>[return]</sup></a></li>
+<li id="fn:2">2 $\times$ 2 m lengths from which 13 sets of two 75 mm rods can be cut.
+ <a class="footnote-return" href="#fnref:2"><sup>[return]</sup></a></li>
+<li id="fn:3">Pack of fifty; six nuts required for each sensor.
+ <a class="footnote-return" href="#fnref:3"><sup>[return]</sup></a></li>
+<li id="fn:4">I was lucky enough to get this printing done for free, but if you don&rsquo;t have a friend to do this, you could get the parts 3d printed online. I looked at a couple of suppliers, and compared to the cost of printing with your own (or a friend&rsquo;s printer) they were very expensive: in the region of £2-£3 for each component.
+ <a class="footnote-return" href="#fnref:4"><sup>[return]</sup></a></li>
+</ol>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

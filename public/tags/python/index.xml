@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Python on A Hugo website</title>
+    <link>/tags/python/</link>
+    <description>Recent content in Python on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 22 Feb 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/python/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Measuring light with a Raspberry Pi</title>
+      <link>/2016/02/22/measuring-light-with-a-raspberry-pi/</link>
+      <pubDate>Mon, 22 Feb 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/02/22/measuring-light-with-a-raspberry-pi/</guid>
+      <description>{% include _toc.html %}
+I&amp;rsquo;ve been working through a year&amp;rsquo;s worth of sensor data that I collected using Raspberry Pis. In the last post on this subject I compared my temperature records with records from a local weather station. In this post I&amp;rsquo;m going to look at the light measurements. I have two main questions I would like to answer:
+ Can the light patterns be used to explain the temperature patterns noted in my temperature post.</description>
+    </item>
+    
+    <item>
+      <title>Sensing temperature with a Raspberry Pi</title>
+      <link>/2016/01/15/sensing-temperature-with-a-raspberry-pi/</link>
+      <pubDate>Fri, 15 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/01/15/sensing-temperature-with-a-raspberry-pi/</guid>
+      <description>In my last post I started to delve into a year of sensor data that I have been collecting with my Raspberry Pi sensors. I made some general observations about the data, and went through the process of cleaning it.
+In this post I&amp;rsquo;ll taking a deeper look at the temperature data. I currently have three temperatrue sensors: two internal (one a DS18B20, and a second within an DHT22 combined temperature and humidity sensor) and one external (another DS18B20).</description>
+    </item>
+    
+  </channel>
+</rss>

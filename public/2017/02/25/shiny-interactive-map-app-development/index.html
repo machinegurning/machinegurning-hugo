@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Shiny interactive map app development - A Hugo website</title>
+<meta property="og:title" content="Shiny interactive map app development - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">11 min read</span>
+    
+
+    <h1 class="article-title">Shiny interactive map app development</h1>
+
+    
+    <span class="article-date">2017/02/25</span>
+    
+
+    <div class="article-content">
+      
+
+<p>I&rsquo;ve been <a href="http://www.machinegurning.com/rstats/uk_obesity/">developing</a> my mapping skills in R for a couple of months now. I started off using a couple of different packages but was quickly drawn to <code>leaflet</code> which allows one to create interactive web maps with the <a href="http://leafletjs.com/">JavaScript Leaflet Library</a>. It has loads of great features out of the box and will meet most of your mapping needs (if old fashioned people reject your interactive map you can also provide a <a href="http://stackoverflow.com/questions/31336898/how-to-save-leaflet-in-rstudio-map-as-png-or-jpg-file">static version</a> using the <code>mapshot</code> function in the <code>mapview</code> package available on CRAN).</p>
+
+<p>This blog post aims to persuade you as to the merits of <code>leaflet</code> especially when combined with <a href="https://shiny.rstudio.com/">shiny</a> facilitating the development of some powerful apps for your users to explore data with. To demonstrate I simulate some data and pose a question: how do <code>X1</code> and <code>X2</code> vary between schools within Local Education Authorities (LA) in England?</p>
+
+<h1 id="app-cherry-picker">App - Cherry Picker</h1>
+
+<p>A Shiny app for mapping School specific variables by Local Education Authority with Leaflet in R.</p>
+
+<h2 id="the-live-app">The live app</h2>
+
+<p><a href="https://mammykins.shinyapps.io/App-cherry_picker/">App-cherry_picker</a> allows the user to investigate correlations between two made-up variables (we call them <code>apples</code> and <code>pears</code> [stairs], more interesting names than <code>X1</code> and <code>X2</code>) drawn from a uniform distribution.
+It demonstrates how <a href="https://en.wikipedia.org/wiki/Cherry_picking">cherry picking</a>, or finding data that supports your viewpoint (and ignoring data that does not) can be easily done even with two totally uncorrelated variables. We also use this appletunity for fruit related puns or <a href="https://en.wikipedia.org/wiki/Punnet">punnet</a>-try.</p>
+
+<h2 id="use-the-app">Use the app</h2>
+
+<p>Give it a try: <a href="https://mammykins.shinyapps.io/App-cherry_picker/">App-cherry_picker</a>.</p>
+
+<h2 id="clone-the-code-https-github-com-mammykins-app-cherry-picker">Clone the <a href="https://github.com/mammykins/App-cherry_picker">code</a></h2>
+
+<p>The code looks complicated right? Shiny can be tricky as it can be more difficult to debug than regular R. However, it&rsquo;s not so bad, the code is developed iteratively, it&rsquo;s not written in one session. Make sure you know what the end <a href="https://en.wikipedia.org/wiki/Usability_testing">user wants</a> and show it to them frequently for feedback. Gradually your app &rsquo;ll evolve to meet the needs of the user. The interactivity is worth the extra effort and there are plenty of <a href="https://shiny.rstudio.com/tutorial/">good tutorials</a> available!</p>
+
+<p>I started this app development by going to the Shiny gallery and copying code from an <a href="https://shiny.rstudio.com/tutorial/">app</a> which looked similar to the desired app I had in mind. You can do the same by copying my code as a starting point.</p>
+
+<h2 id="use-version-control">Use version control</h2>
+
+<p>Prior to app development of your own, make sure you are using version control such as git. Use Github (a repository hosting site; see <a href="http://stackoverflow.com/questions/13321556/difference-between-git-and-github">here for the difference between git and Github</a>) or other sites to share your code. This will make life a lot easier as explained <a href="https://swcarpentry.github.io/git-novice/">here</a>.</p>
+
+<h2 id="shiny-is-special">Shiny is special</h2>
+
+<p>Shiny is a package that contains a set of functions to build web applications within R. However, bear in mind:</p>
+
+<ul>
+<li>for the correct use of its functions, files need to be organised appropriately (note the ui, server and global files found within an <a href="https://github.com/mammykins/App-cherry_picker">App prefixed folder</a>).<br /></li>
+<li>the syntax of its functions are slightly different to base R.<br /></li>
+</ul>
+
+<p>Briefly the <code>ui.R</code> is the app&rsquo;s frontend and the <code>server.R</code> is the backend (<a href="https://shiny.rstudio.com/tutorial/lesson1/">more detail</a>). <code>global.R</code> has its own niche uses such as pre-loading packages and data that can be used both in <code>ui.R</code> and <code>server.R</code>. For example, in my app I use it to read in all the core datasets and prepare the mapping data. I also call a <a href="https://github.com/mammykins/App-cherry_picker/blob/master/make_popup_vector_from_numeric.R">custom function</a> which is used to plot a school Marker on the Leaflet map.</p>
+
+<h3 id="ui">UI</h3>
+
+<p>Here we have one of the tabs that you can navigate to. This <code>tabPanel</code> is one of four in the app that are contained within the <code>navbarPage</code> (see <a href="https://github.com/mammykins/App-cherry_picker/blob/master/ui.R">ui.R</a>). Each <code>tabPanel</code> is seperated from one another by commas. It&rsquo;s important to lay out your code sensibly to avoid misplacing a comma, fortunately R Studio takes care of this for you.</p>
+
+<p>Note the use of HTML builder functions (e.g. <code>p()</code> and <code>h4()</code>) for constructing HTML documents (the output is an intereactive webpage).</p>
+
+<p>{% highlight r %}
+tabPanel(&ldquo;Fruit limit&rdquo;,
+         h4(&ldquo;Schools selected from Data explorer tab&rdquo;),
+         DT::dataTableOutput(&ldquo;green_grocers&rdquo;),
+         plotOutput(&ldquo;scatter_fruit&rdquo;, height = 200),
+         h4(&ldquo;How many items of fruit required to feed the Schools of interest?&rdquo;),
+         p(&ldquo;This app was developed to showcase a Shiny app in R using the Leaflet package. Use your imagination, make a map!&rdquo;,
+           style = &ldquo;font-family: &lsquo;times&rsquo;; font-si16pt&rdquo;)
+         )
+{% endhighlight %}</p>
+
+<p>The <code>tags</code> environment also contains convenience functions. Here I insert the <a href="https://github.com/mammykins/App-cherry_picker/blob/master/www/mg_logo.png">Machine Gurning logo</a> (which must be saved in a folder called <a href="https://github.com/mammykins/App-cherry_picker/tree/master/www">www</a>) and produce a quote within the user interface.</p>
+
+<p>{% highlight r %}
+tags$a(img(src = &ldquo;mg_logo.png&rdquo;, height = 144, width = 144),</p>
+
+<pre><code>   href = &quot;http://www.machinegurning.com/posts/&quot;),
+</code></pre>
+
+<p>tags$blockquote(&ldquo;Correlation does not imply causation.&rdquo;, cite = &ldquo;Anon.&rdquo;)
+{% endhighlight %}</p>
+
+<h3 id="reactivity">Reactivity</h3>
+
+<p>Shiny is all about reactivity. The user picks a new LA of interest and the app adapts. The <code>selectInput</code> is the important feature here that provides teh user the choice of LA and phase of schools. The user is provided with a list of schools through the <code>global.R</code> assigned object <code>la_user_friendly_list</code>. They pick the LA and that string can now be called by the <code>server.R</code> using <code>input$la_of_interest</code>.</p>
+
+<p>{% highlight r %}
+                                      selectInput(inputId = &ldquo;la_of_interest&rdquo;,
+                                                  label = &ldquo;Local Authority&rdquo;,
+                                                  choices = la_user_friendly_list,
+                                                  selected = &ldquo;202 - Camden&rdquo;),
+                                      selectInput(inputId = &ldquo;phase&rdquo;, label = &ldquo;School phase&rdquo;,
+                                                  choices = c(&ldquo;Secondary&rdquo;, &ldquo;Primary&rdquo;))
+{% endhighlight %}</p>
+
+<p>We use this information to filter our fruits (<code>apples</code> and <code>pears</code> joined data from <code>global.R</code>) all-schools dataframe (including geospatial goordinates) and create a reactive object called <code>ks4_to_map()</code> (this is vestigial name). In the following code we filter our dataframe by splitting the input string and extract the numeric LA Code (e.g. &ldquo;202 - Camden&rdquo; to 202). Thus any schools of that LA are filtered and further filtered by school phase and complete cases.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="note-input-la-of-interest-not-just-la-of-interest-this-is-from-the-ui-r-inputid">NOTE input$la_of_interest, not just la_of_interest; this is from the ui.R inputID</h1>
+
+<p>ks4_to_map &lt;- reactive({
+    dplyr::filter(fruits,
+                  la_number == as.numeric(sapply(strsplit(input$la_of_interest[[1]], split = &ldquo; &ldquo;), &ldquo;[[&ldquo;, 1))) %&gt;%
+      left_join(school_locations,  #  we need geospatial data
+                by = c(&ldquo;urn&rdquo;, &ldquo;la_number&rdquo;)) %&gt;%
+      dplyr::filter(phase == input$phase) %&gt;%
+      mutate(easting = easting.x, northing = northing.x) %&gt;%
+      select(-easting.y, -northing.y) %&gt;%
+      na.omit()
+  })
+{% endhighlight %}</p>
+
+<p>Great, we have the schools we need to plot in our LA. To provide the national perspective we can draw a histogram of all the school data using our <code>global.R</code> assigned <code>fruits</code> dataframe object and then use our reactive object <code>ks4_to_map</code> to add a <code>rug()</code> of blue ticks to the bottom. Note how we assign this object, which is based on a reactive object, to <code>output$hist_apples</code>. <code>renderPlot</code> renders a reactive plot that is suitable for assigning to an output slot.</p>
+
+<p>{% highlight r %}
+  # Provide variable distributions to aid comparison to rest of the country
+  output$hist_apples &lt;- renderPlot({
+    hist(fruits$apples,  #  Note this does all schools, doesn&rsquo;t filter for School Phase, which you may want
+         main = &ldquo;Apple of my eye&rdquo;,  #  Note how we call our pre-filtered data assigned in global!
+         xlab = &ldquo;Apples&rdquo;, col = &ldquo;salmon&rdquo;, border = &lsquo;white&rsquo;, xlim = c(0, 1))
+    rug(ks4_to_map()$apples, ticksize = -0.2, lwd = 3, col = &ldquo;blue&rdquo;)  #  For the rug we use our reactive dataframes
+  })
+{% endhighlight %}</p>
+
+<p>Thus to render this object in the <code>ui.R</code> we use the shiny function <code>plotOutput</code>. You can find this line of code in the <code>absolutePanel</code> in the <code>ui.R</code>.</p>
+
+<p>{% highlight r %}
+plotOutput(&ldquo;hist_apples&rdquo;, height = 200)  #  Note the use of &ldquo;output_name&rdquo;
+{% endhighlight %}</p>
+
+<h3 id="leaflet">Leaflet</h3>
+
+<p>The same principles apply for creating the map, the <code>ks4_to_map()</code> reactive object is transformed into a spatial points dataframe object called <code>ks4_sp_ll</code>. Importantly we need to convert the esoteric northings and eastings, used by OS in the UK, to latitude and longitude. The credit for this solution should go to this <a href="http://www.alex-singleton.com/R-Tutorial-Materials/7-converting-coordinates.pdf">tutorial</a>.</p>
+
+<p>{% highlight r %}
+   # LEAFLET &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;</p>
+
+<p># Create coordinates variable, first argument
+  # Create the SpatialPointsDataFrame, note coords and data are distinct slots in S4 object
+  # Vestigial name from condainment app
+  ks4_sp_ll &lt;- reactive({
+    #  we use x as a placeholder just within this reactive bit, helps with the last renaming step
+    x &lt;- spTransform(
+      sp::SpatialPointsDataFrame(dplyr::select(ks4_to_map(), easting, northing),
+                                 data = dplyr::select(ks4_to_map(), -easting, -northing),
+                                 proj4string = CRS(&ldquo;+init=epsg:27700&rdquo;)),
+      CRS(latlong)
+    )
+    # Convert from Eastings and Northings to Latitude and Longitude and rename columns
+    colnames(x@coords)[colnames(x@coords) == &ldquo;easting&rdquo;] &lt;- &ldquo;longitude&rdquo;
+    colnames(x@coords)[colnames(x@coords) == &ldquo;northing&rdquo;] &lt;- &ldquo;latitude&rdquo;</p>
+
+<pre><code>x
+</code></pre>
+
+<p>})
+{% endhighlight %}</p>
+
+<p>Now we render the reactive leaflet object by assigning the output slot <code>output$mymap</code> using the function <code>renderLeaflet</code>. The <a href="https://rstudio.github.io/leaflet/">online help</a> is very good for Leaflet so I won&rsquo;t go into all the details here. In the interactive map you can change the map tile set, plot circles for the different variables on and off, have the apples displayed and the pears variable as an outline, use markers to identify school names on the maps.</p>
+
+<p>{% highlight r %}
+    # LEAFLET &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;</p>
+
+<p>output$mymap &lt;- renderLeaflet({
+    #  See the full code in server.R
+  })
+{% endhighlight %}</p>
+
+<h2 id="dt">DT</h2>
+
+<p>The R package <a href="https://rstudio.github.io/DT/">DT</a> provides an R interface to the JavaScript library DataTables. R data objects (matrices or data frames) can be displayed as tables on HTML pages, and DataTables provides filtering, pagination, sorting, and many other features in the tables. I make use of this in the second tab called &ldquo;Data Explorer&rdquo;. You can create all your standard Excel-like dashboard features that people like. Including currency symbols, colouring fonts (blue for good, red for bad) etc.</p>
+
+<p>This package also facilitates row selection, so the user can click on schools of interest and explore them further. Here we use selected rows to help us in our cherry picking exercise. By clicking on potential cherries (i.e. where both apples and pears are relatively high) in the &ldquo;Data Explorer&rdquo; tab, this then draws red circles on a scatterplot of all schools&rsquo; apples and pears data for those highlighted schools. Does your selected school make it into the cherry picking region?</p>
+
+<p>As you interact with the DT table (e.g.sort columns, search the table, or navigate through pages), DT will expose some information about the current state of the table to Shiny. At the moment, this information is available in the input object of the Shiny server function (suppose the table output id is <code>tableId</code>). The important bit in the code is the suffixing of <code>_rows_selected</code> on the <code>tableId</code> (in this case creating <code>fruit_table_data_rows_selected</code>), <a href="https://rstudio.github.io/DT/shiny.html">explained here</a>.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="another-tab">ANOTHER TAB &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-</h1>
+
+<p># Here we can use another tab to display some furter analysis or statistics</p>
+
+<h1 id="https-rstudio-github-io-dt-shiny-html"><a href="https://rstudio.github.io/DT/shiny.html">https://rstudio.github.io/DT/shiny.html</a></h1>
+
+<p># row selection
+  output$green_grocers &lt;- DT::renderDataTable(datatable(
+    slice(ks4_to_map() %&gt;%
+            select(school_name, apples, pears, urn) %&gt;%
+            arrange(desc(apples)) %&gt;%
+            rename(School_Name = school_name, URN = urn), #  creates identical table to slice from, see fruit_table_data
+          input$fruit_table_data_rows_selected) %&gt;%<br />
+      mutate(made_up_statistic = (apples + pears) * (if_else(input$phase == &ldquo;Secondary&rdquo;,
+                                              3,  #  Secondary school children need more fruit!?
+                                              1) * 30),
+             cherry_status = round((apples + pears) / 2, 2)
+    ) %&gt;%  #  we refine the datatable here and prettify
+      select(School_Name, cherry_status, made_up_statistic)
+  ) %&gt;%  #  and prettify
+    formatRound(c(&ldquo;School_Name&rdquo;, &ldquo;made_up_statistic&rdquo;),
+                0)
+  )
+{% endhighlight %}</p>
+
+<h3 id="other-features">Other features</h3>
+
+<p>People like Excel, let them save app outputs so that they can then open them in Excel.</p>
+
+<p>{% highlight r %}
+  output$download_data &lt;- downloadHandler(
+    filename = function() { paste(&ldquo;cherry_picker<em>app</em>&rdquo;, input$la_of_interest, &lsquo;.csv&rsquo;, sep = &ldquo;) },
+    content = function(file) {
+      write.csv(ks4_to_map(), file)
+    }
+  )
+{% endhighlight %}</p>
+
+<h3 id="try-it-yourself">Try it yourself</h3>
+
+<p>Try <a href="https://help.github.com/articles/cloning-a-repository/">cloning my repo</a> and replacing the data within the apples and pears columns in both of the respective csv files with some school data of interest (match on the URN). Then run the <a href="https://github.com/mammykins/App-cherry_picker/blob/master/school_data_write_as_rds.R">school_data_write_as_rds.R</a> to write the data as the more memory efficient RDS (there&rsquo;s no reason your app can&rsquo;t directly read in the data as a csv). Now you have a similar app that will produce a map of your two variables of interest; albeit still called apples and pears!  From this starting point you can continue to add and remove features to get your app into the user desired shape.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<blockquote>
+<p>The future&rsquo;s bright, the future&rsquo;s Shiny!</p>
+</blockquote>
+
+<p>Shiny map apps are awesome and can be useful for spotting patterns in data that might be worth a more robust statistical follow up investigation. It&rsquo;s important to protect oneself from cherry picking for a unconciously favoured hypothesis as demonstrated with this app, where one could pick out numerous schools that are high for both apples and pears. If one only presented these schools in a discussion, one might think that there was good evidence for banning apples in schools. At the least to prevent everything from going pear shaped!</p>
+
+<p>{% highlight r %}
+devtools::session_info()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="setting-value">setting  value</h2>
+
+<h2 id="version-r-version-3-3-2-2016-10-31">version  R version 3.3.2 (2016-10-31)</h2>
+
+<h2 id="system-x86-64-mingw32">system   x86_64, mingw32</h2>
+
+<h2 id="ui-rstudio-1-0-136">ui       RStudio (1.0.136)</h2>
+
+<h2 id="language-en">language (EN)</h2>
+
+<h2 id="collate-english-united-kingdom-1252">collate  English_United Kingdom.1252</h2>
+
+<h2 id="tz-europe-london">tz       Europe/London</h2>
+
+<h2 id="date-2017-03-20">date     2017-03-20</h2>
+
+<h2 id="package-version-date-source">package    * version date       source</h2>
+
+<h2 id="checkpoint-0-3-18-2016-10-31-cran-r-3-3-2">checkpoint   0.3.18  2016-10-31 CRAN (R 3.3.2)</h2>
+
+<h2 id="devtools-1-12-0-2016-06-24-cran-r-3-3-2">devtools     1.12.0  2016-06-24 CRAN (R 3.3.2)</h2>
+
+<h2 id="digest-0-6-11-2017-01-03-cran-r-3-3-2">digest       0.6.11  2017-01-03 CRAN (R 3.3.2)</h2>
+
+<h2 id="evaluate-0-10-2016-10-11-cran-r-3-3-1">evaluate     0.10    2016-10-11 CRAN (R 3.3.1)</h2>
+
+<h2 id="knitr-1-15-1-2016-11-22-cran-r-3-3-2">knitr        1.15.1  2016-11-22 CRAN (R 3.3.2)</h2>
+
+<h2 id="magrittr-1-5-2014-11-22-cran-r-3-3-1">magrittr     1.5     2014-11-22 CRAN (R 3.3.1)</h2>
+
+<h2 id="memoise-1-0-0-2016-01-29-cran-r-3-3-1">memoise      1.0.0   2016-01-29 CRAN (R 3.3.1)</h2>
+
+<h2 id="rmd2md-0-1-4-2017-01-16-github-ivyleavedtoadflax-rmd2md-e2d6ae4">rmd2md       0.1.4   2017-01-16 Github (ivyleavedtoadflax/rmd2md@e2d6ae4)</h2>
+
+<h2 id="stringi-1-1-2-2016-10-01-cran-r-3-3-1">stringi      1.1.2   2016-10-01 CRAN (R 3.3.1)</h2>
+
+<h2 id="stringr-1-1-0-2016-08-19-cran-r-3-3-1">stringr      1.1.0   2016-08-19 CRAN (R 3.3.1)</h2>
+
+<h2 id="withr-1-0-2-2016-06-20-cran-r-3-3-1">withr        1.0.2   2016-06-20 CRAN (R 3.3.1)</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Logistic regression for student performance prediction - A Hugo website</title>
+<meta property="og:title" content="Logistic regression for student performance prediction - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">10 min read</span>
+    
+
+    <h1 class="article-title">Logistic regression for student performance prediction</h1>
+
+    
+    <span class="article-date">2016/03/15</span>
+    
+
+    <div class="article-content">
+      
+
+<p>{% include _toc.html %}</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Classification problems occur often, perhaps even more so than regression problems. Consider the <a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance">Cortez student maths attainment data</a> discussed in previous <a href="http://www.machinegurning.com/rstats/student-performance/">posts</a>. The response variable, final grade of the year (range 0-20), <code>G3</code> can be classified into a binary pass or fail variable called <code>final</code>, based on a threshold mark. We used a decision tree approach to model this data before which provided 95% accuracy and had the benefit of interpretability. We will now model this using logistic regression so we can attach probabilities to our student pass or fail predictions.</p>
+
+<p>{% highlight r %}
+library(dplyr)
+library(ROCR)
+library(caret)
+library(e1071)
+library(boot)</p>
+
+<p>#INPUT
+mydata &lt;- &ldquo;data/2016-03-15-logreg_math.csv&rdquo;
+mydata &lt;- read.table(mydata, sep = &ldquo;;&rdquo;,
+                     header = TRUE)
+{% endhighlight %}</p>
+
+<h2 id="make-the-final-grade-binary-pass-and-fail">Make the final grade binary (pass and fail)</h2>
+
+<p><code>G3</code> is pretty normally distributed, despite the dodgy tail. To simplify matters converted <code>G3</code> marks below 10 as a fail, above or equal to 10 as a pass. Often a school is judged by whether students meet a critcal boundary, in the UK it is a C grade at GCSE for example. Rather than modelling this response Y directly, logistic regression models the probability that Y belongs to a particular category.</p>
+
+<p>{% highlight r %}
+mydata$final &lt;- NULL
+mydata$final &lt;- factor(ifelse(mydata$G3 &gt;= 10, 1, 0),
+                       labels = c(&ldquo;fail&rdquo;, &ldquo;pass&rdquo;))
+data_interest &lt;- mydata
+{% endhighlight %}</p>
+
+<p>From our learnings of the decision tree we can include the variables that were shown to be important predictors in this multiple logistic regression.</p>
+
+<h2 id="objective">Objective</h2>
+
+<ul>
+<li>Using the training data estimate the regression coefficients using maximum likelihood.<br /></li>
+<li>Use these coefficients to predict the test data and compare with reality.</li>
+<li>Evaluate the binary classifier with receiver operating characteristic curve (ROC).</li>
+<li>Evaluate the logistic regression performance with the resampling method cross-validation</li>
+</ul>
+
+<h2 id="training-and-test-datasets">Training and test datasets.</h2>
+
+<p>We need to split the data so we can build the model and then test it, to see if it generalises well. The data arrived in a random order.</p>
+
+<p>{% highlight r %}
+data_train &lt;- data_interest[1:350, ]
+data_test &lt;- data_interest[351:395, ]
+{% endhighlight %}</p>
+
+<p>Now we need to train the model using the data. From our decision tree we know that the prior attainment data variables <code>G1</code> and <code>G2</code> are important as are the <code>Fjob</code> and <code>reason</code> variables. We fit a logistic regression model in order to predict <code>final</code> using the variables mentioned in the previous sentence.</p>
+
+<p>{% highlight r %}
+m1 &lt;- glm(final ~ G1 + G2 + Fjob + reason, data = data_train, family = binomial)
+summary(m1)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="call">Call:</h2>
+
+<h2 id="glm-formula-final-g1-g2-fjob-reason-family-binomial">glm(formula = final ~ G1 + G2 + Fjob + reason, family = binomial,</h2>
+
+<h2 id="data-data-train">data = data_train)</h2>
+
+<h2 id="deviance-residuals">Deviance Residuals:</h2>
+
+<h2 id="min-1q-median-3q-max">Min        1Q    Median        3Q       Max</h2>
+
+<h2 id="2-96026-0-02844-0-00479-0-11783-2-68046">-2.96026  -0.02844   0.00479   0.11783   2.68046</h2>
+
+<h2 id="coefficients">Coefficients:</h2>
+
+<h2 id="estimate-std-error-z-value-pr-z">Estimate Std. Error z value Pr(&gt;|z|)</h2>
+
+<h2 id="intercept-22-26860-3-37459-6-599-4-14e-11">(Intercept)      -22.26860    3.37459  -6.599 4.14e-11 ***</h2>
+
+<h2 id="g1-0-19925-0-17558-1-135-0-2565">G1                 0.19925    0.17558   1.135   0.2565</h2>
+
+<h2 id="g2-1-98273-0-31776-6-240-4-38e-10">G2                 1.98273    0.31776   6.240 4.38e-10 ***</h2>
+
+<h2 id="fjobhealth-0-96166-1-61754-0-595-0-5522">Fjobhealth         0.96166    1.61754   0.595   0.5522</h2>
+
+<h2 id="fjobother-2-80406-1-14546-2-448-0-0144">Fjobother          2.80406    1.14546   2.448   0.0144 *</h2>
+
+<h2 id="fjobservices-1-24826-1-15319-1-082-0-2791">Fjobservices       1.24826    1.15319   1.082   0.2791</h2>
+
+<h2 id="fjobteacher-2-37057-1-77436-1-336-0-1815">Fjobteacher        2.37057    1.77436   1.336   0.1815</h2>
+
+<h2 id="reasonhome-0-19608-0-58259-0-337-0-7364">reasonhome         0.19608    0.58259   0.337   0.7364</h2>
+
+<h2 id="reasonother-1-67970-1-04244-1-611-0-1071">reasonother        1.67970    1.04244   1.611   0.1071</h2>
+
+<h2 id="reasonreputation-0-03099-0-63295-0-049-0-9609">reasonreputation   0.03099    0.63295   0.049   0.9609</h2>
+
+<h2 id="toc_22">&mdash;</h2>
+
+<h2 id="signif-codes-0-0-001-0-01-0-05-0-1-1">Signif. codes:  0 &lsquo;*<strong>&rsquo; 0.001 &lsquo;</strong>&rsquo; 0.01 &lsquo;*&rsquo; 0.05 &lsquo;.&rsquo; 0.1 &lsquo; &rsquo; 1</h2>
+
+<h2 id="dispersion-parameter-for-binomial-family-taken-to-be-1">(Dispersion parameter for binomial family taken to be 1)</h2>
+
+<h2 id="null-deviance-440-30-on-349-degrees-of-freedom">Null deviance: 440.30  on 349  degrees of freedom</h2>
+
+<h2 id="residual-deviance-116-81-on-340-degrees-of-freedom">Residual deviance: 116.81  on 340  degrees of freedom</h2>
+
+<h2 id="aic-136-81">AIC: 136.81</h2>
+
+<h2 id="number-of-fisher-scoring-iterations-8">Number of Fisher Scoring iterations: 8</h2>
+
+<p>{% endhighlight %}
+The model does appear to suffer from overdispersion. The p-values associated with <code>reason</code> are all non-significant. Following Crawley&rsquo;s recommendation we attempt model simplification by removing this term from the model after changing the model family argument to <code>family = quasibinomial</code>.</p>
+
+<p>{% highlight r %}
+m1 &lt;- glm(final ~ G1 + G2 + Fjob + reason, data = data_train, family = quasibinomial)
+{% endhighlight %}
+We use the more conservative &ldquo;F-test&rdquo; to compare models due to the quasibinomial error distribution, after Crawley.</p>
+
+<p>{% highlight r %}
+m2 &lt;- update(m1, ~. - reason)  #  the model is identical except removal of reason variable
+anova(m1, m2, test = &ldquo;F&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="analysis-of-deviance-table">Analysis of Deviance Table</h2>
+
+<h2 id="model-1-final-g1-g2-fjob-reason">Model 1: final ~ G1 + G2 + Fjob + reason</h2>
+
+<h2 id="model-2-final-g1-g2-fjob">Model 2: final ~ G1 + G2 + Fjob</h2>
+
+<h2 id="resid-df-resid-dev-df-deviance-f-pr-f">Resid. Df Resid. Dev Df Deviance      F Pr(&gt;F)</h2>
+
+<h2 id="1-340-116-81">1       340     116.81</h2>
+
+<h2 id="2-343-119-53-3-2-7241-1-3662-0-2529">2       343     119.53 -3  -2.7241 1.3662 0.2529</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>No difference in explanatory power between the models. There is no evidence that <code>reason</code> is associated with a students pass or fail in their end of year maths exam. We continue model simplification after using <code>summary()</code> (not shown).</p>
+
+<p>{% highlight r %}
+m3 &lt;- update(m2, ~. - G1)
+anova(m2, m3, test = &ldquo;F&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="analysis-of-deviance-table-1">Analysis of Deviance Table</h2>
+
+<h2 id="model-1-final-g1-g2-fjob">Model 1: final ~ G1 + G2 + Fjob</h2>
+
+<h2 id="model-2-final-g2-fjob">Model 2: final ~ G2 + Fjob</h2>
+
+<h2 id="resid-df-resid-dev-df-deviance-f-pr-f-1">Resid. Df Resid. Dev Df Deviance      F Pr(&gt;F)</h2>
+
+<h2 id="1-343-119-53">1       343     119.53</h2>
+
+<h2 id="2-344-120-29-1-0-75605-1-2107-0-272">2       344     120.29 -1 -0.75605 1.2107  0.272</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We don&rsquo;t need the earlier <code>G1</code> exam result as we have <code>G2</code> in the model already. What happens if we remove <code>Fjob</code>?</p>
+
+<p>{% highlight r %}
+m4 &lt;- update(m3, ~. - Fjob)
+anova(m3, m4, test = &ldquo;F&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="analysis-of-deviance-table-2">Analysis of Deviance Table</h2>
+
+<h2 id="model-1-final-g2-fjob">Model 1: final ~ G2 + Fjob</h2>
+
+<h2 id="model-2-final-g2">Model 2: final ~ G2</h2>
+
+<h2 id="resid-df-resid-dev-df-deviance-f-pr-f-2">Resid. Df Resid. Dev Df Deviance      F    Pr(&gt;F)</h2>
+
+<h2 id="1-344-120-29">1       344     120.29</h2>
+
+<h2 id="2-348-134-06-4-13-775-5-2966-0-0003768">2       348     134.06 -4  -13.775 5.2966 0.0003768 ***</h2>
+
+<h2 id="toc_47">&mdash;</h2>
+
+<h2 id="signif-codes-0-0-001-0-01-0-05-0-1-1-1">Signif. codes:  0 &lsquo;*<strong>&rsquo; 0.001 &lsquo;</strong>&rsquo; 0.01 &lsquo;*&rsquo; 0.05 &lsquo;.&rsquo; 0.1 &lsquo; &rsquo; 1</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We lose explanatory power, we need to keep <code>Fjob</code> in the model. This gives us our minimal adequate model. <code>Fjob</code> is a useful predictor but perhaps we could reduce the number of levels by recoding the variable as only some of the jobs seem useful as predictors.</p>
+
+<h2 id="contrasts">Contrasts</h2>
+
+<p>For a better understanding of how R dealt with the categorical variables, we can use the <code>contrasts()</code> function. This function will show us how the variables have been dummyfied by R and how to interpret them in a model. Note how the default in R is to use alphabetical order.</p>
+
+<p>{% highlight r %}
+contrasts(data_train$final)  #  fail as zero, pass as one; logical
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="pass">pass</h2>
+
+<h2 id="fail-0">fail    0</h2>
+
+<h2 id="pass-1">pass    1</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+contrasts(data_train$Fjob)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="health-other-services-teacher">health other services teacher</h2>
+
+<h2 id="at-home-0-0-0-0">at_home       0     0        0       0</h2>
+
+<h2 id="health-1-0-0-0">health        1     0        0       0</h2>
+
+<h2 id="other-0-1-0-0">other         0     1        0       0</h2>
+
+<h2 id="services-0-0-1-0">services      0     0        1       0</h2>
+
+<h2 id="teacher-0-0-0-1">teacher       0     0        0       1</h2>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="model-interpretation">Model interpretation</h2>
+
+<p>{% highlight r %}
+summary(m3)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="call-1">Call:</h2>
+
+<h2 id="glm-formula-final-g2-fjob-family-quasibinomial-data-data-train">glm(formula = final ~ G2 + Fjob, family = quasibinomial, data = data_train)</h2>
+
+<h2 id="deviance-residuals-1">Deviance Residuals:</h2>
+
+<h2 id="min-1q-median-3q-max-1">Min        1Q    Median        3Q       Max</h2>
+
+<h2 id="2-96489-0-03611-0-00746-0-12873-2-55348">-2.96489  -0.03611   0.00746   0.12873   2.55348</h2>
+
+<h2 id="coefficients-1">Coefficients:</h2>
+
+<h2 id="estimate-std-error-t-value-pr-t">Estimate Std. Error t value Pr(&gt;|t|)</h2>
+
+<h2 id="intercept-20-8371-2-4770-8-412-1-09e-15">(Intercept)  -20.8371     2.4770  -8.412 1.09e-15 ***</h2>
+
+<h2 id="g2-2-0358-0-2300-8-850-2e-16">G2             2.0358     0.2300   8.850  &lt; 2e-16 ***</h2>
+
+<h2 id="fjobhealth-1-1546-1-2463-0-926-0-35488">Fjobhealth     1.1546     1.2463   0.926  0.35488</h2>
+
+<h2 id="fjobother-2-8266-0-8916-3-170-0-00166">Fjobother      2.8266     0.8916   3.170  0.00166 **</h2>
+
+<h2 id="fjobservices-1-3300-0-8913-1-492-0-13656">Fjobservices   1.3300     0.8913   1.492  0.13656</h2>
+
+<h2 id="fjobteacher-2-5742-1-3610-1-891-0-05941">Fjobteacher    2.5742     1.3610   1.891  0.05941 .</h2>
+
+<h2 id="toc_73">&mdash;</h2>
+
+<h2 id="signif-codes-0-0-001-0-01-0-05-0-1-1-2">Signif. codes:  0 &lsquo;*<strong>&rsquo; 0.001 &lsquo;</strong>&rsquo; 0.01 &lsquo;*&rsquo; 0.05 &lsquo;.&rsquo; 0.1 &lsquo; &rsquo; 1</h2>
+
+<h2 id="dispersion-parameter-for-quasibinomial-family-taken-to-be-0-6501799">(Dispersion parameter for quasibinomial family taken to be 0.6501799)</h2>
+
+<h2 id="null-deviance-440-30-on-349-degrees-of-freedom-1">Null deviance: 440.30  on 349  degrees of freedom</h2>
+
+<h2 id="residual-deviance-120-29-on-344-degrees-of-freedom">Residual deviance: 120.29  on 344  degrees of freedom</h2>
+
+<h2 id="aic-na">AIC: NA</h2>
+
+<h2 id="number-of-fisher-scoring-iterations-8-1">Number of Fisher Scoring iterations: 8</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>The smallest p-value here is assocaited with <code>G2</code>. The positive coefficient for this predictor suggests that an increase in <code>G2</code> is associated increase in the probability of <code>final = pass</code>. To be precise a one-unit increase in <code>G2</code> is associated with an increase in the log odds of <code>pass</code> by 2.0357671.</p>
+
+<p>{% highlight r %}
+glm.probs &lt;- predict(m3, newdata = data_test, type = &ldquo;response&rdquo;)  # predicted probabilities
+glm.pred &lt;- rep(&ldquo;fail&rdquo;, 45)  #  convert into pass or fail
+glm.pred[glm.probs &gt; 0.5] = &ldquo;pass&rdquo;  #  index</p>
+
+<p>confusionMatrix(table(glm.pred, data_test$final), positive = &ldquo;pass&rdquo;)  # from the caret package, also need e1071 package
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="confusion-matrix-and-statistics">Confusion Matrix and Statistics</h2>
+
+<h2 id="glm-pred-fail-pass">glm.pred fail pass</h2>
+
+<h2 id="fail-17-2">fail   17    2</h2>
+
+<h2 id="pass-0-26">pass    0   26</h2>
+
+<h2 id="accuracy-0-9556">Accuracy : 0.9556</h2>
+
+<h2 id="95-ci-0-8485-0-9946">95% CI : (0.8485, 0.9946)</h2>
+
+<h2 id="no-information-rate-0-6222">No Information Rate : 0.6222</h2>
+
+<h2 id="p-value-acc-nir-2-1e-07">P-Value [Acc &gt; NIR] : 2.1e-07</h2>
+
+<h2 id="kappa-0-9076">Kappa : 0.9076</h2>
+
+<h2 id="mcnemar-s-test-p-value-0-4795">Mcnemar&rsquo;s Test P-Value : 0.4795</h2>
+
+<h2 id="sensitivity-0-9286">Sensitivity : 0.9286</h2>
+
+<h2 id="specificity-1-0000">Specificity : 1.0000</h2>
+
+<h2 id="pos-pred-value-1-0000">Pos Pred Value : 1.0000</h2>
+
+<h2 id="neg-pred-value-0-8947">Neg Pred Value : 0.8947</h2>
+
+<h2 id="prevalence-0-6222">Prevalence : 0.6222</h2>
+
+<h2 id="detection-rate-0-5778">Detection Rate : 0.5778</h2>
+
+<h2 id="detection-prevalence-0-5778">Detection Prevalence : 0.5778</h2>
+
+<h2 id="balanced-accuracy-0-9643">Balanced Accuracy : 0.9643</h2>
+
+<h2 id="positive-class-pass">&lsquo;Positive&rsquo; Class : pass</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>The first command predicts the probability of the test students&rsquo; characteristics resulting in a <code>pass</code> based on the <code>glm()</code> built using the training data. The second and third command creates a vector of 45 <code>fails</code> with those probabilities greater than 50% being converted into <code>pass</code>. The predicted passes and failures are compared with the real ones in a table with a test error of 4.444%.</p>
+
+<h2 id="model-performance">Model performance</h2>
+
+<p>As a last step, we are going to plot the ROC curve and calculate the AUC (area under the curve) which are typical performance measurements for a binary classifier.
+ The ROC is a curve generated by plotting the true positive rate (TPR) against the false positive rate (FPR) at various threshold settings while the AUC is the area under the ROC curve. As a rule of thumb, a model with good predictive ability should have an AUC closer to 1 (1 is ideal) than to 0.5.</p>
+
+<p>{% highlight r %}
+pr &lt;- prediction(glm.probs, data_test$final)
+prf &lt;- performance(pr, measure = &ldquo;tpr&rdquo;, x.measure = &ldquo;fpr&rdquo;)
+plot(prf)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-03-15_plot_prf-1.svg" alt="plot of chunk 2016-03-15_plot_prf" /></p>
+
+<p>{% highlight r %}
+auc &lt;- performance(pr, measure = &ldquo;auc&rdquo;)
+auc &lt;- auc@y.values[[1]]
+auc
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-9884454">[1] 0.9884454</h2>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The 0.95 accuracy on the test set is quite a good result and an AUC of 0.9884454. However, keep in mind that this result is somewhat dependent on the manual split of the data that I made earlier, therefore if you wish for a more precise score, you would be better off running some kind of cross validation such as k-fold cross validation. The logistic regression also provides coefficients allowing a quantitative understanding of the association between a variable and the odss of success which can be useful.</p>
+
+<h2 id="leave-one-out-cross-validation-for-generalized-linear-models">Leave-one-out cross-validation for Generalized Linear Models</h2>
+
+<p>As mentioned above let&rsquo;s conduct a cross validation using the <code>cv.glm()</code> function from the <a href="http://www.inside-r.org/r-doc/boot/cv.glm">boot</a> package.This function calculates the estimated K-fold cross-validation prediction error for generalized linear models. We produce our model <code>glm.fit</code> based on our earlier learnings. We follow guidance of the Chapter 5.3.2 cross-validation lab session in James et al., 2014.</p>
+
+<p>{% highlight r %}
+set.seed(1337)
+glm.fit &lt;- glm(final ~ G2 + Fjob, family = quasibinomial, data = data_interest)
+cv.err &lt;- cv.glm(data = data_interest, glmfit = glm.fit)
+cv.err$delta
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-05632119-0-05631311">[1] 0.05632119 0.05631311</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>The <code>cv.glm()</code> function produces a list with several components. The two numbers in the <code>delta</code> vector contain the cross-validation results. Our cross-validation estimate for the test error is approximately 0.056.</p>
+
+<h2 id="k-fold-cross-validation">k-fold cross-validation</h2>
+
+<p>The <code>cv.glm()</code> function can also be used to implement k-fold cross-validation. Below we use k = 10, a common choice for k, on our data.</p>
+
+<p>{% highlight r %}
+set.seed(1337)
+cv.err.10 &lt;- cv.glm(data = data_interest, glmfit = glm.fit, K = 10)
+cv.err.10$delta
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-05686960-0-05653651">[1] 0.05686960 0.05653651</h2>
+
+<p>{% endhighlight %}
+On this data set, using this model, the two estimates are very close for K = 1 and K = 10. The error estimates are small, suggesting the model may perform OK if applied to predict future student <code>final</code> pass or fail.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Cortez and Silva (2008). Using data mining to predict secondary school performance.</li>
+<li>Crawley (2004). Statistics an introduction using R.</li>
+<li>James et al., (2014). An introduction to statistical learning with applications in R. Springer.</li>
+<li><a href="http://www.r-bloggers.com/how-to-perform-a-logistic-regression-in-r/">http://www.r-bloggers.com/how-to-perform-a-logistic-regression-in-r/</a></li>
+<li><a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance">https://archive.ics.uci.edu/ml/datasets/Student+Performance</a></li>
+</ul>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-2-3-2015-12-10">R version 3.2.3 (2015-12-10)</h2>
+
+<h2 id="platform-x86-64-w64-mingw32-x64-64-bit">Platform: x86_64-w64-mingw32/x64 (64-bit)</h2>
+
+<h2 id="running-under-windows-8-x64-build-9200">Running under: Windows &gt;= 8 x64 (build 9200)</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-collate-english-united-kingdom-1252">[1] LC_COLLATE=English_United Kingdom.1252</h2>
+
+<h2 id="2-lc-ctype-english-united-kingdom-1252">[2] LC_CTYPE=English_United Kingdom.1252</h2>
+
+<h2 id="3-lc-monetary-english-united-kingdom-1252">[3] LC_MONETARY=English_United Kingdom.1252</h2>
+
+<h2 id="4-lc-numeric-c">[4] LC_NUMERIC=C</h2>
+
+<h2 id="5-lc-time-english-united-kingdom-1252">[5] LC_TIME=English_United Kingdom.1252</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-stats-graphics-grdevices-utils-datasets-methods-base">[1] stats     graphics  grDevices utils     datasets  methods   base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-boot-1-3-17-e1071-1-6-7-caret-6-0-64-ggplot2-2-0-0">[1] boot_1.3-17     e1071_1.6-7     caret_6.0-64    ggplot2_2.0.0</h2>
+
+<h2 id="5-lattice-0-20-33-rocr-1-0-7-gplots-2-17-0-dplyr-0-4-3">[5] lattice_0.20-33 ROCR_1.0-7      gplots_2.17.0   dplyr_0.4.3</h2>
+
+<h2 id="9-testthat-0-11-0-knitr-1-12">[9] testthat_0.11.0 knitr_1.12</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-rcpp-0-12-3-nloptr-1-0-4-formatr-1-2-1">[1] Rcpp_0.12.3        nloptr_1.0.4       formatR_1.2.1</h2>
+
+<h2 id="4-plyr-1-8-3-class-7-3-14-bitops-1-0-6">[4] plyr_1.8.3         class_7.3-14       bitops_1.0-6</h2>
+
+<h2 id="7-iterators-1-0-8-tools-3-2-3-lme4-1-1-10">[7] iterators_1.0.8    tools_3.2.3        lme4_1.1-10</h2>
+
+<h2 id="10-digest-0-6-9-evaluate-0-8-memoise-0-2-1">[10] digest_0.6.9       evaluate_0.8       memoise_0.2.1</h2>
+
+<h2 id="13-gtable-0-1-2-nlme-3-1-122-mgcv-1-8-9">[13] gtable_0.1.2       nlme_3.1-122       mgcv_1.8-9</h2>
+
+<h2 id="16-matrix-1-2-3-foreach-1-4-3-dbi-0-3-1">[16] Matrix_1.2-3       foreach_1.4.3      DBI_0.3.1</h2>
+
+<h2 id="19-yaml-2-1-13-parallel-3-2-3-sparsem-1-7">[19] yaml_2.1.13        parallel_3.2.3     SparseM_1.7</h2>
+
+<h2 id="22-stringr-1-0-0-matrixmodels-0-4-1-gtools-3-5-0">[22] stringr_1.0.0      MatrixModels_0.4-1 gtools_3.5.0</h2>
+
+<h2 id="25-catools-1-17-1-stats4-3-2-3-nnet-7-3-11">[25] caTools_1.17.1     stats4_3.2.3       nnet_7.3-11</h2>
+
+<h2 id="28-grid-3-2-3-r6-2-1-1-rmarkdown-0-9-2">[28] grid_3.2.3         R6_2.1.1           rmarkdown_0.9.2</h2>
+
+<h2 id="31-minqa-1-2-4-gdata-2-17-0-reshape2-1-4-1">[31] minqa_1.2.4        gdata_2.17.0       reshape2_1.4.1</h2>
+
+<h2 id="34-car-2-1-1-magrittr-1-5-splines-3-2-3">[34] car_2.1-1          magrittr_1.5       splines_3.2.3</h2>
+
+<h2 id="37-scales-0-3-0-codetools-0-2-14-htmltools-0-3">[37] scales_0.3.0       codetools_0.2-14   htmltools_0.3</h2>
+
+<h2 id="40-mass-7-3-45-pbkrtest-0-4-4-rsconnect-0-4-1-11">[40] MASS_7.3-45        pbkrtest_0.4-4     rsconnect_0.4.1.11</h2>
+
+<h2 id="43-assertthat-0-1-colorspace-1-2-6-quantreg-5-19">[43] assertthat_0.1     colorspace_1.2-6   quantreg_5.19</h2>
+
+<h2 id="46-kernsmooth-2-23-15-stringi-1-0-1-munsell-0-4-2">[46] KernSmooth_2.23-15 stringi_1.0-1      munsell_0.4.2</h2>
+
+<h2 id="49-crayon-1-3-1">[49] crayon_1.3.1</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

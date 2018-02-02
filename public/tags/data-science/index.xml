@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Data Science on A Hugo website</title>
+    <link>/tags/data-science/</link>
+    <description>Recent content in Data Science on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 28 Jan 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/data-science/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Dealing with dates</title>
+      <link>/2017/01/28/dealing-with-dates/</link>
+      <pubDate>Sat, 28 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/28/dealing-with-dates/</guid>
+      <description>In the past I have worked with a number of timeseries of sensor data that I collected using raspberry pis, arduinos, and esp8266 modules. It&amp;rsquo;s not something I do regularly enough to remember the best way to do it, so I&amp;rsquo;m writing this post as a reminder to myself, and perhaps someone will benefit from my aide-memoire.
+In previous posts I have combined data from two sensors I built, both based on raspberry pis (e.</description>
+    </item>
+    
+    <item>
+      <title>Monster Hunting with XGBoost</title>
+      <link>/2017/01/04/monster-hunting-with-xgboost/</link>
+      <pubDate>Wed, 04 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/04/monster-hunting-with-xgboost/</guid>
+      <description>Kaggle&amp;rsquo;s bread-and-butter is its Machine Learning, or Predictive Analytics competitions. The processes used in these scenarios encompass a very small fraction of the Data Science process. However, this gameified version of Data Science can be engaging and may be an interesting hook for some newcomers, as it side-steps some of the more time consuming data wrangling processes. I introduce it here to help those who are looking for a Data Science related resolution or goal.</description>
+    </item>
+    
+    <item>
+      <title>Newyearal Networks</title>
+      <link>/2017/01/03/newyearal-networks/</link>
+      <pubDate>Tue, 03 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/01/03/newyearal-networks/</guid>
+      <description>One of my New Year resolutions is to get to grips with deep learning. I thought a good place to start would be a refresher into &amp;lsquo;shallow&amp;rsquo; neural networks, and that is what this post and the one that follows it will be about. I&amp;rsquo;ll go through the maths behind a quick dirty neural network, and implement it in R.
+I&amp;rsquo;m using as my sources the tome Elements of Statistical Learning, Andrew Ng&amp;rsquo;s excellent machine learning course on coursera, and a short course I have been doing on Udemy: Deep Learning in Python.</description>
+    </item>
+    
+    <item>
+      <title>Nearest neighbour methods</title>
+      <link>/2016/05/27/nearest-neighbour-methods/</link>
+      <pubDate>Fri, 27 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/27/nearest-neighbour-methods/</guid>
+      <description>{% include _toc.html %}
+In my last post, I started working through some examples given by Hastie et al in Elements of Statistical learning. I looked at using a linear model for classification across a randomly generated training set. In this post I&amp;rsquo;ll use nearest neighbour methods to create a non-linear decision boundary over the same data.
+Nearest neighbour algorithm There are much more learned folk than I who give good explanations of the maths behind nearest neighbours, so I won&amp;rsquo;t spend too long on the theory.</description>
+    </item>
+    
+    <item>
+      <title>Getting to grips with &#39;Elements of statistical learning&#39;</title>
+      <link>/2016/05/08/getting-to-grips-with-elements-of-statistical-learning/</link>
+      <pubDate>Sun, 08 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/08/getting-to-grips-with-elements-of-statistical-learning/</guid>
+      <description>{% include _toc.html %}
+Last week I joined a reading group for the weighty tome Elements of Statistical Learning. I really like the idea of this group; interesting as it is - it can be hard to maintain the drive to wade through a text like this. Working through it week on week with a group of like-minded people is a great way to overcome this.
+Linear models In this post I implement in R some of the ideas that are presented in the first 2 chapters of Elements of Statistical Learning, namely: least squares.</description>
+    </item>
+    
+  </channel>
+</rss>

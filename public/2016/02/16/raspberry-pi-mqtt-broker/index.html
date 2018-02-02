@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Raspberry Pi MQTT broker - A Hugo website</title>
+<meta property="og:title" content="Raspberry Pi MQTT broker - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">5 min read</span>
+    
+
+    <h1 class="article-title">Raspberry Pi MQTT broker</h1>
+
+    
+    <span class="article-date">2016/02/16</span>
+    
+
+    <div class="article-content">
+      
+
+<p>In my <a href="../esp8266">last post</a> I started meddling with the ESP8266 module as a low
+cost (and smaller) alternative to an Arduino or Raspberry Pi for creating home
+sensors.</p>
+
+<p>I was toying with the idea of sending measurements to a database using a RESTful
+API on the existing Postgres database I use to host measurements on Amazon Web
+Services.</p>
+
+<p>After a bit of reading, I&rsquo;ve realised that there is a better solution:
+<a href="http://mqtt.org/">MQTT</a>, a lightweight protocol designed for machine to machine
+(M2M) communication for sensors, and similar low powered and simple devices.
+MQTT uses an event driven publish/subscribe paradigm: sensors publish to a
+broker, which can then pass on information to subscribers. I&rsquo;m not 100% sure yet
+how I will achieve persistence (and store sensor readings for later analysis),
+<a href="http://www.hivemq.com/blog/how-to-get-started-with-mqtt">HiveMQ</a> has a plugin
+that will do this at the broker, without the database needing to be a
+subscriber, which is a nice option.</p>
+
+<p>MQTT looks like the way forward for this kind of project, so I&rsquo;ll worry about
+the persistence problem later.</p>
+
+<h3 id="minibian-a-lightweight-raspberry-pi-distro">Minibian: a lightweight Raspberry Pi distro</h3>
+
+<p>I&rsquo;ve got a spare Raspberry Pi 2 which I am using for this project. To save
+space, and avoid raspbian bloat, I&rsquo;ve used
+<a href="https://minibianpi.wordpress.com/features/">minibian</a> for a very lightweight
+machine.</p>
+
+<h4 id="creating-a-user">Creating a user</h4>
+
+<p>You&rsquo;ll also realise pretty quickly that the usual Raspberry Pi user setup is not
+there in Minibian. There is just a root user, so I first created a new user with
+admin privileges:</p>
+
+<pre><code>adduser &lt;newuser&gt;
+ 
+sudo usermod -a -G sudo &lt;newuser&gt; 
+</code></pre>
+
+<p>You may then also want to get access to the <code>sudo</code> command. So you will need to
+log into the superuser account, and install it.</p>
+
+<pre><code># Log in as root (assuming you are logged in as newuser)
+ 
+su
+ 
+# Install sudo
+ 
+apt-get install sudo 
+</code></pre>
+
+<h4 id="upgrading">Upgrading</h4>
+
+<p>The last release of Minibian was 2015-11-12, so a good thing to do is update the
+few packages that do come installed to the latest versions:</p>
+
+<pre><code>sudo apt-get update -y
+sudo apt-get upgrade -y 
+</code></pre>
+
+<h4 id="wi-fi-drivers">Wi-Fi drivers</h4>
+
+<p>Minibian is so lightweight it doesn&rsquo;t ship with Wi-Fi drivers as standard. If
+you want to use Wi-Fi instead of a wired connection, you will need to install
+these manually. An explanation is given
+<a href="https://www.raspberrypi.org/forums/viewtopic.php?f=66&amp;t=108863">here</a>, but in
+brief:</p>
+
+<pre><code># Install necessary packages
+ 
+apt-get install firmware-ralink 
+apt-get install firmware-realtek
+ 
+# Test with a network scan
+ 
+apt-get install wireless-tools iwlist wlan0 scan
+ 
+# Install wpa_supplicant for auto-connect
+ 
+apt-get install wpasupplicant
+ 
+</code></pre>
+
+<p>I usually just copy the <code>/etc/wpa_supplicant/wpa_supplicant.conf</code> file from
+another one of my pis, to duplicate the Wi-Fi settings. My <code>wpa_supplicant.conf</code>
+looks something like this:</p>
+
+<pre><code>ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+ 
+network={
+         ssid=&quot;SSID&quot;
+         psk=&quot;password&quot;
+         proto=RSN
+         key_mgmt=WPA-PSK
+         pairwise=CCMP
+         auth_alg=OPEN
+        }
+ 
+</code></pre>
+
+<h4 id="using-ssh-keys">Using SSH keys</h4>
+
+<p>Finally I want to avoid entering a password every time I log on, so I copy the
+public SSH key from my laptop to the <code>authorized_keys</code> file on the minibian pi.</p>
+
+<p>If you want to use git or similar, you will need to generate an SSH key for the
+pi, so you may as well run <code>ssh-keygen</code> now, and generate a key. For internal
+network use, I tend to leave the passwords blank, but if you are particularly
+security conscious, you can enter something.</p>
+
+<p>This command will create the <code>~/.ssh/</code> folder. The next step is to send over
+your public key from your client machine. I do this without copying pasting with
+the following command run from the client machine:</p>
+
+<pre><code>cat ~/.ssh/id_rsa.pub | ssh user@192.168.1.100 'cat &gt;&gt;
+~/.ssh/authorized_keys' 
+</code></pre>
+
+<p>You&rsquo;ll be prompted to enter your password for this
+command, but after that, you should not have to enter a password again, the next
+time you SSH in.</p>
+
+<h2 id="creating-a-disk-image">Creating a disk image</h2>
+
+<p>After all this work, it&rsquo;s a good idea to create a backup disk image. Thankfully
+a Minibian image can be nice and small, unlike the standard raspbian, so you are
+not left with several GB sized files all over the place.</p>
+
+<p>First you need to unmount the drive with <code>umount</code>. It will be mounted in two
+places on <code>/media/user/</code>, so make sure to <code>umount</code> both.</p>
+
+<p>Then you can run:</p>
+
+<pre><code>sudo dd if=/dev/sdc of=2016-02-15-minibian.img 
+</code></pre>
+
+<p>to create a backup image and compress it.
+This will produce an 8GB file (depending on the size of your SD card, and with a lot of blank space).
+We can check this with <code>fdisk -l /tmp/2016-02-15-minibian.img</code> which gives:</p>
+
+<pre><code>Disk /tmp/2016-02-15-minibian.img: 7744 MB, 7744782336 bytes
+4 heads, 16 sectors/track, 236352 cylinders, total 15126528 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x0008929a
+ 
+                   Device Boot      Start         End      Blocks   Id  System
+/tmp/2016-02-15-minibian1              16      125055       62520    b  W95 FAT32
+/tmp/2016-02-15-minibian2          125056    14997503     7436224   83  Linux
+ 
+</code></pre>
+
+<p>We can then take the block size (1 * 512) and the end of the second partition (14997503), and truncate the end of the image with:</p>
+
+<pre><code> truncate --size=$[(14997503+1)*512] /tmp/2016-02-15-minibian
+</code></pre>
+
+<p>and then compress the final image with:</p>
+
+<pre><code>bzip2 /tmp/2016-02-15-minibian.img
+</code></pre>
+
+<h2 id="next-steps">Next steps</h2>
+
+<p>Next time I&rsquo;ll install the MQTT broker&hellip;</p>
+
+<h2 id="sources">Sources</h2>
+
+<p><a href="https://help.ubuntu.com/community/DriveImaging">Create a disk image</a><br />
+<a href="http://www.penninkhof.com/2015/03/why-use-mqtt-in-iot-projects/">Why use MQTT</a><br />
+<a href="https://www.raspberrypi.org/forums/viewtopic.php?f=66&amp;t=108863">WiFi on Minibian</a><br />
+<a href="https://minibianpi.wordpress.com/setup/">Latest version of Minibian</a><br />
+<a href="https://www.digitalocean.com/community/tutorials/how-to-add-delete-and-grant-sudo-privileges-to-users-on-a-debian-vps">Granting sudo priveleges</a><br />
+<a href="http://mosquitto.org/">Mosquitto MQTT broker</a><br />
+<a href="http://www.hivemq.com/blog/how-to-get-started-with-mqtt">HiveMQ MQTT broker</a><br />
+<a href="http://nthn.me/posts/2012/mqtt.html">Good blog on MQTT</a><br />
+<a href="http://www.cyberciti.biz/faq/linuxunix-how-to-extract-and-decompress-a-bz2-tbz2-file/">Creating bzip2 files</a><br />
+<a href="http://softwarebakery.com/shrinking-images-on-linux">Shrinking disk images</a></p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

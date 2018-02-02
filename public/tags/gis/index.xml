@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gis on A Hugo website</title>
+    <link>/tags/gis/</link>
+    <description>Recent content in Gis on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 30 Aug 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/gis/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Visualising FAO data</title>
+      <link>/2015/08/30/visualising-fao-data/</link>
+      <pubDate>Sun, 30 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/30/visualising-fao-data/</guid>
+      <description>I&amp;rsquo;ve been working on a chapter of a book looking at weather and production data for a major crop across the globe. One of the things I need to produce is a bubble map showing the relative production for each producing country worldwide, and region specific maps for each of the major production growing region.
+There is a great package for doing this called rworldmap. In this little post I present the code I used to produce figures for the book using rworldmap.</description>
+    </item>
+    
+  </channel>
+</rss>

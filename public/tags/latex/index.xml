@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Latex on A Hugo website</title>
+    <link>/tags/latex/</link>
+    <description>Recent content in Latex on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 10 Oct 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/latex/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Reproducible journal articles</title>
+      <link>/2015/10/10/reproducible-journal-articles/</link>
+      <pubDate>Sat, 10 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/10/10/reproducible-journal-articles/</guid>
+      <description>A few months ago, I wrote a post about my experiences of writing up a PhD thesis reproducible using $\LaTeX$ and R via knitr. Since then I have started to write up much of my PhD work into academic papers for peer review, so in this post I&amp;rsquo;m documenting a number of new lessons I have learnt over the last five months. I&amp;rsquo;m working on four papers at present, one of which is under review, and I hope to make the source code available as these appear in print.</description>
+    </item>
+    
+    <item>
+      <title>Writing a PhD thesis in LaTeX and R</title>
+      <link>/2015/04/20/writing-a-phd-thesis-in-latex-and-r/</link>
+      <pubDate>Mon, 20 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/04/20/writing-a-phd-thesis-in-latex-and-r/</guid>
+      <description>About a year into the PhD thesis writing process, I decided to make a switch from a widely known WhatYouSeeisWhatYouGet word processor, into $\LaTeX$. It all started with a black line at the bottom of the page. It appeared one day while I was writing a riveting chapter on soil carbon, and looked like a border on top of the footer. I don&amp;rsquo;t know where it came from, and no matter what I tried, I couldn&amp;rsquo;t get rid of it.</description>
+    </item>
+    
+  </channel>
+</rss>

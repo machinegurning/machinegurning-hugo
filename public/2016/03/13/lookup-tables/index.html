@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Lookup tables - A Hugo website</title>
+<meta property="og:title" content="Lookup tables - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">6 min read</span>
+    
+
+    <h1 class="article-title">Lookup tables</h1>
+
+    
+    <span class="article-date">2016/03/13</span>
+    
+
+    <div class="article-content">
+      
+
+<p>{% include _toc.html %}</p>
+
+<p>Character matching provides a powerful way to make lookup tables. There are more concise functions available in packages like <code>dplyr</code> that achieve the same end but it is useful to understand how they are implemented with basic subsetting.</p>
+
+<p>{% highlight r %}
+library(dplyr)
+{% endhighlight %}</p>
+
+<p>We start off by building an example dataframe.</p>
+
+<p>{% highlight r %}
+set.seed(1337)  # we use rnorm</p>
+
+<p>pupil_data &lt;- data.frame(
+  studentid = 1:12,
+  school = c(&ldquo;Park view&rdquo;, &ldquo;Grange Hill&rdquo;, &ldquo;Sweet valley&rdquo;),
+  superoutputarea = c(&ldquo;E01011949&rdquo;, &ldquo;E01011105&rdquo;, &ldquo;E01011333&rdquo;),
+  attainment = (rnorm(n = 12)),
+  stringsAsFactors = FALSE  #  we can modify the class of variables later if required
+)
+{% endhighlight %}</p>
+
+<p>If we look at the data, we notice the variable <a href="https://neighbourhood.statistics.gov.uk/HTMLDocs/nessgeography/superoutputareasexplained/output-areas-explained.htm"><code>superoutputarea</code></a> is a nine digit code that doesn&rsquo;t tell a human much.
+We are interested in how the area relates to the socio-economic classification of typical people who live in that area or a measure of deprivation of the area.
+We must convert this into the more informative proxy which can then be used in our machine learning tools later.</p>
+
+<p>{% highlight r %}
+pupil_data
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="studentid-school-superoutputarea-attainment">studentid       school superoutputarea attainment</h2>
+
+<h2 id="1-1-park-view-e01011949-0-1924919">1          1    Park view       E01011949  0.1924919</h2>
+
+<h2 id="2-2-grange-hill-e01011105-1-4467018">2          2  Grange Hill       E01011105 -1.4467018</h2>
+
+<h2 id="3-3-sweet-valley-e01011333-0-3231805">3          3 Sweet valley       E01011333 -0.3231805</h2>
+
+<h2 id="4-4-park-view-e01011949-1-6222961">4          4    Park view       E01011949  1.6222961</h2>
+
+<h2 id="5-5-grange-hill-e01011105-0-6890241">5          5  Grange Hill       E01011105 -0.6890241</h2>
+
+<h2 id="6-6-sweet-valley-e01011333-2-0421222">6          6 Sweet valley       E01011333  2.0421222</h2>
+
+<h2 id="7-7-park-view-e01011949-0-9437791">7          7    Park view       E01011949  0.9437791</h2>
+
+<h2 id="8-8-grange-hill-e01011105-2-0819269">8          8  Grange Hill       E01011105  2.0819269</h2>
+
+<h2 id="9-9-sweet-valley-e01011333-1-9171173">9          9 Sweet valley       E01011333  1.9171173</h2>
+
+<h2 id="10-10-park-view-e01011949-0-4148122">10        10    Park view       E01011949 -0.4148122</h2>
+
+<h2 id="11-11-grange-hill-e01011105-1-0328535">11        11  Grange Hill       E01011105  1.0328535</h2>
+
+<h2 id="12-12-sweet-valley-e01011333-1-6785696">12        12 Sweet valley       E01011333 -1.6785696</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+str(pupil_data)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="data-frame-12-obs-of-4-variables">&lsquo;data.frame&rsquo;:    12 obs. of  4 variables:</h2>
+
+<h2 id="studentid-int-1-2-3-4-5-6-7-8-9-10">$ studentid      : int  1 2 3 4 5 6 7 8 9 10 &hellip;</h2>
+
+<h2 id="school-chr-park-view-grange-hill-sweet-valley-park-view">$ school         : chr  &ldquo;Park view&rdquo; &ldquo;Grange Hill&rdquo; &ldquo;Sweet valley&rdquo; &ldquo;Park view&rdquo; &hellip;</h2>
+
+<h2 id="superoutputarea-chr-e01011949-e01011105-e01011333-e01011949">$ superoutputarea: chr  &ldquo;E01011949&rdquo; &ldquo;E01011105&rdquo; &ldquo;E01011333&rdquo; &ldquo;E01011949&rdquo; &hellip;</h2>
+
+<h2 id="attainment-num-0-192-1-447-0-323-1-622-0-689">$ attainment     : num  0.192 -1.447 -0.323 1.622 -0.689 &hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>What we need is a list which contains the necessary translation for <code>superoutputarea</code>. We define that here as <code>lookup</code>. A 7-point scale is used for deprivation with Sweet Valley High in a wealthy area and Park View in a deprived area.</p>
+
+<p>{% highlight r %}
+lookup &lt;- c(&ldquo;E01011949&rdquo; = 1, &ldquo;E01011105&rdquo; = 3, &ldquo;E01011333&rdquo; = 7)
+{% endhighlight %}</p>
+
+<p>To convert we simply:</p>
+
+<p>{% highlight r %}
+lookup[pupil_data$superoutputarea]
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="e01011949-e01011105-e01011333-e01011949-e01011105-e01011333-e01011949">E01011949 E01011105 E01011333 E01011949 E01011105 E01011333 E01011949</h2>
+
+<h2 id="1-3-7-1-3-7-1">1         3         7         1         3         7         1</h2>
+
+<h2 id="e01011105-e01011333-e01011949-e01011105-e01011333">E01011105 E01011333 E01011949 E01011105 E01011333</h2>
+
+<h2 id="3-7-1-3-7">3         7         1         3         7</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="if-we-don-t-want-the-names-in-the-result">if we don&rsquo;t want the names in the result</h1>
+
+<p>unname(lookup[pupil_data$superoutputarea])
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-1-3-7-1-3-7-1-3-7-1-3-7">[1] 1 3 7 1 3 7 1 3 7 1 3 7</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Thus we can use this to create a new variable called <code>depriv</code>.</p>
+
+<p>{% highlight r %}
+pupil_data$depriv &lt;- NULL
+pupil_data$depriv &lt;- unname(lookup[pupil_data$superoutputarea])
+pupil_data
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="studentid-school-superoutputarea-attainment-depriv">studentid       school superoutputarea attainment depriv</h2>
+
+<h2 id="1-1-park-view-e01011949-0-1924919-1">1          1    Park view       E01011949  0.1924919      1</h2>
+
+<h2 id="2-2-grange-hill-e01011105-1-4467018-3">2          2  Grange Hill       E01011105 -1.4467018      3</h2>
+
+<h2 id="3-3-sweet-valley-e01011333-0-3231805-7">3          3 Sweet valley       E01011333 -0.3231805      7</h2>
+
+<h2 id="4-4-park-view-e01011949-1-6222961-1">4          4    Park view       E01011949  1.6222961      1</h2>
+
+<h2 id="5-5-grange-hill-e01011105-0-6890241-3">5          5  Grange Hill       E01011105 -0.6890241      3</h2>
+
+<h2 id="6-6-sweet-valley-e01011333-2-0421222-7">6          6 Sweet valley       E01011333  2.0421222      7</h2>
+
+<h2 id="7-7-park-view-e01011949-0-9437791-1">7          7    Park view       E01011949  0.9437791      1</h2>
+
+<h2 id="8-8-grange-hill-e01011105-2-0819269-3">8          8  Grange Hill       E01011105  2.0819269      3</h2>
+
+<h2 id="9-9-sweet-valley-e01011333-1-9171173-7">9          9 Sweet valley       E01011333  1.9171173      7</h2>
+
+<h2 id="10-10-park-view-e01011949-0-4148122-1">10        10    Park view       E01011949 -0.4148122      1</h2>
+
+<h2 id="11-11-grange-hill-e01011105-1-0328535-3">11        11  Grange Hill       E01011105  1.0328535      3</h2>
+
+<h2 id="12-12-sweet-valley-e01011333-1-6785696-7">12        12 Sweet valley       E01011333 -1.6785696      7</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+str(pupil_data)  #  check variables are of appropriate class
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="data-frame-12-obs-of-5-variables">&lsquo;data.frame&rsquo;:    12 obs. of  5 variables:</h2>
+
+<h2 id="studentid-int-1-2-3-4-5-6-7-8-9-10-1">$ studentid      : int  1 2 3 4 5 6 7 8 9 10 &hellip;</h2>
+
+<h2 id="school-chr-park-view-grange-hill-sweet-valley-park-view-1">$ school         : chr  &ldquo;Park view&rdquo; &ldquo;Grange Hill&rdquo; &ldquo;Sweet valley&rdquo; &ldquo;Park view&rdquo; &hellip;</h2>
+
+<h2 id="superoutputarea-chr-e01011949-e01011105-e01011333-e01011949-1">$ superoutputarea: chr  &ldquo;E01011949&rdquo; &ldquo;E01011105&rdquo; &ldquo;E01011333&rdquo; &ldquo;E01011949&rdquo; &hellip;</h2>
+
+<h2 id="attainment-num-0-192-1-447-0-323-1-622-0-689-1">$ attainment     : num  0.192 -1.447 -0.323 1.622 -0.689 &hellip;</h2>
+
+<h2 id="depriv-num-1-3-7-1-3-7-1-3-7-1">$ depriv         : num  1 3 7 1 3 7 1 3 7 1 &hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Great, now we can use this dataframe for machine learning.
+What if we have a large dataframe, are there more concise and faster ready made functions to use?
+Probably but we won&rsquo;t elucidate that here, we just assume <code>dplyr</code> is fast as it passess to <code>C++</code>.
+Plus I like <code>dplyr</code> with its nice chaining.</p>
+
+<p>{% highlight r %}
+mutate(pupil_data, depriv2 = unname(lookup[pupil_data$superoutputarea]))
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="studentid-school-superoutputarea-attainment-depriv-depriv2">studentid       school superoutputarea attainment depriv depriv2</h2>
+
+<h2 id="1-1-park-view-e01011949-0-1924919-1-1">1          1    Park view       E01011949  0.1924919      1       1</h2>
+
+<h2 id="2-2-grange-hill-e01011105-1-4467018-3-3">2          2  Grange Hill       E01011105 -1.4467018      3       3</h2>
+
+<h2 id="3-3-sweet-valley-e01011333-0-3231805-7-7">3          3 Sweet valley       E01011333 -0.3231805      7       7</h2>
+
+<h2 id="4-4-park-view-e01011949-1-6222961-1-1">4          4    Park view       E01011949  1.6222961      1       1</h2>
+
+<h2 id="5-5-grange-hill-e01011105-0-6890241-3-3">5          5  Grange Hill       E01011105 -0.6890241      3       3</h2>
+
+<h2 id="6-6-sweet-valley-e01011333-2-0421222-7-7">6          6 Sweet valley       E01011333  2.0421222      7       7</h2>
+
+<h2 id="7-7-park-view-e01011949-0-9437791-1-1">7          7    Park view       E01011949  0.9437791      1       1</h2>
+
+<h2 id="8-8-grange-hill-e01011105-2-0819269-3-3">8          8  Grange Hill       E01011105  2.0819269      3       3</h2>
+
+<h2 id="9-9-sweet-valley-e01011333-1-9171173-7-7">9          9 Sweet valley       E01011333  1.9171173      7       7</h2>
+
+<h2 id="10-10-park-view-e01011949-0-4148122-1-1">10        10    Park view       E01011949 -0.4148122      1       1</h2>
+
+<h2 id="11-11-grange-hill-e01011105-1-0328535-3-3">11        11  Grange Hill       E01011105  1.0328535      3       3</h2>
+
+<h2 id="12-12-sweet-valley-e01011333-1-6785696-7-7">12        12 Sweet valley       E01011333 -1.6785696      7       7</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Sometimes we might have a more complicated lookup table which has multiple columns of infomation.
+Suppose we take our vector of attainment grades and round them to the nearest whole number.</p>
+
+<p>{% highlight r %}
+pupil_data &lt;- mutate(pupil_data, grade = round(attainment, digits = 0))</p>
+
+<p>grades &lt;- pupil_data$grade</p>
+
+<p>info &lt;- data.frame(
+  grade = -3:3,
+  desc = c(&ldquo;Awful&rdquo;, &ldquo;Rubbish&rdquo;, &ldquo;Poor&rdquo;, &ldquo;OK&rdquo;, &ldquo;Satisfactory&rdquo;, &ldquo;Good&rdquo;, &ldquo;Awesome&rdquo;),
+  pass = c(F, F, F, T, T, T, T)
+)
+{% endhighlight %}</p>
+
+<p>We want to duplicate the <code>info</code> table so that we have a row for each values in <code>grade</code>. We can do this in two ways either using <code>match()</code> and integer subsetting, or <code>rownames()</code> and character subsetting:</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="using-match">using match</h1>
+
+<p>id &lt;- match(grades, info$grade)
+info[id, ]
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="grade-desc-pass">grade         desc  pass</h2>
+
+<h2 id="4-0-ok-true">4       0           OK  TRUE</h2>
+
+<h2 id="3-1-poor-false">3      -1         Poor FALSE</h2>
+
+<h2 id="4-1-0-ok-true">4.1     0           OK  TRUE</h2>
+
+<h2 id="6-2-good-true">6       2         Good  TRUE</h2>
+
+<h2 id="3-1-1-poor-false">3.1    -1         Poor FALSE</h2>
+
+<h2 id="6-1-2-good-true">6.1     2         Good  TRUE</h2>
+
+<h2 id="5-1-satisfactory-true">5       1 Satisfactory  TRUE</h2>
+
+<h2 id="6-2-2-good-true">6.2     2         Good  TRUE</h2>
+
+<h2 id="6-3-2-good-true">6.3     2         Good  TRUE</h2>
+
+<h2 id="4-2-0-ok-true">4.2     0           OK  TRUE</h2>
+
+<h2 id="5-1-1-satisfactory-true">5.1     1 Satisfactory  TRUE</h2>
+
+<h2 id="2-2-rubbish-false">2      -2      Rubbish FALSE</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="using-rownames">using rownames</h1>
+
+<p>rownames(info) &lt;- info$grade
+info[as.character(grades), ]
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="grade-desc-pass-1">grade         desc  pass</h2>
+
+<h2 id="0-0-ok-true">0        0           OK  TRUE</h2>
+
+<h2 id="1-1-poor-false">-1      -1         Poor FALSE</h2>
+
+<h2 id="0-1-0-ok-true">0.1      0           OK  TRUE</h2>
+
+<h2 id="2-2-good-true">2        2         Good  TRUE</h2>
+
+<h2 id="1-1-1-poor-false">-1.1    -1         Poor FALSE</h2>
+
+<h2 id="2-1-2-good-true">2.1      2         Good  TRUE</h2>
+
+<h2 id="1-1-satisfactory-true">1        1 Satisfactory  TRUE</h2>
+
+<h2 id="2-2-2-good-true">2.2      2         Good  TRUE</h2>
+
+<h2 id="2-3-2-good-true">2.3      2         Good  TRUE</h2>
+
+<h2 id="0-2-0-ok-true">0.2      0           OK  TRUE</h2>
+
+<h2 id="1-1-1-satisfactory-true">1.1      1 Satisfactory  TRUE</h2>
+
+<h2 id="2-2-rubbish-false-1">-2      -2      Rubbish FALSE</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We have matched the <code>grade</code> of the student with its appropriate descriptor and pass / fail status using a more complicated lookup table.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>A named character vector can act as a simple lookup table. We could even read this in from a csv file. Lookup is simple in R.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Wickham, H. (2015). Advanced R.</li>
+</ul>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-2-3-2015-12-10">R version 3.2.3 (2015-12-10)</h2>
+
+<h2 id="platform-x86-64-pc-linux-gnu-64-bit">Platform: x86_64-pc-linux-gnu (64-bit)</h2>
+
+<h2 id="running-under-ubuntu-14-04-4-lts">Running under: Ubuntu 14.04.4 LTS</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-methods-stats-graphics-grdevices-utils-datasets-base">[1] methods   stats     graphics  grDevices utils     datasets  base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-dplyr-0-4-3-testthat-0-11-0-knitr-1-12-3">[1] dplyr_0.4.3     testthat_0.11.0 knitr_1.12.3</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-rcpp-0-12-2-digest-0-6-8-crayon-1-3-1-assertthat-0-1">[1] Rcpp_0.12.2     digest_0.6.8    crayon_1.3.1    assertthat_0.1</h2>
+
+<h2 id="5-r6-2-1-1-dbi-0-3-1-formatr-1-2-1-magrittr-1-5">[5] R6_2.1.1        DBI_0.3.1       formatR_1.2.1   magrittr_1.5</h2>
+
+<h2 id="9-evaluate-0-8-stringi-1-0-1-lazyeval-0-1-10-tools-3-2-3">[9] evaluate_0.8    stringi_1.0-1   lazyeval_0.1.10 tools_3.2.3</h2>
+
+<h2 id="13-stringr-1-0-0-parallel-3-2-3-memoise-0-2-1">[13] stringr_1.0.0   parallel_3.2.3  memoise_0.2.1</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

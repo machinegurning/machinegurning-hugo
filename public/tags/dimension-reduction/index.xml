@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dimension Reduction on A Hugo website</title>
+    <link>/tags/dimension-reduction/</link>
+    <description>Recent content in Dimension Reduction on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 27 Nov 2017 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/dimension-reduction/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Classification of spreadsheets</title>
+      <link>/2017/11/27/classification-of-spreadsheets/</link>
+      <pubDate>Mon, 27 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/11/27/classification-of-spreadsheets/</guid>
+      <description>Data tables in the form of spreadsheets are ubiquitous in enterprise. For better or worse, they are the Swiss Army Knife (or cockroaches) for decision support in many organisations.
+Why are they so popular and widely used? That&amp;rsquo;s not the focus of this blog, instead we focus on how you might go about automating the classification of spreadsheets without manually having to open and inspect them. We use some of the techniques we used in previous posts to represent a spreadsheet as a matrix (empty or not-empty cells) and attempt dimension reduction.</description>
+    </item>
+    
+    <item>
+      <title>t-Distributed Stochastic Neighbor Embedding</title>
+      <link>/2017/10/13/t-distributed-stochastic-neighbor-embedding/</link>
+      <pubDate>Fri, 13 Oct 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/10/13/t-distributed-stochastic-neighbor-embedding/</guid>
+      <description>Last time we looked at the classic approach of PCA, this time we look at a relatively modern method called t-Distributed Stochastic Neighbour Embedding (t-SNE). The paper is fairly accessible so we work through it here and attempt to use the method in R on a new data set (there&amp;rsquo;s also a video talk).
+The data science process often starts with visualisation; we want to see the data in an attempt to make sense of it.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.35" />
+
+
+<title>Discrete Time Markov Chains - A Hugo website</title>
+<meta property="og:title" content="Discrete Time Markov Chains - A Hugo website">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">13 min read</span>
+    
+
+    <h1 class="article-title">Discrete Time Markov Chains</h1>
+
+    
+    <span class="article-date">2016/06/02</span>
+    
+
+    <div class="article-content">
+      
+
+<h2 id="markov-chains">Markov chains</h2>
+
+<p>Markov chains, named after Andrey Markov, are mathematical systems that hop from one &ldquo;state&rdquo; (a situation or set of values) to another. See <a href="http://setosa.io/blog/2014/07/26/markov-chains/index.html">here</a> for an excellent introduction.</p>
+
+<p>The second time I used a Markov chain method resulted in a publication (the first was when I simulated Brownian motion with a coin for GCSE coursework). At the time I was completing it as part of the excellent and highly recommended <a href="http://sysmic.ac.uk/home.html">Sysmic course</a> so that it could contribute to a chapter in my thesis and as a <a href="http://onlinelibrary.wiley.com/doi/10.1111/imb.12220/abstract;jsessionid=3694FE870B60851D03E74F8EF7D18E79.f04t01">journal article</a>.</p>
+
+<p>As I was new to programming, I naively wrote the function myself, to simulate the transition between states of injected insect embryos to model the development of <a href="https://en.wikipedia.org/wiki/Transgenesis">transgenic insects</a>, wherby each injected egg had a change of either living or dying and then, if alive, a chance of incorporating the injected DNA into its genome (simplified explanation).</p>
+
+<p>When using R it is always wiser to find a package that has already been developed and documented, as it is likely to have experienced more testing  than anything you would produce as an individual (it&rsquo;s also quicker). We investigate the <code>markovchain</code> package.</p>
+
+<h2 id="discrete-time-markov-chain">Discrete Time Markov Chain</h2>
+
+<p>We define a discrete time markov chain that matches our statistics derived from my review published this year, we consider the diamond back moth summary statistics, <em>Plutella xylostella</em> (survival and transformation efficiency).</p>
+
+<p>{% highlight r %}
+library(markovchain)</p>
+
+<h2 id="get-the-diamond-back-moth-summary-statistics-of-interest">Get the diamond back moth summary statistics of interest</h2>
+
+<p>library(dplyr)
+mydata &lt;- read.csv(&ldquo;<a href="https://raw.githubusercontent.com/mammykins/piggyBac-data/master/master2015jan.csv&quot;">https://raw.githubusercontent.com/mammykins/piggyBac-data/master/master2015jan.csv&quot;</a>,
+header = TRUE) %&gt;% select(g0.lambda, surv)</p>
+
+<p>s &lt;-  median(mydata$surv, na.rm = TRUE) %&gt;% round(digits = 5)
+trans_efficiency &lt;- median(mydata$g0.lambda, na.rm = TRUE) %&gt;% round(digits = 5)
+{% endhighlight %}</p>
+
+<p>First we create our three different states of our Discrete Time Markov Chain (DTMC). Embryo, injection survivor and transgenic adult (<code>egg</code>, <code>g0</code>, <code>dead</code>). We keep things simple to learn how the process works, if injection survivors are non-transgenic then we discard them (their state changes to <code>dead</code>).</p>
+
+<h2 id="transition-matrix">Transition matrix</h2>
+
+<p>We use a &ldquo;transition matrix&rdquo; to tally the transition probabilities. Every state in the state space is included once as a row and again as a column, and each cell in the matrix tells you the probability of transitioning from its row&rsquo;s state to its column&rsquo;s state. The rows of the transition matrix must total to 1. There also has to be the same number of rows as columns.</p>
+
+<p>Based on our summary statistics in my paper we describe our transition probability between states for <em>Plutella xylostella</em> as:</p>
+
+<p>$$\mathbf{X} = \left[\begin{array}
+{rrr}
+0 &amp; 0.13 &amp; 0.87 &amp; 0 <br />
+0 &amp; 0 &amp; 0.98 &amp; 0.02 <br />
+0 &amp; 0 &amp; 1 &amp; 0 <br />
+0 &amp; 0 &amp; 0 &amp; 1 <br />
+\end{array}\right]
+$$</p>
+
+<p>Compare this matrix to the matrix <code>dtmcA</code> assigned below to elucidate the meaning of the proportions in the matrix.</p>
+
+<p>{% highlight r %}
+tmA &lt;- matrix(c(0, s, 1 - s, 0,     #  egg to&hellip;
+                0, 0, 1 - trans_efficiency, trans_efficiency,   #  g0 to&hellip;
+                0, 0, 1, 0,         #  dead to&hellip;
+                0, 0, 0, 1),
+              nrow = 4, byrow = TRUE) #define the transition matrix
+dtmcA &lt;- new(&ldquo;markovchain&rdquo;, transitionMatrix = tmA,
+states = c(&ldquo;egg&rdquo;, &ldquo;g0&rdquo;, &ldquo;dead&rdquo;, &ldquo;transgenic&rdquo;),
+name = &ldquo;diamondback&rdquo;) #create the DTMC
+dtmcA
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="diamondback">diamondback</h2>
+
+<h2 id="a-4-dimensional-discrete-markov-chain-with-following-states">A  4 - dimensional discrete Markov Chain with following states:</h2>
+
+<h2 id="egg-g0-dead-transgenic">egg, g0, dead, transgenic</h2>
+
+<h2 id="the-transition-matrix-by-rows-is-defined-as-follows">The transition matrix   (by rows)  is defined as follows:</h2>
+
+<h2 id="egg-g0-dead-transgenic-1">egg      g0    dead transgenic</h2>
+
+<h2 id="egg-0-0-12942-0-87058-0-00000">egg          0 0.12942 0.87058    0.00000</h2>
+
+<h2 id="g0-0-0-00000-0-98134-0-01866">g0           0 0.00000 0.98134    0.01866</h2>
+
+<h2 id="dead-0-0-00000-1-00000-0-00000">dead         0 0.00000 1.00000    0.00000</h2>
+
+<h2 id="transgenic-0-0-00000-0-00000-1-00000">transgenic   0 0.00000 0.00000    1.00000</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Eggs operate as the input to the model, we put <code>egg</code> in, we then do injections, 0.87058 of the <code>egg</code> die, 0.12942 survive to produce injection survivors (<code>g0</code>), of these <code>g0</code>, only 1% give rise to transgenics, the non-transgenics are considered <code>dead</code>, or waste insects.</p>
+
+<p>We can use the igraph package to plot the Markov Chain object.</p>
+
+<p>{% highlight r %}
+plot(dtmcA, main = &ldquo;Transition probability matrix for DBM&rdquo;)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-06-02-trans1-1.svg" alt="plot of chunk 2016-06-02-trans1" />
+Or there are <code>diagram</code> ways to plot.</p>
+
+<p>{% highlight r %}
+library(diagram)
+plot(dtmcA, main = &ldquo;Transition probability matrix for DBM&rdquo;, package = &ldquo;diagram&rdquo;,
+        lwd = 1, box.lwd = 2, cex.txt = 0.8,
+        box.size = 0.1, box.type = &ldquo;square&rdquo;,
+        box.prop = 0.5)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-06-02-trans2-1.svg" alt="plot of chunk 2016-06-02-trans2" /></p>
+
+<h2 id="probabilistic-analysis">Probabilistic analysis</h2>
+
+<ul>
+<li>It is possible to access transition probabilities and to perform
+basic operations.</li>
+<li>Similarly, it is possible to access the conditional distribution of
+states.</li>
+</ul>
+
+<p>{% highlight r %}
+dtmcA[2, 4] #using [ method
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-01866">[1] 0.01866</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+transitionProbability(dtmcA,
+&ldquo;g0&rdquo;,&ldquo;transgenic&rdquo;) #using specific S4 method
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-0-01866-1">[1] 0.01866</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+conditionalDistribution(dtmcA,&ldquo;g0&rdquo;)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="egg-g0-dead-transgenic-2">egg         g0       dead transgenic</h2>
+
+<h2 id="0-00000-0-00000-0-98134-0-01866">0.00000    0.00000    0.98134    0.01866</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We can use a variety of methods to subset S4 objects. Further examples can be found in Hadley Wickham&rsquo;s <a href="http://adv-r.had.co.nz/">Advanced R</a>.</p>
+
+<p>Excitingly it is possible to simulate states&rsquo; distributions after <code>n</code> steps, where <code>n</code> is the number of eggs to be injected, our input to the Markov Chain. If we run one step or one discrete time period then our <code>egg</code> are injected and it is determined using matrix multiplication (<code>tmA</code> by <code>initialState</code>)</p>
+
+<p>{% highlight r %}
+set.seed(1337)
+n &lt;- 1000  #  number of embryos to be injected
+steps &lt;- 1</p>
+
+<p>########
+initialState &lt;- c(n, 0, 0, 0)  #  we start off with only eggs injected, zero for all others
+finalState &lt;- initialState*dtmcA ^ steps #using power operator
+finalState
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="egg-g0-dead-transgenic-3">egg     g0   dead transgenic</h2>
+
+<h2 id="1-0-129-42-870-58-0">[1,]   0 129.42 870.58          0</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>For the full process of insect transgenesis (injection and setting up wild-type crosses to assess if DNA has been integrated) we need 2 or more steps. What would happen if we specified 10 steps?</p>
+
+<p>{% highlight r %}
+set.seed(1337)
+n &lt;- 1000  #  number of embryos to be injected
+steps &lt;- 2</p>
+
+<p>########
+initialState &lt;- c(n, 0, 0, 0)  #  we start off with only eggs injected, zero for all others
+finalState &lt;- initialState*dtmcA ^ steps #using power operator
+finalState
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="egg-g0-dead-transgenic-4">egg g0    dead transgenic</h2>
+
+<h2 id="1-0-0-997-585-2-414977">[1,]   0  0 997.585   2.414977</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>If we specified 2 or greater steps the <code>finalState</code> would be identical, as <code>transgenic</code> feeds into itself with 100% chance. This is emphasised using the <code>steadyStates()</code> function and revealed by the <code>summary()</code>.</p>
+
+<p>{% highlight r %}
+steadyStates(dtmcA) #S4 method
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="egg-g0-dead-transgenic-5">egg g0 dead transgenic</h2>
+
+<h2 id="1-0-0-0-1">[1,]   0  0    0          1</h2>
+
+<h2 id="2-0-0-1-0">[2,]   0  0    1          0</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+summary(dtmcA)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="diamondback-markov-chain-that-is-composed-by">diamondback  Markov chain that is composed by:</h2>
+
+<h2 id="closed-classes">Closed classes:</h2>
+
+<h2 id="dead">dead</h2>
+
+<h2 id="transgenic">transgenic</h2>
+
+<h2 id="recurrent-classes">Recurrent classes:</h2>
+
+<h2 id="dead-transgenic">{dead},{transgenic}</h2>
+
+<h2 id="transient-classes">Transient classes:</h2>
+
+<h2 id="egg-g0">{egg},{g0}</h2>
+
+<h2 id="the-markov-chain-is-not-irreducible">The Markov chain is not irreducible</h2>
+
+<h2 id="the-absorbing-states-are-dead-transgenic">The absorbing states are: dead transgenic</h2>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="estimating-a-transition-matrix-from-data">Estimating a transition matrix from data</h2>
+
+<p>The package permits to fit a DTMC estimating the transition matrix
+from a sequence of data. <code>createSequenceMatrix()</code> returns a function
+showing previous vs actual states from the pairs in a given sequence.<br />
+The <code>markovchainFit()</code> function allows us to obtain the estimated
+transition matrix and the confidence levels (using elliptic Maximum Likelihood Estimate
+hyphothesis).</p>
+
+<p>{% highlight r %}
+#using Alofi rainfall dataset
+data(rain)
+str(rain)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="data-frame-1096-obs-of-2-variables">&lsquo;data.frame&rsquo;:    1096 obs. of  2 variables:</h2>
+
+<h2 id="v1-int-3-2-2-2-2-2-2-3-3-3">$ V1  : int  3 2 2 2 2 2 2 3 3 3 &hellip;</h2>
+
+<h2 id="rain-chr-6-1-5-1-5-1-5">$ rain: chr  &ldquo;6+&rdquo; &ldquo;1-5&rdquo; &ldquo;1-5&rdquo; &ldquo;1-5&rdquo; &hellip;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+mysequence &lt;- rain$rain
+createSequenceMatrix(mysequence)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="0-1-5-6">0 1-5  6+</h2>
+
+<h2 id="0-362-126-60">0   362 126  60</h2>
+
+<h2 id="1-5-136-90-68">1-5 136  90  68</h2>
+
+<h2 id="6-50-79-124">6+   50  79 124</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+myFit &lt;- markovchainFit(data = mysequence, confidencelevel = 0.9)
+myFit
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="estimate">$estimate</h2>
+
+<h2 id="mle-fit">MLE Fit</h2>
+
+<h2 id="a-3-dimensional-discrete-markov-chain-with-following-states">A  3 - dimensional discrete Markov Chain with following states:</h2>
+
+<h2 id="0-1-5-6-1">0, 1-5, 6+</h2>
+
+<h2 id="the-transition-matrix-by-rows-is-defined-as-follows-1">The transition matrix   (by rows)  is defined as follows:</h2>
+
+<h2 id="0-1-5-6-2">0       1-5        6+</h2>
+
+<h2 id="0-0-6605839-0-2299270-0-1094891">0   0.6605839 0.2299270 0.1094891</h2>
+
+<h2 id="1-5-0-4625850-0-3061224-0-2312925">1-5 0.4625850 0.3061224 0.2312925</h2>
+
+<h2 id="6-0-1976285-0-3122530-0-4901186">6+  0.1976285 0.3122530 0.4901186</h2>
+
+<h2 id="standarderror">$standardError</h2>
+
+<h2 id="0-1-5-6-3">0        1-5         6+</h2>
+
+<h2 id="0-0-03471952-0-02048353-0-01413498">0   0.03471952 0.02048353 0.01413498</h2>
+
+<h2 id="1-5-0-03966634-0-03226814-0-02804834">1-5 0.03966634 0.03226814 0.02804834</h2>
+
+<h2 id="6-0-02794888-0-03513120-0-04401395">6+  0.02794888 0.03513120 0.04401395</h2>
+
+<h2 id="confidenceinterval">$confidenceInterval</h2>
+
+<h2 id="confidenceinterval-confidencelevel">$confidenceInterval$confidenceLevel</h2>
+
+<h2 id="1-0-9">[1] 0.9</h2>
+
+<h2 id="confidenceinterval-lowerendpointmatrix">$confidenceInterval$lowerEndpointMatrix</h2>
+
+<h2 id="0-1-5-6-4">0       1-5         6+</h2>
+
+<h2 id="0-0-6160891-0-2036763-0-09137435">0   0.6160891 0.2036763 0.09137435</h2>
+
+<h2 id="1-5-0-4117506-0-2647692-0-19534713">1-5 0.4117506 0.2647692 0.19534713</h2>
+
+<h2 id="6-0-1618105-0-2672305-0-43371243">6+  0.1618105 0.2672305 0.43371243</h2>
+
+<h2 id="confidenceinterval-upperendpointmatrix">$confidenceInterval$upperEndpointMatrix</h2>
+
+<h2 id="0-1-5-6-5">0       1-5        6+</h2>
+
+<h2 id="0-0-7050788-0-2561777-0-1276038">0   0.7050788 0.2561777 0.1276038</h2>
+
+<h2 id="1-5-0-5134195-0-3474757-0-2672379">1-5 0.5134195 0.3474757 0.2672379</h2>
+
+<h2 id="6-0-2334464-0-3572754-0-5465247">6+  0.2334464 0.3572754 0.5465247</h2>
+
+<h2 id="loglikelihood">$logLikelihood</h2>
+
+<h2 id="1-1040-419">[1] -1040.419</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>So we can call our estimated transition probability matrix using <code>myFit$estimate</code>. We could then use it to make predicitons for hypothetical set-ups.</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="assign-our-fitted-estimate-for-the-transition-matrix-to-tmb">Assign our fitted estimate for the transition matrix to tmB</h1>
+
+<p>dtmcB &lt;- myFit$estimate
+dtmcB
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="mle-fit-1">MLE Fit</h2>
+
+<h2 id="a-3-dimensional-discrete-markov-chain-with-following-states-1">A  3 - dimensional discrete Markov Chain with following states:</h2>
+
+<h2 id="0-1-5-6-6">0, 1-5, 6+</h2>
+
+<h2 id="the-transition-matrix-by-rows-is-defined-as-follows-2">The transition matrix   (by rows)  is defined as follows:</h2>
+
+<h2 id="0-1-5-6-7">0       1-5        6+</h2>
+
+<h2 id="0-0-6605839-0-2299270-0-1094891-1">0   0.6605839 0.2299270 0.1094891</h2>
+
+<h2 id="1-5-0-4625850-0-3061224-0-2312925-1">1-5 0.4625850 0.3061224 0.2312925</h2>
+
+<h2 id="6-0-1976285-0-3122530-0-4901186-1">6+  0.1976285 0.3122530 0.4901186</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+set.seed(1337)
+n &lt;- 999<br />
+steps &lt;- 1</p>
+
+<p>########
+initialState &lt;- c(n/3, n/3, n/3)
+finalState &lt;- initialState*dtmcB ^ steps #using power operator
+finalState
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="0-1-5-6-8">0      1-5       6+</h2>
+
+<h2 id="1-439-8255-282-4847-276-6897">[1,] 439.8255 282.4847 276.6897</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>If we took the time to understand what the <code>rain</code> data was about then this might provide additional insight. The key point is we could develop a discrete time Markov Method based on estimates of a transition matrix from the data.</p>
+
+<h2 id="waste-water-pipe-deterioration">Waste water pipe deterioration</h2>
+
+<p>Here we propose a hypothetical situation where we are responsible for the condition of our sewer waste water pipes in a region. We use a survey to describe the current condition with a four-point scale, inspired by Baik et al., (2006). The ranking goes from Brand New to Bad, A to D.</p>
+
+<p>{% highlight r %}
+tmC &lt;- matrix(c(0.9, 0.1, 0, 0,    #  a
+                0, 0.8, 0.2, 0,   #  b
+                0, 0, 0.6, 0.4,         #  c
+                0, 0, 0, 1),        #  d
+              nrow = 4, byrow = TRUE) #define the transition matrix
+dtmcC &lt;- new(&ldquo;markovchain&rdquo;, transitionMatrix = tmC,
+states = c(&ldquo;a&rdquo;, &ldquo;b&rdquo;, &ldquo;c&rdquo;, &ldquo;d&rdquo;),
+name = &ldquo;element&rdquo;) #create the DTMC
+dtmcC
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="element">element</h2>
+
+<h2 id="a-4-dimensional-discrete-markov-chain-with-following-states-1">A  4 - dimensional discrete Markov Chain with following states:</h2>
+
+<h2 id="a-b-c-d">a, b, c, d</h2>
+
+<h2 id="the-transition-matrix-by-rows-is-defined-as-follows-3">The transition matrix   (by rows)  is defined as follows:</h2>
+
+<h2 id="a-b-c-d-1">a   b   c   d</h2>
+
+<h2 id="a-0-9-0-1-0-0-0-0">a 0.9 0.1 0.0 0.0</h2>
+
+<h2 id="b-0-0-0-8-0-2-0-0">b 0.0 0.8 0.2 0.0</h2>
+
+<h2 id="c-0-0-0-0-0-6-0-4">c 0.0 0.0 0.6 0.4</h2>
+
+<h2 id="d-0-0-0-0-0-0-1-0">d 0.0 0.0 0.0 1.0</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>Correct estimation of transition probabilities in a Markov chain based deterioration model is a key ingredient for successful and cost-effective proactive management of wastewater systems. Imagine our company&rsquo;s estate (all of its pipes) were allowed to deteriorate for one year with an element transition matrix of:</p>
+
+<p>$$\mathbf{X} = \left[\begin{array}
+{rrr}
+0.9 &amp; 0.1 &amp; 0 &amp; 0 <br />
+0 &amp; 0.8 &amp; 0.2 &amp; 0 <br />
+0 &amp; 0 &amp; 0.6 &amp; 0.4 <br />
+0 &amp; 0 &amp; 0 &amp; 1 <br />
+\end{array}\right]
+$$</p>
+
+<p>provided by expert domain knowledge from a consultancy or preferably from the data.</p>
+
+<p>{% highlight r %}
+set.seed(1337)
+show(dtmcC)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="element-1">element</h2>
+
+<h2 id="a-4-dimensional-discrete-markov-chain-with-following-states-2">A  4 - dimensional discrete Markov Chain with following states:</h2>
+
+<h2 id="a-b-c-d-2">a, b, c, d</h2>
+
+<h2 id="the-transition-matrix-by-rows-is-defined-as-follows-4">The transition matrix   (by rows)  is defined as follows:</h2>
+
+<h2 id="a-b-c-d-3">a   b   c   d</h2>
+
+<h2 id="a-0-9-0-1-0-0-0-0-1">a 0.9 0.1 0.0 0.0</h2>
+
+<h2 id="b-0-0-0-8-0-2-0-0-1">b 0.0 0.8 0.2 0.0</h2>
+
+<h2 id="c-0-0-0-0-0-6-0-4-1">c 0.0 0.0 0.6 0.4</h2>
+
+<h2 id="d-0-0-0-0-0-0-1-0-1">d 0.0 0.0 0.0 1.0</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+#n &lt;-   #<br />
+steps &lt;- 1</p>
+
+<p>########
+initialState &lt;- c(12, 35, 18, 5)<br />
+finalState &lt;- initialState*dtmcC ^ steps #using power operator
+finalState
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="a-b-c-d-4">a    b    c    d</h2>
+
+<h2 id="1-10-8-29-2-17-8-12-2">[1,] 10.8 29.2 17.8 12.2</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>We could then use the transition matrix to model what would happen to our pipes through the next 50 years without any investment. We can set up a data frame to contain labels for each timestep, and a count of how many pipes are in each state at each timestep. Then, we fill that data frame with the results after each timestep <code>i</code>, calculated by <code>initialState * dtmcC ^ i</code>:</p>
+
+<p>{% highlight r %}
+#INPUT
+set.seed(1337)
+initialState &lt;- c(12, 35, 18, 5)
+timesteps &lt;- 50</p>
+
+<p>#SIMULATION
+pipe_df &lt;- data.frame( &ldquo;timestep&rdquo; = numeric(),
+ &ldquo;a&rdquo; = numeric(), &ldquo;b&rdquo; = numeric(),
+ &ldquo;c&rdquo; = numeric(), &ldquo;d&rdquo; = numeric(),
+ stringsAsFactors = FALSE)
+ for (i in 0:timesteps) {
+newrow &lt;- as.list(c(i, round(as.numeric(initialState * dtmcC ^ i), 0)))
+ pipe_df[nrow(pipe_df) + 1, ] &lt;- newrow
+ }</p>
+
+<p>#OUTPUT
+head(pipe_df, 5)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="timestep-a-b-c-d">timestep  a  b  c  d</h2>
+
+<h2 id="1-0-12-35-18-5">1        0 12 35 18  5</h2>
+
+<h2 id="2-1-11-29-18-12">2        1 11 29 18 12</h2>
+
+<h2 id="3-2-10-24-17-19">3        2 10 24 17 19</h2>
+
+<h2 id="4-3-9-21-15-26">4        3  9 21 15 26</h2>
+
+<h2 id="5-4-8-17-13-32">5        4  8 17 13 32</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+tail(pipe_df, 5)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="timestep-a-b-c-d-1">timestep a b c  d</h2>
+
+<h2 id="47-46-0-0-0-70">47       46 0 0 0 70</h2>
+
+<h2 id="48-47-0-0-0-70">48       47 0 0 0 70</h2>
+
+<h2 id="49-48-0-0-0-70">49       48 0 0 0 70</h2>
+
+<h2 id="50-49-0-0-0-70">50       49 0 0 0 70</h2>
+
+<h2 id="51-50-0-0-0-70">51       50 0 0 0 70</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>A plot may be preferred to visualise the condition of our pipes without investment.</p>
+
+<p>{% highlight r %}
+library(RColorBrewer)
+colours &lt;- brewer.pal(4, &ldquo;Set1&rdquo;)
+plot(pipe_df$timestep, pipe_df$b, ylim = c(0, 70), col = colours[1], type = &ldquo;l&rdquo;,
+     xlab = &ldquo;Horizon in years&rdquo;, ylab = &ldquo;Frequency of pipes in state&rdquo;)
+lines(pipe_df$timestep,pipe_df$a, col = colours[2])
+lines(pipe_df$timestep,pipe_df$c, col = colours[3])
+lines(pipe_df$timestep,pipe_df$d, col = colours[4])
+legend(&ldquo;right&rdquo;, legend = c(&ldquo;a&rdquo;, &ldquo;b&rdquo;, &ldquo;c&rdquo;, &ldquo;d&rdquo;), fill = colours)
+{% endhighlight %}</p>
+
+<p><img src="/figures/2016-06-02-pipes-norepair-1.svg" alt="plot of chunk 2016-06-02-pipes-norepair" /></p>
+
+<p>We can calculate the timestep when all pipes break, or a steady state is reached at the absorbing state d by</p>
+
+<p>{% highlight r %}
+absorbingStates(dtmcC)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-d">[1] &ldquo;d&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+transientStates(dtmcC)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="1-a-b-c">[1] &ldquo;a&rdquo; &ldquo;b&rdquo; &ldquo;c&rdquo;</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}
+steadyStates(dtmcC)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="a-b-c-d-5">a b c d</h2>
+
+<h2 id="1-0-0-0-1-1">[1,] 0 0 0 1</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>As all but state d are transitional, we are interested in when all are equal to zero and &ldquo;d&rdquo; is equal to the sum of the frequency of initial states, 70.</p>
+
+<p>{% highlight r %}
+head(filter(pipe_df, a == 0, b == 0, c  == 0), n = 1)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="timestep-a-b-c-d-2">timestep a b c  d</h2>
+
+<h2 id="1-31-0-0-0-69">1       31 0 0 0 69</h2>
+
+<p>{% endhighlight %}</p>
+
+<p>{% highlight r %}</p>
+
+<h1 id="note-the-rounding-error">note the rounding error</h1>
+
+<p>head(filter(pipe_df, a == 0, b == 0, c  == 0, d == sum(initialState)), n = 1)
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="timestep-a-b-c-d-3">timestep a b c  d</h2>
+
+<h2 id="1-40-0-0-0-70">1       40 0 0 0 70</h2>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="extension">Extension</h2>
+
+<p>We can use this code to change the various transition probabilities to see what the effects are on the outputs (sensitivity analysis) through <a href="http://www.machinegurning.com/rstats/map_df/">visual inspection</a> and consider what transition probabilities would strike the right balance (repair and maintenance allows state reversion, from states c and d back to a). Also, there are methods we could use to perform uncertainty analysis, e.g. putting confidence intervals around the transition probabilities. We won&rsquo;t do either of these here. This type of decision modelling scenario is perfect for Shiny app implementation!</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+<li>Gregory, M., Alphey, L., Morrison, N. I., &amp; Shimeld, S. M. (2016). Insect transformation with piggyBac : getting the number of injections just right. Insect Molecular Biology, <a href="http://doi.org/10.1111/imb.12220">http://doi.org/10.1111/imb.12220</a></li>
+<li>Baik, H., Seok, H., Jeong, D., &amp; Abraham, D. M. (2006). Deterioration Models for Management of Wastewater Systems. Journal of Water Resources Planning and Management, 132(February), 15-24. <a href="http://doi.org/10.1061/(ASCE)0733-9496(2006)132:1(15">http://doi.org/10.1061/(ASCE)0733-9496(2006)132:1(15</a>)</li>
+<li><a href="http://www.r-bloggers.com/a-discrete-time-markov-chain-dtmc-sir-model-in-r/">http://www.r-bloggers.com/a-discrete-time-markov-chain-dtmc-sir-model-in-r/</a></li>
+</ul>
+
+<p>{% highlight r %}
+sessionInfo()
+{% endhighlight %}</p>
+
+<p>{% highlight text %}</p>
+
+<h2 id="r-version-3-3-0-2016-05-03">R version 3.3.0 (2016-05-03)</h2>
+
+<h2 id="platform-x86-64-pc-linux-gnu-64-bit">Platform: x86_64-pc-linux-gnu (64-bit)</h2>
+
+<h2 id="running-under-ubuntu-14-04-4-lts">Running under: Ubuntu 14.04.4 LTS</h2>
+
+<h2 id="locale">locale:</h2>
+
+<h2 id="1-lc-ctype-en-gb-utf-8-lc-numeric-c">[1] LC_CTYPE=en_GB.UTF-8       LC_NUMERIC=C</h2>
+
+<h2 id="3-lc-time-en-gb-utf-8-lc-collate-en-gb-utf-8">[3] LC_TIME=en_GB.UTF-8        LC_COLLATE=en_GB.UTF-8</h2>
+
+<h2 id="5-lc-monetary-en-gb-utf-8-lc-messages-en-gb-utf-8">[5] LC_MONETARY=en_GB.UTF-8    LC_MESSAGES=en_GB.UTF-8</h2>
+
+<h2 id="7-lc-paper-en-gb-utf-8-lc-name-c">[7] LC_PAPER=en_GB.UTF-8       LC_NAME=C</h2>
+
+<h2 id="9-lc-address-c-lc-telephone-c">[9] LC_ADDRESS=C               LC_TELEPHONE=C</h2>
+
+<h2 id="11-lc-measurement-en-gb-utf-8-lc-identification-c">[11] LC_MEASUREMENT=en_GB.UTF-8 LC_IDENTIFICATION=C</h2>
+
+<h2 id="attached-base-packages">attached base packages:</h2>
+
+<h2 id="1-methods-stats-graphics-grdevices-utils-datasets-base">[1] methods   stats     graphics  grDevices utils     datasets  base</h2>
+
+<h2 id="other-attached-packages">other attached packages:</h2>
+
+<h2 id="1-rcolorbrewer-1-1-2-diagram-1-6-3-shape-1-4-2">[1] RColorBrewer_1.1-2 diagram_1.6.3      shape_1.4.2</h2>
+
+<h2 id="4-dplyr-0-4-3-markovchain-0-4-4-testthat-0-8-1">[4] dplyr_0.4.3        markovchain_0.4.4  testthat_0.8.1</h2>
+
+<h2 id="7-knitr-1-13">[7] knitr_1.13</h2>
+
+<h2 id="loaded-via-a-namespace-and-not-attached">loaded via a namespace (and not attached):</h2>
+
+<h2 id="1-igraph-1-0-1-rcpp-0-12-5-magrittr-1-5">[1] igraph_1.0.1        Rcpp_0.12.5         magrittr_1.5</h2>
+
+<h2 id="4-lattice-0-20-33-r6-2-1-2-matlab-1-0-2">[4] lattice_0.20-33     R6_2.1.2            matlab_1.0.2</h2>
+
+<h2 id="7-stringr-1-0-0-tools-3-3-0-parallel-3-3-0">[7] stringr_1.0.0       tools_3.3.0         parallel_3.3.0</h2>
+
+<h2 id="10-grid-3-3-0-dbi-0-4-1-lazyeval-0-1-10">[10] grid_3.3.0          DBI_0.4-1           lazyeval_0.1.10</h2>
+
+<h2 id="13-rcppparallel-4-3-19-digest-0-6-4-assertthat-0-1">[13] RcppParallel_4.3.19 digest_0.6.4        assertthat_0.1</h2>
+
+<h2 id="16-matrix-1-2-6-formatr-1-4-evaluate-0-9">[16] Matrix_1.2-6        formatR_1.4         evaluate_0.9</h2>
+
+<h2 id="19-stringi-1-1-1-stats4-3-3-0-expm-0-999-0">[19] stringi_1.1.1       stats4_3.3.0        expm_0.999-0</h2>
+
+<p>{% endhighlight %}</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+

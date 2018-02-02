@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Environment on A Hugo website</title>
+    <link>/tags/environment/</link>
+    <description>Recent content in Environment on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 01 Aug 2015 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/environment/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>SylvaSense Part II</title>
+      <link>/2015/08/01/sylvasense-part-ii/</link>
+      <pubDate>Sat, 01 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/01/sylvasense-part-ii/</guid>
+      <description>Gypsum blocks In my previous post I was looking into building my own gypsum block soil moisture sensors. All the component parts have now arrived, and so I&amp;rsquo;ve now produced three sensors. In this post I&amp;rsquo;ll explain how I made them, show some preliminary data, and talk a bit about how much they cost.
+I&amp;rsquo;m using 3 mm A3 stainless steel studding to form the electrodes across which the arduino will measure resistance.</description>
+    </item>
+    
+    <item>
+      <title>SylvaSense Part I</title>
+      <link>/2015/07/28/sylvasense-part-i/</link>
+      <pubDate>Tue, 28 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/07/28/sylvasense-part-i/</guid>
+      <description>A bit of context I&amp;rsquo;ve been playing a lot with raspberry pis over the last couple of years. I&amp;rsquo;m now the proud owner of an original Raspberry Pi B, A, two A+s, and a brand spanking new Pi 2. Currently I have one sitting next to my electricity meter reading LED pulses from the meter, charting my electricity consumption, and a second running an external and internal temperature sensor, light, and humidity sensors.</description>
+    </item>
+    
+  </channel>
+</rss>

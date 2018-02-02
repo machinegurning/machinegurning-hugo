@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Lookups on A Hugo website</title>
+    <link>/tags/lookups/</link>
+    <description>Recent content in Lookups on A Hugo website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 13 Mar 2016 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/lookups/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Lookup tables</title>
+      <link>/2016/03/13/lookup-tables/</link>
+      <pubDate>Sun, 13 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/03/13/lookup-tables/</guid>
+      <description>{% include _toc.html %}
+Character matching provides a powerful way to make lookup tables. There are more concise functions available in packages like dplyr that achieve the same end but it is useful to understand how they are implemented with basic subsetting.
+{% highlight r %} library(dplyr) {% endhighlight %}
+We start off by building an example dataframe.
+{% highlight r %} set.seed(1337) # we use rnorm
+pupil_data &amp;lt;- data.</description>
+    </item>
+    
+  </channel>
+</rss>
