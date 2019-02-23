@@ -22,26 +22,20 @@ I'm currently working on the excellent Machine Learning course by Andrew Ng avai
  
 Rather than calculating the optimal solution for the linear regression with a single algorithm, in this exercise we use gradient descent to iteratively find a solution. To get the concept behing gradient descent, I start by implementing gradient descent for a function which takes just on parameter (rather than two - like linear regression).
  
-In this instance I have adapted code from Matt Bogard's excellent blog [Econometric Sense](http://econometricsense.blogspot.co.uk/2011/11/gradient-descent-in-r.html), and will use the same same function:
+In this instance I have adapted code from Matt Bogard's excellent blog [Econometric Sense](http://econometricsense.blogspot.co.uk/2011/11/gradient-descent-in-r.html), and will use the same function:
  
 $$h_{\theta}=1.2(x-2)^2 + 3.2$$
  
-So we can state our objective to minimise $\theta_1$ with respect of $J(\theta_1)$ with a real number, or put mathetically $\min\limits_{\theta_1}J(\theta_1)$ and $\theta_1\in\mathbb{R}$
+So we can state our objective to minimise $\theta_1$ with respect of $J(\theta\_1)$ with a real number, or put mathetically $\min\limits\_{\theta\_1}J(\theta\_1)$ and $\theta\_1\in\mathbb{R}$
  
 ### Cost function
  
-We define the cost function $J(\theta_1)$ using calculus as $J(\theta)=2.4(x-2)$ (see [Matt's blog](http://econometricsense.blogspot.co.uk/2011/11/gradient-descent-in-r.html)).
+We define the cost function $J(\theta\_1)$ using calculus as $J(\theta)=2.4(x-2)$ (see [Matt's blog](http://econometricsense.blogspot.co.uk/2011/11/gradient-descent-in-r.html)).
  
-Gradient descent is defined by Andrew Ng as:
+Gradient descent is defined by Andrew Ng as (repeat until convergence):
  
 $$
-\begin{multline}
-\text{repeat until convergence} \{\\
- 
-\theta_1:=\theta_1 - \alpha\frac{d}{d\theta_1}J(\theta_1)\\
- 
-\}
-\end{multline}
+\theta\_1:=\theta\_1 - \alpha\frac{d}{d\theta\_1}J(\theta\_1)\\
 $$
  
 * where $\alpha$ is the learning rate governing the size of the step take with each iteration.
@@ -142,7 +136,7 @@ with(
   )
 ```
 
-[![plot of chunk gradient_descent_plots](/figures/gradient_descent_plots-1.png)](/figures/gradient_descent_plots-1.png) 
+![plot of chunk gradient_descent_plots](/img/2015-03-29_gradient_descent_plots-1.png)
 
 ```r
 create_plot(expression(alpha~just~right))
@@ -162,7 +156,7 @@ with(
   )
 ```
 
-[![plot of chunk gradient_descent_plots](/figures/gradient_descent_plots-2.png)](/figures/gradient_descent_plots-2.png) 
+![plot of chunk gradient_descent_plots](/img/2015-03-29_gradient_descent_plots-2.png)
 
 ```r
 create_plot(expression(High~alpha))
@@ -182,7 +176,7 @@ with(
   )
 ```
 
-[![plot of chunk gradient_descent_plots](/figures/gradient_descent_plots-3.png)](/figures/gradient_descent_plots-3.png) 
+![plot of chunk gradient_descent_plots](/img/2015-03-29_gradient_descent_plots-3.png)
  
 Another way to look at the rate of convergence is to plot the number of iterations against the output of $f(x)$. Vertical lines show when convergence occurs. When $\alpha$ is set very low, it takes much longer than necessary (although it does converge). When $\alpha$ is too high, convergence doesn't occur at all within a hundred iterations.
  
@@ -200,4 +194,4 @@ plot(alpha_too_high$x, type = "l", col = "red")
 abline(v = (round(alpha_too_high$x,4) != 2) %>% which %>% length)
 ```
 
-[![plot of chunk gradient_descent_iterations](/figures/gradient_descent_iterations-1.png)](/figures/gradient_descent_iterations-1.png) 
+![plot of chunk gradient_descent_iterations](/img/2015-03-29_gradient_descent_iterations-1.png)

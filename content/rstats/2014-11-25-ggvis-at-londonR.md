@@ -143,7 +143,7 @@ qplot(
     )
 ```
 
-![plot of chunk ggplot2 recap](/img/2014-11-25_ggplot2 recap-4.png)
+![plot of chunk ggplot2 recap](/img/2014-11-25_ggplot2_recap4.png)
  
 #### The 'geoms'
  
@@ -4315,7 +4315,7 @@ ggvis.getPlot("plot_id443457428").parseSpec(plot_id443457428_spec);
 * `add_axis` controls colour of gridlines, etc
 * The `add_legend` and `hide_legend` functions allow use to control if we see a legend and wheere it appears
  
-`add_legend("fill")`
+`add_legnd("fill")`
 `add_legend(c("fill","shape"))`
  
 #### Scales
@@ -4360,7 +4360,5 @@ grep(
 #### Documentation
  
 * [ggvis documentation](http://ggvis.rstudio.com)
- 
- 
  
  
