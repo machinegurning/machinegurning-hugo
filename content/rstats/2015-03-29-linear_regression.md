@@ -19,19 +19,11 @@ For the implementation of gradient descent for linear regression I draw from [Di
  
 Andrew Ng defines gradient descent for linear regression as:
  
-$$
-\begin{multline}
-\text{repeat until convergence} \{\\
+$$\theta\_0:=\theta\_0 - \alpha\frac{1}{m}\sum\_{i=1}^{m}(h\_{\theta}(x^{(i)})-y^{(i)})$$
  
-\theta_0:=\theta_0 - \alpha\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})\\
+$$\theta\_1:=\theta\_1 - \alpha\frac{1}{m}\sum\_{i=1}^{m}(h\_{\theta}(x^{(i)})-y^{(i)})\cdot x^{i}$$
  
-\theta_1:=\theta_1 - \alpha\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})\cdot x^{i}\\
- 
-\}
-\end{multline}
-$$
- 
-Where $\alpha$ is the training rate, $m$ is the number of training examples, and the term on the right is the familiar squared error term after multiplication with the partial derivative $\frac{\delta}{\delta\theta_0}$ or $\frac{\delta}{\delta\theta_1}$ as appropriate.
+Where $\alpha$ is the training rate, $m$ is the number of training examples, and the term on the right is the familiar squared error term after multiplication with the partial derivative $\frac{\delta}{\delta\theta\_0}$ or $\frac{\delta}{\delta\theta\_1}$ as appropriate.
  
 Digithead's implementation of this is quite slick, and it took me a while to get my head around the vectorised implementation, so I will break it down here, for my own memory if nothing else:
  
@@ -48,30 +40,29 @@ X <- cbind(1,matrix(ex1data1$x))
 y <- ex1data1$y
 ```
  
-To run linear regression as a matrix multiplication it is necessary to add a column of ones, so that $x_0 = 1$. This means that when matrix $X$ is multiplied by the parameter matrix $\theta$, the intercept $\theta_0=\theta_0\times1$. i.e.:
+To run linear regression as a matrix multiplication it is necessary to add a column of ones, so that $x\_0 = 1$. This means that when matrix $X$ is multiplied by the parameter matrix $\theta$, the intercept $\theta\_0=\theta\_0\times1$. i.e.:
  
-$$
-\begin{bmatrix}
-x^0_0 & x^1_0 \\
-x^0_1 & x^1_1 \\
-x^0_2 & x^1_2 \\
-\vdots & \vdots \\
-x^0_3 & x_m 
+$$\begin{bmatrix}
+x^0\_0 & x^1\_0 \\\\\\
+x^0\_1 & x^1\_1 \\\\\\
+x^0\_2 & x^1\_2 \\\\\\
+\vdots & \vdots \\\\\\
+x^0\_3 & x\_m 
 \end{bmatrix}\times\begin{bmatrix}
-\theta_0 \\
-\theta_1 
+\theta\_0 \\\\\\
+\theta\_1 
 \end{bmatrix}=\begin{bmatrix}
-\theta_0 + (x^1_0\times\theta_1) \\
-\theta_0 + (x^1_1\times\theta_1) \\
-\theta_0+ (x^1_2\times\theta_1) \\
-\vdots \\
-\theta_0 + (x^1_m\times\theta_1)
+\theta\_0 + (x^1\_0\times\theta\_1) \\\\\\
+\theta\_0 + (x^1\_1\times\theta\_1) \\\\\\
+\theta\_0+ (x^1\_2\times\theta\_1) \\\\\\
+\vdots \\\\\\
+\theta\_0 + (x^1\_m\times\theta\_1)
 \end{bmatrix}\approx a+bx
 $$
  
 We define the usual squared error cost function: 
  
-$$J(\theta_0,\theta_1)=\frac{1}{2m}\sum_{i=1}^{m}(h_\theta(x)-y)^2$$ 
+$$J(\theta\_0,\theta\_1)=\frac{1}{2m}\sum\_{i=1}^{m}(h\_\theta(x)-y)^2$$ 
  
 Except that in Digithead's implementation below $h_\theta$ is defined by the matrix multiplication of $X$ and $\theta$ as described above, and rather than multiplying by $\frac{1}{2m}$, he divides by $2m$.
  
@@ -124,17 +115,9 @@ This makes a reasonably large jump, so I'll break down each line of this loop, f
  
 Recall that Andrew Ng defines the final algorithm for gradient descent for linear regression to be:
  
-$$
-\begin{multline}
-\text{repeat until convergence} \{\\
+$$\theta\_0:=\theta\_0 - \alpha\frac{1}{m}\sum\_{i=1}^{m}(h\_{\theta}(x^{(i)})-y^{(i)})$$
  
-\theta_0:=\theta_0 - \alpha\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})\\
- 
-\theta_1:=\theta_1 - \alpha\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})\cdot x^{i}\\
- 
-\}
-\end{multline}
-$$
+$$\theta\_1:=\theta\_1 - \alpha\frac{1}{m}\sum\_{i=1}^{m}(h\_{\theta}(x^{(i)})-y^{(i)})\cdot x^{i}$$
  
 The first and second lines of the loop handle the term $(h_{\theta}(x^{(i)})-y^{(i)})\cdot x^{(i)}$. The first line:
  
@@ -156,15 +139,15 @@ To give a snippet of this calculation from the first iteration:
  
 $$
 \begin{bmatrix}
-1.00 & 1.00 & \cdots & 1.00 \\
+1.00 & 1.00 & \cdots & 1.00 \\\\\\
 6.11 & 5.53 & \cdots & 5.44
 \end{bmatrix}\begin{bmatrix}
--17.59 \\
--9.13\\
-\vdots \\
+-17.59 \\\\\\
+-9.13\\\\\\
+\vdots \\\\\\
 -0.617  
 \end{bmatrix}=\begin{bmatrix}
-(1.00\times-17.59)+(1.00\times-9.13)+\cdots+(1.00\times-0.617) \\
+(1.00\times-17.59)+(1.00\times-9.13)+\cdots+(1.00\times-0.617) \\\\\\
 (6.11\times-17.59)+(5.53\times-9.13)+\cdots+(5.44\times-0.617)
 \end{bmatrix}
 $$
@@ -269,7 +252,7 @@ abline(a=theta[1],b=theta[2])
 abline(model,col="red",lty=2)
 ```
 
-[![plot of chunk plot_linear_regression_model](/figures/plot_linear_regression_model-1.png)](/figures/plot_linear_regression_model-1.png) 
+![plot of chunk plot_linear_regression_model](/img/2015-03-29_plot_linear_regression_model-1.png)
  
 Plotting $J(\theta_0,\theta_1)$ for each iteration would indicate that we had not yet minimised $J(\theta_0,\theta_1)$, and that it is continuing to fall with each further iteration:
  
@@ -294,7 +277,7 @@ plot(
   )
 ```
 
-[![plot of chunk plot_convergence](/figures/plot_convergence-1.png)](/figures/plot_convergence-1.png) 
+![plot of chunk plot_convergence](/img/2015-03-29_plot_convergence-1.png)
  
 The right hand plot just zooms in on the left hand plot, at the very end of the curve, so we can see that it is still dropping at quite a pace.
  
@@ -399,6 +382,6 @@ plot(
   )
 ```
 
-[![plot of chunk plot_convergence2](/figures/plot_convergence2-1.png)](/figures/plot_convergence2-1.png) 
+![plot of chunk plot_convergence2](/img/2015-03-29_plot_convergence2-1.png)
  
 So this time it appears to converge, although it took many iterations to get here. Some adjustment of the learning rate would probably bring this down.
