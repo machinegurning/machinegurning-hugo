@@ -79,7 +79,7 @@ p <- house_prices %>%
 p
 ```
 
-[![plot of chunk plot_multiple_regression](/figures/plot_multiple_regression-1.png)](/figures/plot_multiple_regression-1.png) 
+![plot of chunk plot_multiple_regression](/img/2015-03-29_plot_multiple_regression-1.png)
  
 ### Feature normalisation/scaling
  
@@ -263,7 +263,8 @@ grad <- function(alpha, j, X, y, theta) {
     
     if (i > 1) {
       
-      # Here I define a function to calculate when we have roughly reached convergence.
+      # Here I define a function to calculate when we have roughly reached
+      # convergence.
       
       if (
         isTRUE(
@@ -341,7 +342,7 @@ Hmm ok so that didn't seem to work. Just out of interest, let's plot the history
 plot(theta_history[,4],type="l")
 ```
 
-[![plot of chunk plot_theta_history](/figures/plot_theta_history-1.png)](/figures/plot_theta_history-1.png) 
+![plot of chunk plot_theta_history](/img/2015-03-29_plot_theta_history-1.png)
  
 Definitely something not working there. Ok so now I'll try it *with* feature scaling.
  
@@ -381,7 +382,7 @@ And to plot it:
 plot(theta_history[,4],type="l")
 ```
 
-[![plot of chunk plot_theta_history1](/figures/plot_theta_history1-1.png)](/figures/plot_theta_history1-1.png) 
+![plot of chunk plot_theta_history1](/img/2015-03-29_plot_theta_history1-1.png)
  
 Great, convergence after 389 iterations. All seems well, but I want to compare this with a multiple linear regression the traditional way:
  
@@ -415,7 +416,9 @@ house_prices %<>%
     
     # Traditional statistical method of y = a + bx + cx
     
-    pred = coef(model)[1] + (coef(model)[2] * size) + (coef(model)[3]*as.integer(n_rooms))
+    pred = coef(model)[1] + (coef(model)[2] * size) + (
+        coef(model)[3]*as.integer(n_rooms)
+        )
     )
  
 identical(
@@ -481,7 +484,7 @@ house_prices %>%
     )
 ```
 
-[![plot of chunk plot_multiple_regression_predictions](/figures/plot_multiple_regression_predictions-1.png)](/figures/plot_multiple_regression_predictions-1.png) 
+![plot of chunk plot_multiple_regression_predictions](/img/2015-03-29_plot_multiple_regression_predictions-1.png)
  
 Pretty close to a single regression model, but you can see that there are slightly different slopes for each number of rooms.
  
