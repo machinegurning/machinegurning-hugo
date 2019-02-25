@@ -46,13 +46,13 @@ $$
 The cost function is given by:
  
 $$
-J(\theta)=\frac{1}{m}\sum^m_{i=1}[-y^{(i)}\log(h_\theta(x^{(i)}))-(1-y^{(i)})\log(1-h_\theta(x^{(i)}))]
+J(\theta)=\frac{1}{m}\sum^m\_{i=1}[-y^{(i)}\log(h\_\theta(x^{(i)}))-(1-y^{(i)})\log(1-h\_\theta(x^{(i)}))]
 $$
  
 And the gradient of the cost is a vector of the same length as $\theta$ where the $j^{th}$ element (for $j = 0,1,\cdots,n$) is defined as:
  
 $$
-\frac{\delta J(\theta)}{\delta\theta_{j}}=\frac{1}{m}\sum^{m}_{i=1}(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j
+\frac{\delta J(\theta)}{\delta\theta\_{j}}=\frac{1}{m}\sum^{m}\_{i=1}(h\_{\theta}(x^{(i)})-y^{(i)})x^{(i)}\_j
 $$
  
 ### Vectorised logistic regression
@@ -76,7 +76,7 @@ plot(
   )
 ```
 
-[![plot of chunk 2015-04-06-sigmoid-function](/figures/2015-04-06-sigmoid-function-1.png)](/figures/2015-04-06-sigmoid-function-1.png) 
+![plot of chunk 2015-04-06-sigmoid-function](/img/2015-04-06-sigmoid-function-1.png)
  
 ...and with this function, implementing $h_{\theta}$ is easy:
  
@@ -143,7 +143,7 @@ p <- ex2data1 %>%
 p
 ```
 
-[![plot of chunk 2015-04-06-log-reg](/figures/2015-04-06-log-reg-1.png)](/figures/2015-04-06-log-reg-1.png) 
+![plot of chunk 2015-04-06-log-reg](/img/2015-04-06-log-reg-1.png)
  
 And now try out logistic regression with `ucminf`:
  
@@ -208,7 +208,7 @@ p + stat_function(
     )
 ```
 
-[![plot of chunk 2015-04-06-log-reg-boundary](/figures/2015-04-06-log-reg-boundary-1.png)](/figures/2015-04-06-log-reg-boundary-1.png) 
+![plot of chunk 2015-04-06-log-reg-boundary](/img/2015-04-06-log-reg-boundary-1.png)
  
 ### Vectorising 
  
@@ -229,7 +229,7 @@ It wasn't immediately clear to me what's going on here, so I'm going to break th
  
 First we create two vectors `c(y, 1 - y)` and `c(log(h(theta,X)), log(1 - h(theta,X)))` and compute the cross product of them. The first matrix is the concatenation of the $-y$ and $(1-y)$ terms for length $m$ from the equation: 
  
-$$J(\theta)\frac{1}{m}\sum^m_{i=1}[-y^{(i)}\log(h_\theta(x^{(i)}))-(1-y^{(i)})\log(1-h_\theta(x^{(i)}))]$$
+$$J(\theta)\frac{1}{m}\sum^m\_{i=1}[-y^{(i)}\log(h\_\theta(x^{(i)}))-(1-y^{(i)})\log(1-h\_\theta(x^{(i)}))]$$
  
 The second vector concatenates the remaining terms:
  
@@ -245,10 +245,10 @@ $$
 \begin{bmatrix}
 0 & 0 & 0 & \cdots & 0
 \end{bmatrix}\begin{bmatrix}
--0.6931472 \\
--0.6931472 \\
--0.6931472 \\
-\vdots \\
+-0.6931472 \\\\\\
+-0.6931472 \\\\\\
+-0.6931472 \\\\\\
+\vdots \\\\\\
 -0.6931472
 \end{bmatrix} = -0.6931472
 $$
