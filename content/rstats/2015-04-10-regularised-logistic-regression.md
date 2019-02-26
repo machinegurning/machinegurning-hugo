@@ -54,7 +54,7 @@ p <- ex2data2 %>%
 p
 ```
 
-[![plot of chunk 2015-04-10-initial-data-plot](/figures/2015-04-10-initial-data-plot-1.png)](/figures/2015-04-10-initial-data-plot-1.png) 
+![plot of chunk 2015-04-10-initial-data-plot](/img/2015-04-10-initial-data-plot-1.png)
  
 ### Feature mapping
  
@@ -62,15 +62,15 @@ In this example I'll map the features into all polynomial terms of $x_1$ and $x_
  
 $$
 mF(x)=\begin{bmatrix}
-1 \\
-x_1 \\
-x_2 \\
-x_1^2 \\
-x_1 x_2 \\
-x_2^2 \\
-x_1^3 \\
-\vdots \\
-x_1x_2^{11} \\
+1 \\\\\\
+x_1 \\\\\\
+x_2 \\\\\\
+x_1^2 \\\\\\
+x_1 x_2 \\\\\\
+x_2^2 \\\\\\
+x_1^3 \\\\\\
+\vdots \\\\\\
+x_1x_2^{11} \\\\\\
 x_2^{12}
 \end{bmatrix}
 $$
@@ -282,7 +282,7 @@ p + geom_contour(
     )
 ```
 
-[![plot of chunk 2015-04-10-no-regularisation](/figures/2015-04-10-no-regularisation-1.png)](/figures/2015-04-10-no-regularisation-1.png) 
+![plot of chunk 2015-04-10-no-regularisation](/img/2015-04-10-no-regularisation-1.png)
  
 So this looks is capturing the positive values pretty well, but it could probably be improved especially in the top and bottom left where new cases are likely to be mis-classified.
  
@@ -293,7 +293,7 @@ To improve on the boundary above we can implement regularisation; this should re
 Andrew Ng gives us the regularised cost function as:
  
 $$
-J(\theta)=\frac{1}{m}\sum^m_{i=1}[-y^{(i)}\log(h_\theta(x^{(i)}))-(1-y^{(i)})\log(1-h_\theta(x^{(i)}))]+\frac{\lambda}{2m}\sum^n_{j=1}\theta^2_j
+J(\theta)=\frac{1}{m}\sum^m\_{i=1}[-y^{(i)}\log(h\_\theta(x^{(i)}))-(1-y^{(i)})\log(1-h\_\theta(x^{(i)}))]+\frac{\lambda}{2m}\sum^n\_{j=1}\theta^2\_j
 $$
  
 Note that the parameter $\theta_0$ is not regularised as this corresponds to the intercept.
@@ -356,12 +356,11 @@ Jv_reg(poly,y,theta,0)
 Now for the gradient function. As noted, we don't regularise $\theta_0$, so we need a more complicated gradient function.
  
 $$
-\left\{
 \begin{array}{ll}  
-    \displaystyle\frac{\delta J(\theta)}{\delta\theta_0}=\frac{1}{m}\sum_{i=1}^m(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j & \text{for}\ j=0 \\
-    & \\
-    \displaystyle\frac{\delta J(\theta)}{\delta\theta_j}=\left(\frac{1}{m}\sum_{i=1}^n(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j\right) + \frac{\lambda}{m}\theta_j & \text{for}\ j\geq1
-\end{array}\right .
+    \displaystyle\frac{\delta J(\theta)}{\delta\theta\_0}=\frac{1}{m}\sum\_{i=1}^m(h\_{\theta}(x^{(i)})-y^{(i)})x^{(i)}\_j & \text{for}\ j=0 \\\\\\
+    & \\\\\\
+    \displaystyle\frac{\delta J(\theta)}{\delta\theta\_j}=\left(\frac{1}{m}\sum\_{i=1}^n(h\_{\theta}(x^{(i)})-y^{(i)})x^{(i)}\_j\right) + \frac{\lambda}{m}\theta\_j & \text{for}\ j\geq1
+\end{array}
 $$
  
  
@@ -491,7 +490,7 @@ p + geom_contour(
     )
 ```
 
-[![plot of chunk 2015-04-10-lambda-equals-1](/figures/2015-04-10-lambda-equals-1-1.png)](/figures/2015-04-10-lambda-equals-1-1.png) 
+![plot of chunk 2015-04-10-lambda-equals-1](/img/2015-04-10-lambda-equals-1-1.png)
  
 Regularisation has smoothed away much of the overfitting. We can't tell how succesful this will be without evaluating the model on the a set, but we can also try a range of values for $\lambda$ and see what effect this has.
  
@@ -508,7 +507,7 @@ for (i in 1:length(lambda)) {
   reg_error[i,2] <- reg_lr(
     X = poly,
     y = y,
-    theta = theta,
+ e  theta = theta,
     lambda = lambda[i]
     ) %$% error  
   }
@@ -538,8 +537,8 @@ out_mat <- matrix(nrow = 500, ncol = length(lambda))
 colnames(out_mat) <- paste(lambda, sep = "")
 out_mat <- cbind(boundary[,1:2],out_mat) %>% as.matrix
  
-# Add two 0s to the beginning of the vector to make life easier in the for loop
-# when referencing lambda
+# Add two 0s to the beginning of the vector to make life easier in the for 
+# loop when referencing lambda
  
 lambda <- c(0,0,lambda)
  
@@ -604,7 +603,7 @@ out_mat %>%
     )
 ```
 
-[![plot of chunk 2015-04-10-various-lambdas](/figures/2015-04-10-various-lambdas-1.png)](/figures/2015-04-10-various-lambdas-1.png) 
+![plot of chunk 2015-04-10-various-lambdas](/img/2015-04-10-various-lambdas-1.png)
  
 So it's clear that increasing $\lambda$ leads to progressively greater smoothing of the decision boundary. And despite decreasing accuracy on the training set, these regularised decision boundaries would certainly perform better against a test set.
  
