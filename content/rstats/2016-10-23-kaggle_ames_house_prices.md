@@ -100,7 +100,7 @@ The missing data is found in about a dozen or so of the variables (those on the 
 extracat::visna(train_correct_type, sort = "b")
 ```
 
-![plot of chunk 2016-10-23_visna](/figures/2016-10-23_visna-1.svg)
+![plot of chunk 2016-10-23_visna](img/2016-10-23_visna-1.svg)
  
 ### Keep it simple
  
@@ -179,7 +179,7 @@ Let's take a closer look at `GrLiveArea`, there seem to be four outliers. Accord
 plot(train_no_factors$SalePrice, train_no_factors$GrLivArea)
 ```
 
-![plot of chunk 2016-10-23_sp](/figures/2016-10-23_sp-1.svg)
+![plot of chunk 2016-10-23_sp](img/2016-10-23_sp-1.svg)
  
 
 ```r
@@ -196,7 +196,7 @@ corrplot::corrplot(cor(train_no_factors), method = "circle", type = "lower", dia
                    order = "FPC", tl.cex = 0.6, tl.col = "black") #  plot matrix and ordered by first principal component
 ```
 
-![plot of chunk 2016-10-23_corrplot](/figures/2016-10-23_corrplot-1.svg)
+![plot of chunk 2016-10-23_corrplot](img/2016-10-23_corrplot-1.svg)
  
 This display of the correlation matrix shows the most important variables associated with `SalePrice`. This provides a good starting point for modelling and or feature selection. For example `OverallCond` shows poor correlation with `SalePrice`, perhaps we need to adjust this variable to improve its information content. Or perhaps people ignore the condition and think of the property as a fixer upper opportunity. As you can see there is huge depth to the data and it would be easy to feel overwhelmed. Fortunately, we're not trying to win the competition, just produce some OK predictions quickly.  
  

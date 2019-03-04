@@ -509,7 +509,7 @@ For example, in my [govstyle](https://github.com/UKGov-Data-Science/govstyle) pa
  
 <br>
  
-[![https://codecov.io](/figures/2016-10-27-codecov.png)](https://codecov.io/gh/UKGov-Data-Science/govstyle/tree/4e3ebad092dbec02c2c92be6f1419146ce90b5e4/R)  
+[![https://codecov.io](img/2016-10-27-codecov.png)](https://codecov.io/gh/UKGov-Data-Science/govstyle/tree/4e3ebad092dbec02c2c92be6f1419146ce90b5e4/R)  
  
 <br>  
   
@@ -517,7 +517,7 @@ Drilling deeper, I can see that of the two functions that make up the package, o
  
 <br>
  
-![https://codecov.io](/figures/2016-10-27-codecov1.png)  
+![https://codecov.io](img/2016-10-27-codecov1.png)  
   
 <br>
   
@@ -525,7 +525,7 @@ I can even see the offending lines of code, which are in this case an untested `
  
 <br>
  
-![https://codecov.io](/figures/2016-10-27-codecov2.png)  
+![https://codecov.io](img/2016-10-27-codecov2.png)  
  
 <br>
  

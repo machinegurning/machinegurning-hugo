@@ -90,7 +90,7 @@ ggpairs(train,
     axisLabels = "show")
 ```
 
-![plot of chunk 2017-01-04-splom](/figures/2017-01-04-splom-1.svg)
+![plot of chunk 2017-01-04-splom](img/2017-01-04-splom-1.svg)
  
 First look at the density plots on the diagonals which are "sorta" histograms for the associated variable (read off the column or row, they are the same). 
 Helpfully they lie between zero and one, no need to [normalise](http://www.machinegurning.com/rstats/student-performance/), thanks Kaggle! 
@@ -188,7 +188,7 @@ importance_matrix <- xgb.importance(
 xgb.plot.importance(importance_matrix)
 ```
 
-![plot of chunk 2017-01-04-barplot](/figures/2017-01-04-barplot-1.svg)
+![plot of chunk 2017-01-04-barplot](img/2017-01-04-barplot-1.svg)
  
 All of our features seem to be fairly relevant. 
 You could try removing the least important and rerunning the model and see whether it reduces the error.  

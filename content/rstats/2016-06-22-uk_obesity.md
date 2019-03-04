@@ -159,7 +159,7 @@ Now when we plot the UK map the appropriate Counties will be coloured red. Thus 
 plot(gadm, col = myColours, border = 'grey')
 ```
 
-![plot of chunk 2016-06-22-fat_map](/figures/2016-06-22-fat_map-1.svg)
+![plot of chunk 2016-06-22-fat_map](img/2016-06-22-fat_map-1.svg)
  
 ## Conclusion
 I demonstrated basic webscraping, getting and cleaning data and then handling a large `.rds` file type for final map production with highlights at the County level. The plotting itself takes almost no time, getting the data and preparing it is the time consuming part. That sounds like Data Science to me!

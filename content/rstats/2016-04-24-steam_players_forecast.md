@@ -212,7 +212,7 @@ If we try and plot `df2`, what will happen? Notice how `plot()` defaults to a sc
 plot(df2$thedate, df2$players)
 ```
 
-![plot of chunk 2016-04-24_scatterplot](/figures/2016-04-24_scatterplot-1.svg)
+![plot of chunk 2016-04-24_scatterplot](img/2016-04-24_scatterplot-1.svg)
  
  
 We can't do much with this dataframe due to the way the date is expressed, let's convert to a time series object so that R can work with the data and plot it more appropriately. Each steam average player count now has its own date index.
@@ -223,7 +223,7 @@ steam_ts <- ts(data = df2$players, start = c(2012, 7), deltat = 1/12)  #  monthl
 plot(steam_ts, ylab = "Average number of players on Steam")
 ```
 
-![plot of chunk 2016-04-24_ts_dota2_1](/figures/2016-04-24_ts_dota2_1-1.svg)
+![plot of chunk 2016-04-24_ts_dota2_1](img/2016-04-24_ts_dota2_1-1.svg)
 
 ```r
 steam_ts
@@ -310,7 +310,7 @@ plot(train, main = "Half year forecasts for Steam active player number",
    xlim = c(2012, 2017), ylim = c(50000, 800000))
 ```
 
-![plot of chunk 2016-04-24_ts_dota2_2](/figures/2016-04-24_ts_dota2_2-1.svg)
+![plot of chunk 2016-04-24_ts_dota2_2](img/2016-04-24_ts_dota2_2-1.svg)
  
 Now let's fit some [classic benchmark forecasting models](https://www.otexts.org/fpp/2/3) from simple to complex. We have the grand mean, the naive or last observation method and the ETS method explained later.
  
@@ -337,7 +337,7 @@ legend("topleft", lty = 1, col = c(4,2,3, bty = "n"),
 legend = c("Average model","Naive model","ETS"))
 ```
 
-![plot of chunk 2016-04-24_ts_dota2_3](/figures/2016-04-24_ts_dota2_3-1.svg)
+![plot of chunk 2016-04-24_ts_dota2_3](img/2016-04-24_ts_dota2_3-1.svg)
  
 Which model provided the best forecast?
  
@@ -353,7 +353,7 @@ plot(forecast(fit3), main = "Half year forecast for Dota player number",
 lines(test)
 ```
 
-![plot of chunk 2016-04-24_ts_dota2_4](/figures/2016-04-24_ts_dota2_4-1.svg)
+![plot of chunk 2016-04-24_ts_dota2_4](img/2016-04-24_ts_dota2_4-1.svg)
  
 ## Quantitative testing
  
@@ -438,19 +438,19 @@ res <- fit3$residuals
 plot(res, main = "Residuals from ETS method")
 ```
 
-![plot of chunk 2016-04-24_res](/figures/2016-04-24_res-1.svg)
+![plot of chunk 2016-04-24_res](img/2016-04-24_res-1.svg)
 
 ```r
 Acf(res, main = "ACF of residuals")
 ```
 
-![plot of chunk 2016-04-24_res](/figures/2016-04-24_res-2.svg)
+![plot of chunk 2016-04-24_res](img/2016-04-24_res-2.svg)
 
 ```r
 hist(res, nclass = "FD", main = "Histogram of residuals")
 ```
 
-![plot of chunk 2016-04-24_res](/figures/2016-04-24_res-3.svg)
+![plot of chunk 2016-04-24_res](img/2016-04-24_res-3.svg)
  
 When interpreting these diagnostic plots I would consult [Hyndman's book](https://www.otexts.org/fpp/2/6).
  
@@ -468,7 +468,7 @@ plot(forecast(fit4), main = "ETS forecast for Dota player number",
    xlim = c(2012, 2018))
 ```
 
-![plot of chunk 2016-04-24_ts_dota2_5](/figures/2016-04-24_ts_dota2_5-1.svg)
+![plot of chunk 2016-04-24_ts_dota2_5](img/2016-04-24_ts_dota2_5-1.svg)
  
 # Conclusions
  

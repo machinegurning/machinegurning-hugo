@@ -307,7 +307,7 @@ prf <- performance(pr, measure = "tpr", x.measure = "fpr")
 plot(prf)
 ```
 
-![plot of chunk 2016-03-15_plot_prf](/figures/2016-03-15_plot_prf-1.svg)
+![plot of chunk 2016-03-15_plot_prf](img/2016-03-15_plot_prf-1.svg)
 
 ```r
 auc <- performance(pr, measure = "auc")

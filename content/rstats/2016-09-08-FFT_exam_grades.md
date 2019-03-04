@@ -101,7 +101,7 @@ plot(perf_fft,
      decision.names = c("Fail", "Pass"))
 ```
 
-![plot of chunk 2016-09-08_FFTa](/figures/2016-09-08_FFTa-1.svg)
+![plot of chunk 2016-09-08_FFTa](img/2016-09-08_FFTa-1.svg)
  
 There's one of our fast and frugal trees! In the top section of the plot, we see that the data had 237 true Pass cases, and 113 true Fail cases. In the middle section, we see the actual tree. The tree then starts by looking at the cue G2. If the value is less than 0.53, the tree decides that the person is a Pass If the value is not less than 0.53, then the tree looks at G1. If the G1 > 0.44, the tree decides the patient is a Pass. If G1 <= 0.44, the tree decides that the person is a Fail.  
  
@@ -124,7 +124,7 @@ plot(perf_fft,
      tree = 3)
 ```
 
-![plot of chunk 2016-09-08_FFTb](/figures/2016-09-08_FFTb-1.svg)
+![plot of chunk 2016-09-08_FFTb](img/2016-09-08_FFTb-1.svg)
  
 ## Conclusion
  

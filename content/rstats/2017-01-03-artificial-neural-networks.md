@@ -34,7 +34,7 @@ I'm going to deal with a very simple neural network here: a single hidden layer 
 I'll use just two input nodes $x_1$ and $x_2$, set the hidden layer to have just four nodes ($z_1$, $z_2$, $z_3$, and $z_4$), with a single output node $y$.
 So, my obligatory network diagram should look like: 
  
-<img src='http://www.machinegurning.com/figures/2017-01-03-neural_network.svg' alt='Neural Network' style='display: block; margin: auto; padding: 10px 10px;'>
+<img src='http://www.machinegurning.comimg/2017-01-03-neural_network.svg' alt='Neural Network' style='display: block; margin: auto; padding: 10px 10px;'>
  
 Note that I have included additional 'bias' nodes to $X$ and $Z$ (the top ones: $x_0$ and $z_0$), which are always equal to one.
 I'll explain what this is for as we go along.

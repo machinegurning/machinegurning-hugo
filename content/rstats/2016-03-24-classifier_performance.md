@@ -168,7 +168,7 @@ m2 <- rpart(final ~ . , data = data_train, method = 'class')
 prp(m2,varlen = 4, extra = 2)  # plot with shortened abrreviated variable names
 ```
 
-![plot of chunk 2016-03-24_tree_m](/figures/2016-03-24_tree_m-1.svg)
+![plot of chunk 2016-03-24_tree_m](img/2016-03-24_tree_m-1.svg)
  
 We evaluate by comparing real outcome with predicted outcome of students exam result.
  
@@ -319,7 +319,7 @@ plot(perf, main = "ROC curve for student maths exam pass intervention decision t
 abline(a = 0, b = 1, lwd = 2, lty = 2) #  add a line with no predictive value for comparison
 ```
 
-![plot of chunk 2016-03-24_ROC_plot](/figures/2016-03-24_ROC_plot-1.svg)
+![plot of chunk 2016-03-24_ROC_plot](img/2016-03-24_ROC_plot-1.svg)
  
 Qualitatively, we see that our ROC curve appears to occupy the space in the top-left corner of the diagram, which suggests that it is closer to a perfect classifier.
  

@@ -35,7 +35,7 @@ So what happens when Hadley reads your blog post and mentions it on twitter?
 Well, taking the true **Hadley Effect** to be a single day event ocurring 2nd April (we term the tail of this spike: residual Hadley Effect): it's around a **7000% increase** in unique daily visits. 
  
 
-![plot of chunk 2016-04-3-hadley-effect](/figures/2016-04-3-hadley-effect-1.svg)
+![plot of chunk 2016-04-3-hadley-effect](img/2016-04-3-hadley-effect-1.svg)
  
 ## A bit more data
  
@@ -44,7 +44,7 @@ I've been blogging since the end of 2014 (although I only signed up to Google An
  
 From a quick glance, it seems that not only is a mention from Hadley worth about 3 times as many reads as my most popular article (seems to be [this]("../cycling-weather/") one); but his briefest of mentions convinces people to read more of the blog for longer! -- Thanks Hadley
  
-![plot of chunk 2016-04-3-hadley-effect-facet](/figures/2016-04-3-hadley-effect-facet-1.svg)
+![plot of chunk 2016-04-3-hadley-effect-facet](img/2016-04-3-hadley-effect-facet-1.svg)
  
  
 

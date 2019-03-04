@@ -32,7 +32,7 @@ For example some time series may be particularly well behaved except during the 
 plot(ts_uk_tpi, xlab = "Year", ylab = "UK BCIS TPI")  #  see Rmd for data processing
 ```
 
-![plot of chunk 2016-07-29-plot_tpi](/figures/2016-07-29-plot_tpi-1.svg)
+![plot of chunk 2016-07-29-plot_tpi](img/2016-07-29-plot_tpi-1.svg)
  
 We use an economic indicator variable from the UK Building Cost Information Service (BCIS), as it provides an excellent demo of the type of variable that tends to have an upward trend until occasional market effects cause uncertainty and volatility. [Tender price index](https://www.gov.uk/government/statistics/bis-prices-and-cost-indices) (TPI) is used for many practical purposes in the construction industry, including establishing the level of individual tenders, adjustment for time, pricing, cost planning, and forecasting cost trends and general comparisons. Any index that responds to market conditions is suitable for this methodology.
  
@@ -164,7 +164,7 @@ As the time series is non-stationary, let's take the first order difference and 
 plot(x = df4$thedate, y = df4$tpi_d1, xlab = "Year", ylab = "UK BCIS TPI difference", type = "l")
 ```
 
-![plot of chunk 2016-07-29-plot_tpi_dif1](/figures/2016-07-29-plot_tpi_dif1-1.svg)
+![plot of chunk 2016-07-29-plot_tpi_dif1](img/2016-07-29-plot_tpi_dif1-1.svg)
  
 We fit a two state model which results in a reduction in the Log likelihood and both Information Criteria measures.
  
@@ -234,7 +234,7 @@ From the second order difference it looks like we have two regime states which c
 plot(x = df5$thedate, y = df5$tpi_d2, xlab = "Year", ylab = "UK BCIS TPI second order difference", type = "l")
 ```
 
-![plot of chunk 2016-07-29-plot_tpi_dif2](/figures/2016-07-29-plot_tpi_dif2-1.svg)
+![plot of chunk 2016-07-29-plot_tpi_dif2](img/2016-07-29-plot_tpi_dif2-1.svg)
  
 We fit a model, regime detection.
  
@@ -352,7 +352,7 @@ abline(h = st2_mean + ci*st2_sd, col = "red", lty = line_type)
 abline(h = st2_mean - ci*st2_sd, col = "red", lty = line_type)
 ```
 
-![plot of chunk 2016-07-29-plot_hmm](/figures/2016-07-29-plot_hmm-1.svg)
+![plot of chunk 2016-07-29-plot_hmm](img/2016-07-29-plot_hmm-1.svg)
  
 This is quite useful for identifying when TPI is in its different states, however it is of post hoc interest, as we can only look at it after the fact. However, as the volatile years putatively associated with state 2 tend to persist for several quarters, if we enter this state we can predict that our standard time series methods will not be useful for several quarters until the TPI first order difference generative model transitions back to state 1 with probability 0.522 as described in the transition matrix.
  
@@ -403,7 +403,7 @@ p1 <- ggplot( dfgg, aes(thedate) ) +
 p1
 ```
 
-![plot of chunk 2016-07-29-plot_tpi_black](/figures/2016-07-29-plot_tpi_black-1.svg)
+![plot of chunk 2016-07-29-plot_tpi_black](img/2016-07-29-plot_tpi_black-1.svg)
  
 
 ```r
@@ -419,7 +419,7 @@ p2 <- p1 + theme_economist() + scale_colour_economist() +
 p2
 ```
 
-![plot of chunk 2016-07-29-plot_tpi_blue](/figures/2016-07-29-plot_tpi_blue-1.svg)
+![plot of chunk 2016-07-29-plot_tpi_blue](img/2016-07-29-plot_tpi_blue-1.svg)
 
 ```r
 #When was the most extreme spike?
@@ -555,7 +555,7 @@ p3 <- ggplot(df, aes(thedate, value, col = variable, group = 1)) +
 p3
 ```
 
-![plot of chunk 2016-07-29-plot_tpi_hmm_prob](/figures/2016-07-29-plot_tpi_hmm_prob-1.svg)
+![plot of chunk 2016-07-29-plot_tpi_hmm_prob](img/2016-07-29-plot_tpi_hmm_prob-1.svg)
  
 This tells us the current volatility of the TPI and thus will determine the utility and precision of our forecasts that rely on standard timeseries ARIMA methods. Given the TPI is currently in a volatile state probably, we should be cautious when using our standard forecasting strategies. This is particularly poignant given the market volatility associated with the EU referendum.
  

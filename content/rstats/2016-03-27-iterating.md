@@ -277,7 +277,7 @@ subset_models %>%
     )
 ```
 
-![plot of chunk 2016-03-27-augment-plot](/figures/2016-03-27-augment-plot-1.svg)
+![plot of chunk 2016-03-27-augment-plot](img/2016-03-27-augment-plot-1.svg)
  
 In this simple example, we could achieve the same just with `geom_smooth(aes(group=cyl), method="lm")`; however this would not be so easy with a more complicated model.
  

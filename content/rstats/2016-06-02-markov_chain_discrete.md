@@ -97,7 +97,7 @@ We can use the igraph package to plot the Markov Chain object.
 plot(dtmcA, main = "Transition probability matrix for DBM")
 ```
 
-![plot of chunk 2016-06-02-trans1](/figures/2016-06-02-trans1-1.svg)
+![plot of chunk 2016-06-02-trans1](img/2016-06-02-trans1-1.svg)
 Or there are `diagram` ways to plot.
 
 ```r
@@ -108,7 +108,7 @@ plot(dtmcA, main = "Transition probability matrix for DBM", package = "diagram",
         box.prop = 0.5)
 ```
 
-![plot of chunk 2016-06-02-trans2](/figures/2016-06-02-trans2-1.svg)
+![plot of chunk 2016-06-02-trans2](img/2016-06-02-trans2-1.svg)
  
 ## Probabilistic analysis
  
@@ -512,7 +512,7 @@ lines(pipe_df$timestep,pipe_df$d, col = colours[4])
 legend("right", legend = c("a", "b", "c", "d"), fill = colours)
 ```
 
-![plot of chunk 2016-06-02-pipes-norepair](/figures/2016-06-02-pipes-norepair-1.svg)
+![plot of chunk 2016-06-02-pipes-norepair](img/2016-06-02-pipes-norepair-1.svg)
  
  
 We can calculate the timestep when all pipes break, or a steady state is reached at the absorbing state d by 

@@ -252,7 +252,7 @@ You can image that from this plot: whilst varying $k$ would have little effect o
 Set $k$ too low, and we invite *bias*, set $k$ too high, and we are likely to increase *variance*.
 I'll come back to this.
  
-![plot of chunk 2016-05-27-intuition](/figures/2016-05-27-intuition-1.svg)
+![plot of chunk 2016-05-27-intuition](img/2016-05-27-intuition-1.svg)
  
 ### Predictions
  
@@ -339,7 +339,7 @@ knn_pred %>%
   ylab("Y")
 ```
 
-![plot of chunk 2016-05-27-decision_boundary](/figures/2016-05-27-decision_boundary-1.svg)
+![plot of chunk 2016-05-27-decision_boundary](img/2016-05-27-decision_boundary-1.svg)
  
 ### Varying k
  
@@ -349,7 +349,7 @@ For $k=1$ we get a perfect fit with multiple polygons separating all points in e
 As $k$ increases, we see that the more peripheral polygons start to break down, until at $k=15$ there is largely a singular decision boundary which weaves its way between the two classes.
 At $k=99$, this decision boundary is much more linear.
  
-![plot of chunk 2016-05-27-varying-k](/figures/2016-05-27-varying-k-1.svg)
+![plot of chunk 2016-05-27-varying-k](img/2016-05-27-varying-k-1.svg)
  
 In my next post I will address this problem of setting $k$ again, and try to quantify when the model is suffering from variance or bias.
  

@@ -58,7 +58,7 @@ From the codebook we know that `G3` is the final grade of the students. We can i
 hist(mydata$G3)
 ```
 
-![plot of chunk 2016-04-10_hist](/figures/2016-04-10_hist-1.svg)
+![plot of chunk 2016-04-10_hist](img/2016-04-10_hist-1.svg)
  
 ## The magical black box that is the neural networks
 `G3` is pretty normally distributed, despite the dodgy tail. Previously we converted it into a binary output and then used a decision tree approach to make predictions from associated student characteristics. We use the neural network approach here while maintaining `G3` as an integer variable with a range of 1-20.
@@ -113,7 +113,7 @@ print(net_model)
 plot.nnet(net_model)
 ```
 
-![plot of chunk 2016-04-10_net1](/figures/2016-04-10_net1-1.svg)
+![plot of chunk 2016-04-10_net1](img/2016-04-10_net1-1.svg)
  
 Generally, the input layer (I) is considered a distributor of the signals from the external world. Hidden layers (H) are considered to be categorizers or feature detectors of such signals. The output layer (O) is considered a collector of the features detected and producer of the response. While this view of the neural network may be helpful in conceptualizing the functions of the layers, you should not take this model too literally as the functions described can vary widely. Bias layers (B) aren't all that informative ,  they are analogous to intercept terms in a regression model.
  
@@ -143,7 +143,7 @@ plot(predicted_G3, data_test$G3,
 abline(a = 0, b = 1, col = "black") 
 ```
 
-![plot of chunk 2016-04-10_net2](/figures/2016-04-10_net2-1.svg)
+![plot of chunk 2016-04-10_net2](img/2016-04-10_net2-1.svg)
  
 Here we compare to a 1:1 abline in black. It would be interesting to compare how this approach fares against a standard linear regression. Let's add some extra complexity by adding some more hidden nodes.
  
@@ -172,7 +172,7 @@ print(net_model2)
 plot.nnet(net_model2)
 ```
 
-![plot of chunk 2016-04-10_net3](/figures/2016-04-10_net3-1.svg)
+![plot of chunk 2016-04-10_net3](img/2016-04-10_net3-1.svg)
  
 Now we evaluate as before.
  
@@ -201,7 +201,7 @@ plot(predicted_G3_2, data_test$G3,
 abline(a = 0, b = 1, col = "black") 
 ```
 
-![plot of chunk 2016-04-10_net4](/figures/2016-04-10_net4-1.svg)
+![plot of chunk 2016-04-10_net4](img/2016-04-10_net4-1.svg)
  
 A slight improvement, on parr with the Decision Tree approach, even though some variables that we know to be useful were excluded from this modelling exercise. We can improve things by incoporating them into the model. Furthermore, this is not just a pass or fail classification, this provides a predicted exam score in `G3` for any student.    
  

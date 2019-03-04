@@ -151,7 +151,7 @@ sheet_count <- purrr::map(paths, readxl::excel_sheets) %>%
 hist(sheet_count, main = "")
 ```
  
-![](/figures/2017-11-27-hist.png)
+![](img/2017-11-27-hist.png)
  
 ### Data range within worksheets
  
@@ -273,7 +273,7 @@ sheets_data_attr %>% {
 plot(y = df$row_dim, x = df$col_dim)
 abline(v = 35, h = 85, col = "red")
 ```
-![The typical dimensions of a sample of Enron worksheets](/figures/2017-11-27-sheets_dims.png)
+![The typical dimensions of a sample of Enron worksheets](img/2017-11-27-sheets_dims.png)
  
  
 From this plot we eyeball that a rectangle of 35 columns and 85 rows captures approximately 95% of the data in this sample. Typically a spreadsheet has more rows than it does columns; it's longer than it is wide.   
@@ -423,7 +423,7 @@ purrr::pwalk(list(image_inputs$matrix, image_inputs$filename, image_inputs$sheet
       ~ {image(..1, axes = FALSE); title(..2, sub = ..3)})
 ```
  
-![](/figures/2017-11-27-worksheets_image.png)
+![](img/2017-11-27-worksheets_image.png)
  
 We notice the left-handedness of the images as this matches the typical zoom and opening view when reading the spreadsheets in Excel (one starts in the top left corner; also rows are narrower than columns so you can fit more rows on the screen). Here we see the value of the square matrix for the `view_range` which gives us an image comparable to the worksheets upon inspection. Some spreadsheets have islands of filled cells far from the main body, this is often some extra annotation or versioning by the author.   
  
@@ -456,7 +456,7 @@ par(mfrow = c(1, 1))
 #      col = c("black", "blue", "green"))  # colours to help read worksheet number
 ```
  
-![](/figures/2017-11-27-tsne_plot.png)
+![](img/2017-11-27-tsne_plot.png)
  
 We notice that there are quite a few distinctive high cluster blobs which warrant further inspection. For example, the worksheets to the top-right. Indeed they are close together, possibly by the same author.
  
@@ -508,7 +508,7 @@ op <- par(oma=c(5,7,1,1))
 par(op)
 ```
  
-![](/figures/2017-11-27-tsne_worksheets_joe_parks.png)
+![](img/2017-11-27-tsne_worksheets_joe_parks.png)
  
 These appear to be sheets dedicated to periodic "Estimates" with a copy and pasted worksheet style. We are also likely to see the evolution of workbooks through time and their worksheets therein which results in a lack of diversity on our worksheets and t-SNE clustering those worksheets which are directly related. This is not useful, as this is just repeating the information found in the worksheet name. We could try this again after removing duplicate sheets (i.e. periodic accounting) which might result in more informative clusters based on the shape of a spreadsheet. t-SNE does not seem to be adding much value in this scenario as we might prefer to use our own spreadsheet experience to engineer better features rather than resorting to dimension reduction.  
  
@@ -539,7 +539,7 @@ But hide the code this time.
  
 
  
-![](/figures/2017-11-27-tsne_worksheets_vkaminski.png)
+![](img/2017-11-27-tsne_worksheets_vkaminski.png)
  
  
 These are characterised by a top-leftedness, small and mostly empty. These are across a greater range of authors but captures their sameness.  
@@ -573,7 +573,7 @@ But hide the code this time.
  
 
  
-![](/figures/2017-11-27-tsne_worksheets_sparse.png)
+![](img/2017-11-27-tsne_worksheets_sparse.png)
  
 ### Versioning spreadsheets retrospectively
  
@@ -591,7 +591,7 @@ t-SNE learns a non-parametric mapping, which means that it does not learn an exp
  
 Fortunately a recent [literature review](https://arxiv.org/abs/1704.01147) (Reschenhofer et al., 2017) provides a conceptual model for measuring the complexity of spreadsheets which might be useful in helping our classifying spreadsheets that are complex or not (although we lack this label on our Enron data), or in classifying the theme of a spreadsheet, or whether it's tidy or not. We might expect, for example, any economic modelling spreadsheets to be more complicated than a spreadsheet for a social event (a list of names) which could be a useful predictor.   
  
-![A conceptual and integrated model for measuring complexity in spreadsheets.](/figures/2017-11-27-spreadsheets_complexity.png)
+![A conceptual and integrated model for measuring complexity in spreadsheets.](img/2017-11-27-spreadsheets_complexity.png)
  
 This model integrates knowledge about aspects for spreadsheet complexity based on existing complexity metrics. Interestingly these measures can be quantified and have origins in software development and linguistics. We summarise them here but see the [paper](https://arxiv.org/abs/1704.01147) for the full list:   
  
