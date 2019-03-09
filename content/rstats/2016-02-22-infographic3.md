@@ -18,10 +18,6 @@ tags:
 categories: Rstats
 ---
  
-{% include _toc.html %}
- 
-
- 
 
  
 I've been working through a year's worth of sensor data that I collected using Raspberry Pis.
@@ -42,15 +38,15 @@ The data consist of 765977 individual measurements and run from 2015-01-02 to 20
 These values need to be transformed to make interpretation more intuitive.
 I've played with a few transformations, but my current thinking is to use the normalised inverse of the natural log:
  
-\\[
-y=f \Big( \frac{1}{\ln{x}} \Big)
-\\]
+$$
+y = f\Big(\frac{1}{\ln{x}}\Big)
+$$
  
-Where \\( f \\) is the normalisation function:
+Where $f$ is the normalisation function:
  
-\\[
+$$
 f(x)=\frac{x - \max x}{\max x - \min x}
-\\]
+$$
  
 This transformation has three benefits:
  
@@ -62,7 +58,7 @@ After applying this transformation, 5 further values were highlighted as outlier
  
 With these transformations applied, the year long time series looks like this:
  
-![plot of chunk 2016-02-22-full-light-sequence](img/2016-02-22-full-light-sequence-1.png)
+![plot of chunk 2016-02-22-full-light-sequence](/img/2016-02-22-full-light-sequence-1.png)
  
 The very simple local regression (`loess`) highlights some seasonal changes.
 Part of this is almost certainly due to me moving the sensor early in the year, but the reason for the step towards the end of the year is not clear, but is probably due to a change in the position of the sensor (it is prone to falling on its side!).
@@ -71,7 +67,7 @@ Part of this is almost certainly due to me moving the sensor early in the year, 
  
 Here I replicate the same daily plots from my previous post, also showing values between the \\( q_{0.25} \\) and \\( q_{0.75} \\) as the darker ribbon, and the \\( q_{0.1} \\) and \\( q_{0.9} \\) as the more transparent ribbon outside of this. The trend line is again a locally weighted regression.
  
-![plot of chunk 2016-02-22-daily-light-ribbon-plot](img/2016-02-22-daily-light-ribbon-plot-1.png)
+![plot of chunk 2016-02-22-daily-light-ribbon-plot](/img/2016-02-22-daily-light-ribbon-plot-1.png)
  
 So there are some immediate things that become apparent based on this plot.
 Firstly, the shortness of the days in the winter months is evident from the narrowness of the first peak in the winter months.
@@ -90,7 +86,7 @@ The next plot shows a more 'raw' representation where each trace is a day. We ca
 This was due to some issues I had with the pi keeping the right time, and not correctly staying on GMT.  
 * Finally, you can see that from September to about April, I got up before the sun rose, and have eaten my breakfast by artificial light.  
  
-![plot of chunk 2016-02-22-daily-light-traces](img/2016-02-22-daily-light-traces-1.png)
+![plot of chunk 2016-02-22-daily-light-traces](/img/2016-02-22-daily-light-traces-1.png)
  
 These data are pretty messy, but it should be relatively simple to pick out the differences between natural and artificial light, and I will attempt this in one of my next couple of posts.
 Two methods for doing this come to mind:
