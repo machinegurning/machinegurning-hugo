@@ -173,7 +173,8 @@ opts_chunk$set(
 hook_plot = knit_hooks$get('plot')
 knit_hooks$set(
   plot = function(x, options) {
-   # if x is foo.pdf, make it foo.pdf.whatever so the plot hook removes the extension internally
+   # if x is foo.pdf, make it foo.pdf.whatever so the plot hook 
+   # removes the extension internally
   x = paste(c(x, 'whatever'), collapse = '.')
   hook_plot(x, options)
 })

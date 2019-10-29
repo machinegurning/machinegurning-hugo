@@ -34,7 +34,9 @@ The FAOSTAT package has a really simple interface that allows you to navigate th
 install.packages("FAOSTAT")
 library(FAOSTAT)
  
-# Create an object named '.LastSearch' using the FAOSearch function, which can then be called as an argument to the getFAO() or getFAOtoSYB() function.
+# Create an object named '.LastSearch' using the FAOSearch function,
+# which can then be called as an argument to the getFAO() or 
+# getFAOtoSYB() function.
  
 FAOsearch() 
  
@@ -48,7 +50,10 @@ A slightly easier way of dealing with the information that comes back from the q
 
 ```r
 apple_df <- data.frame(
-  varName = c("areaHarvested", "yield", "extractionRate","production","seed"),
+  varName = c(
+    "areaHarvested", "yield", "extractionRate",
+    "production","seed"
+  ),
   domainCode = "QC",
   itemCode = 515,
   elementCode = c(5312,5419,5423,5510,5525),
@@ -126,7 +131,7 @@ mapCountryData(
 )
 ```
 
-[![plot of chunk 2015-08-31-world-map-chloropeth](/figures/2015-08-31-world-map-chloropeth-1.png)](/figures/2015-08-31-world-map-chloropeth-1.png) 
+![plot of chunk 2015-08-31-world-map-chloropeth](/img/2015-08-31-world-map-chloropeth-1.png)
  
 There's definitely something funny going on here, because Antarctica is not known for its apple growing regions. Evidently there is more of a problem than was suggested in the mis-match warning.
  
@@ -145,7 +150,8 @@ apple2013 <- translateCountryCode(
 
 ```r
 ## 
-## NOTE: Please make sure that the country are matched according to their definition
+## NOTE: Please make sure that the country are matched according
+## to their definition
 ```
  
 
@@ -206,7 +212,7 @@ mapBubbles(
 )
 ```
 
-[![plot of chunk 2015-08-31-world-map](/figures/2015-08-31-world-map-1.png)](/figures/2015-08-31-world-map-1.png) 
+![plot of chunk 2015-08-31-world-map](/img/2015-08-31-world-map-1.png)
  
 So after all that, this is what I get. A bit more complicated than using a point and click GIS for pretty similar results, and a bit of a quick fix. If I need to make more of these kinds of visualisation, there are some really beautiful ways of doing this with D3.js; [this](http://datamaps.github.io/) (or [this](http://leafletjs.com/examples/choropleth.html)) is probably how I would do it next time.
  

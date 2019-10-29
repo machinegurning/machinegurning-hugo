@@ -465,7 +465,7 @@ p <- dummy_data %>%
 p
 ```
 
-![plot of chunk 2016-05-08-linear-classification](/figures/2016-05-08-linear-classification-1.svg)
+![plot of chunk 2016-05-08-linear-classification](img/2016-05-08-linear-classification-1.svg)
  
 ## Applying the linear model
  
@@ -612,7 +612,7 @@ draw_boundary(
   ylab("Y")
 ```
 
-![plot of chunk 2016-05-08-decision-boundary](/figures/2016-05-08-decision-boundary-1.svg)
+![plot of chunk 2016-05-08-decision-boundary](img/2016-05-08-decision-boundary-1.svg)
  
 I look forward to delving deeper into [The Elements of Statistical Learning](http://statweb.stanford.edu/~tibs/ElemStatLearn/).
  

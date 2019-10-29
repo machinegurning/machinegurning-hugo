@@ -166,7 +166,7 @@ doubledecker(Survived ~ Sex, data = train,
              gp = gpar(fill = colours))
 ```
 
-![plot of chunk 2016-05-21_dd1](/figures/2016-05-21_dd1-1.svg)
+![plot of chunk 2016-05-21_dd1](img/2016-05-21_dd1-1.svg)
  
 The relative width of the bars in the mosaic plot tells us that there were more men on board the Titanic (this difference in width is a limitation of the plot as humans struggle to discriminate between different sized areas). Also it is apparent that if you were a randomly selected woman you were more likely to survive (`Survived` = 1) than a randomly selected male (who was more likely to die, `Survived` = 0). This could be the basis of a simple predictive tool to use on the test data if we were feeling lazy. We pursue this this here to outline how one would participate in a Kaggle problem. 
  
@@ -245,7 +245,7 @@ doubledecker(Survived ~ Pclass, data = train,
              gp = gpar(fill = colours))
 ```
 
-![plot of chunk 2016-05-21_dd2](/figures/2016-05-21_dd2-1.svg)
+![plot of chunk 2016-05-21_dd2](img/2016-05-21_dd2-1.svg)
  
 Do these individual graphics miss anything? Icluding a main effect of `Pclass` might be useful.
  
@@ -257,7 +257,7 @@ doubledecker(Survived ~ Sex + Pclass, data = train,
              gp = gpar(fill = colours))
 ```
 
-![plot of chunk 2016-05-21_dd3](/figures/2016-05-21_dd3-1.svg)
+![plot of chunk 2016-05-21_dd3](img/2016-05-21_dd3-1.svg)
  
 There appears to be an ineteraction with the class of the sexes associated with different chance of survival.
  
@@ -427,7 +427,7 @@ We use a decision tree approach to build the set of splitting rules used to segm
 hist(train$Fare, col = "grey", main = "", xlab = "Fare")
 ```
 
-![plot of chunk 2016-05-21_hist1](/figures/2016-05-21_hist1-1.svg)
+![plot of chunk 2016-05-21_hist1](img/2016-05-21_hist1-1.svg)
  
 We go ahead and fit a decision tree after modifying the data slightly. We specify the qualitative variables as factors, ordered if appropriate. The new variables `Fare` and `SibSp` are included in the model. Presumably `Fare` is the amount paid for a ticket and `SibSp` 
  
@@ -535,7 +535,7 @@ asRules(dt.train)  #  one rule for each path from root to leaf
 fancyRpartPlot(dt.train, palettes = c("Greys", "Oranges"))  #  grey is death, passengers with a bright future are orange
 ```
 
-![plot of chunk 2016-05-21_tree1](/figures/2016-05-21_tree1-1.svg)
+![plot of chunk 2016-05-21_tree1](img/2016-05-21_tree1-1.svg)
  
 The root node, at the top, reveals that 62% of passengers died, while 38% survived. The number above these proportions indicates the way that the node is voting (at this top level it defaults to everyone will die, or coded as zero or coloured grey) the number at the bottom of the node indicates the proportion of the population that resides in this node, or bucket (here at the top level it is everyone, 100%).
  
@@ -617,7 +617,7 @@ asRules(dt.train2)  #  one rule for each path from root to leaf
 fancyRpartPlot(dt.train2, palettes = c("Greys", "Oranges"))  #  grey is death, passengers with a bright future are orange
 ```
 
-![plot of chunk 2016-05-21_tree2](/figures/2016-05-21_tree2-1.svg)
+![plot of chunk 2016-05-21_tree2](img/2016-05-21_tree2-1.svg)
  
 Now we compare how this does to our previous models. Did the reduction in complexity avoid overfitting and a reduction in test error or are we now missing out on modelling genuine complexity or patterns in the data?
  

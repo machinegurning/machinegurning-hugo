@@ -23,7 +23,7 @@ The exercise was about creating a vectorised implementation of regularised linea
 Regularisation helps us to deal with the problem of overfitting by reducing the weight given to a particular feature $x$. This allows us to retain more features while not giving undue weight to one in particular. Regularisation is mediated by a parameter $\lambda$, as can be seen in the cost function:
  
 $$
-J(\theta)=\frac{1}{2m}\Big(\sum^{m}_{i=1}(h_{\theta}(x^{(i)}-y^{(i)})^2\Big)+\frac{\lambda}{2m}\Big(\sum^{n}_{j=1}\theta^2_j\Big)
+J(\theta)=\frac{1}{2m}\Big(\sum^{m}\_{i=1}(h\_{\theta}(x^{(i)}-y^{(i)})^2\Big)+\frac{\lambda}{2m}\Big(\sum^{n}\_{j=1}\theta^2\_j\Big)
 $$
  
 The first term is essentially the mean-squared-error term, whilst the additive term multiplies the sum of the square of the parameters ($\theta$) by $\lambda$ over $2m$, where $m$ is the number of training examples. Since the objective is to minimise $J(\theta)$ ($\underset{\theta}{\text{min}}J(\theta)$) using a large $\lambda$ will require small values of $\theta_j$ in order to acheive a minima.
@@ -34,7 +34,7 @@ In this example I'm using data from the well worn `mtcars` dataset which is incl
  
 Plotting each individually gives us a sense that they all have pretty correlations with `mpg`, but it's also obvious that the features are correlated: e.g. `disp` and `hp`.
  
-[![plot of chunk 2015-07-08-plot-mtcars](/figures/2015-07-08-plot-mtcars-1.png)](/figures/2015-07-08-plot-mtcars-1.png) 
+![plot of chunk 2015-07-08-plot-mtcars](/img/2015-07-08-plot-mtcars-1.png)
  
 We can also see that the range of values that the features take vary quite a lot. Whilst `cyl` $\leq{8}$, `disp` tends to measured in the hundreds of $\text{in}^2$.
  
@@ -62,7 +62,7 @@ There are 32 rows in the data set, and for this example I will make a 60/20/20 s
  
 At this point is has already become a little difficult to display all the features on a simple two dimensional plot, so I'll use a combination of colour and shape.
  
-[![plot of chunk 2015-07-08-plot-all-data1](/figures/2015-07-08-plot-all-data1-1.png)](/figures/2015-07-08-plot-all-data1-1.png) 
+![plot of chunk 2015-07-08-plot-all-data1](/img/2015-07-08-plot-all-data1-1.png)
  
 So each split of the data has retained some semblance of the curvature present in the training set.
  
@@ -102,12 +102,11 @@ J <- function(X, y, theta, lambda) {
 The gradient function is given below, and is the same as that given in my previous post on [regularised logistic regression](./regularised-logistic-regression/) Note that once again the regularisation term excludes $\theta_0$.
  
 $$
-\left\{
 \begin{array}{ll}  
-    \displaystyle\frac{\delta J(\theta)}{\delta\theta_0}=\frac{1}{m}\sum_{i=1}^m(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j & \text{for}\ j=0 \\
-    & \\
-    \displaystyle\frac{\delta J(\theta)}{\delta\theta_j}=\left(\frac{1}{m}\sum_{i=1}^n(h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}_j\right) + \frac{\lambda}{m}\theta_j & \text{for}\ j\geq1
-\end{array}\right .
+    \displaystyle\frac{\delta J(\theta)}{\delta\theta\_0}=\frac{1}{m}\sum_{i=1}^m(h\_{\theta}(x^{(i)})-y^{(i)})x^{(i)}\_j & \text{for}\ j=0 \\\\\\
+    & \\\\\\
+    \displaystyle\frac{\delta J(\theta)}{\delta\theta\_j}=\left(\frac{1}{m}\sum\_{i=1}^n(h\_{\theta}(x^{(i)})-y^{(i)})x^{(i)}\_j\right) + \frac{\lambda}{m}\theta\_j & \text{for}\ j\geq1
+\end{array}
 $$
  
  
@@ -180,14 +179,14 @@ The output from `optim` differs slightly from `ucminf`; here a convergence of $0
  
 Let's compare the training data with the new predictions from the model trained on that data.
  
-[![plot of chunk 2015-07-08-plot-linear-model](/figures/2015-07-08-plot-linear-model-1.png) ![plot of chunk 2015-07-08-plot-linear-model](/figures/2015-07-08-plot-linear-model-2.png)](/figures/2015-07-08-plot-linear-model-2.png) 
+![plot of chunk 2015-07-08-plot-linear-model](/img/2015-07-08-plot-linear-model-1.png) ![plot of chunk 2015-07-08-plot-linear-model](/img/2015-07-08-plot-linear-model-2.png)
  
 So based on these plots, it should be pretty clear that the simple multiple regression is too simple to represent the curvature we can see in the data.
  
 We can calculate the error related to this model using the sum of the squared differences between the expected and the observed:
  
 $$
-J_{train}(\theta)=\frac{1}{2m}\sqrt{\sum^m_{i=1}(h_\theta(x^{(i)})-y^{(i)})^2}
+J\_{train}(\theta)=\frac{1}{2m}\sqrt{\sum^m\_{i=1}(h_\theta(x^{(i)})-y^{(i)})^2}
 $$
  
 
@@ -220,7 +219,7 @@ The plot below shows the results from models trained on first (i.e. no polynomia
  
 
  
-[![plot of chunk 2015-07-08-plot-degree-facet](/figures/2015-07-08-plot-degree-facet-1.png)](/figures/2015-07-08-plot-degree-facet-1.png) 
+![plot of chunk 2015-07-08-plot-degree-facet](/img/2015-07-08-plot-degree-facet-1.png)
  
 So as before, the first model has made a linear prediction, whilst including second and third order polynomials takes into account the curvature at least in the `disp` $\times$ `mpg` relationship. Note that the model including the third order polynomials has achieved close to 100% accuracy, because there is one feature per training example.
  
@@ -241,7 +240,7 @@ Comparing the model errors confirms this assessment. The training error for the 
  
 So what happens when we apply these models onto the cross-validation dataset. If intuition holds true, the second order model should provide the best fit, whilst the third order model should show signs of having been overfit on the training data.
  
-[![plot of chunk 2015-07-08-plot-cross-degree-facet](/figures/2015-07-08-plot-cross-degree-facet-1.png)](/figures/2015-07-08-plot-cross-degree-facet-1.png) 
+![plot of chunk 2015-07-08-plot-cross-degree-facet](/img/2015-07-08-plot-cross-degree-facet-1.png)
  
 So as predicted, it looks like the third order polynomial model is the worst, as is shown when calculating the error:
  
@@ -263,27 +262,27 @@ So what happens when we apply regularisation?. I'll start with the extreme examp
  
 Let's start with $\lambda = \{10,100,1000,10000,100000,1000000\}$, and look what happens to the prediction of `mpg` from the training set. As $\lambda$ increases, the prediction becomes increasingly more generalised, and fits the training set less perfectly...
  
-[![plot of chunk 2015-07-08-train-regularisation-complicated](/figures/2015-07-08-train-regularisation-complicated-1.png)](/figures/2015-07-08-train-regularisation-complicated-1.png) 
+![plot of chunk 2015-07-08-train-regularisation-complicated](/img/2015-07-08-train-regularisation-complicated-1.png)
  
 And when applied to the cross validation set, increasing $\lambda$ improves the fit of predictions to the cross validation set.
  
-[![plot of chunk 2015-07-08-cross-regularisation-complicated](/figures/2015-07-08-cross-regularisation-complicated-1.png)](/figures/2015-07-08-cross-regularisation-complicated-1.png) 
+![plot of chunk 2015-07-08-cross-regularisation-complicated](/img/2015-07-08-cross-regularisation-complicated-1.png)
  
 And what about the error? Plotting the training error versus cross-validation error will give us an impression of what effect the regularisation parameter is having.
  
-[![plot of chunk 2015-07-08-error-plot-complicated](/figures/2015-07-08-error-plot-complicated-1.png)](/figures/2015-07-08-error-plot-complicated-1.png) 
+![plot of chunk 2015-07-08-error-plot-complicated](/img/2015-07-08-error-plot-complicated-1.png)
  
 So it looks like a value of around $10^7$ will minimise both the training and cross-validation error. This is a pretty large $\lambda$ - but this may not be surprising given that a three order polynomial generates $19$ features for just $19$ training examples, i.e $m=k$.
  
 I'm interested to know what would have happened if I had chosen to run with the second order polynomial model. Using the same choices for $\lambda$ is not appropriate for this model, as there are only $9$ features, so this time I have chosen a smaller range of $\lambda$, but retained $10^7$ just to see what would happen.
  
-[![plot of chunk 2015-07-08-train-regularisation-simple](/figures/2015-07-08-train-regularisation-simple-1.png)](/figures/2015-07-08-train-regularisation-simple-1.png) 
+![plot of chunk 2015-07-08-train-regularisation-simple](/img/2015-07-08-train-regularisation-simple-1.png)
  
 So in this case, setting $\lambda = 10^7$ is a step too far, and results in a model that is too simple, and loses the curvature evident in the data.
  
 And the error?
  
-[![plot of chunk 2015-07-08-error-plot-simple](/figures/2015-07-08-error-plot-simple-1.png)](/figures/2015-07-08-error-plot-simple-1.png) 
+![plot of chunk 2015-07-08-error-plot-simple](/img/2015-07-08-error-plot-simple-1.png)
  
 As predicted, $\lambda$ needs to be set much lower, between $10$ and $100$ to obtain the best solution for the training and cross-validation set. Interestingly the cross-validation error continues to drop until about $\lambda=10000$ which coincides with the model failing to predict curvature in the data as above.
  
@@ -297,7 +296,7 @@ So the final question remains. How will these two models perform against each ot
 There is almost no difference between the performance of the models on the test set; both do a reasonable job; the third order polynomial model gives an error of 1.03, which is very similar to the error given by the simpler model 1.00.
  
  
-[![plot of chunk 2015-07-08-test-regularisation](/figures/2015-07-08-test-regularisation-1.png)](/figures/2015-07-08-test-regularisation-1.png) 
+![plot of chunk 2015-07-08-test-regularisation](/img/2015-07-08-test-regularisation-1.png)
  
 Of course, I should point out that something is probably going wrong if the number of features ($k$) equals the number of training examples ($m$); it's as overfitted as a model can get; but it demonstrates the power of regularisation, and it is heartening to see that a simpler model can perform just as well.
  

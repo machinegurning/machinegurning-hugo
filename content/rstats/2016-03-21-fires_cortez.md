@@ -61,7 +61,7 @@ hist(mydata$area)
 rug(mydata$area)
 ```
 
-![plot of chunk 2016-03-21_hist2](/figures/2016-03-21_hist2-1.svg)
+![plot of chunk 2016-03-21_hist2](img/2016-03-21_hist2-1.svg)
  
 We transform `area` into the new response variable `y`, this would be useful if we wanted to use the SVM for regression.
  
@@ -71,7 +71,7 @@ mydata <- mutate(mydata, y = log(area + 1))  # default is to the base e, y is lo
 hist(mydata$y)
 ```
 
-![plot of chunk 2016-03-21_hist1](/figures/2016-03-21_hist1-1.svg)
+![plot of chunk 2016-03-21_hist1](img/2016-03-21_hist1-1.svg)
  
 We start at an advantage, as we know what model structure for the SVM was most effective for prediction based on the findings of the paper. Thus we can limit our data preparation to a few variables.The proposed solution, which is based in a SVM and requires only four direct
 weather inputs (i.e. temperature, rain, relative humidity and wind speed) is capable of predicting small fires, which constitute the majority of the fire occurrences.

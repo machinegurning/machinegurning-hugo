@@ -99,7 +99,7 @@ From the [codebook](https://archive.ics.uci.edu/ml/datasets/Student+Performance#
 hist(mydata$G3)
 ```
 
-![plot of chunk 2016-03-01_histogram](/figures/2016-03-01_histogram-1.svg)
+![plot of chunk 2016-03-01_histogram](img/2016-03-01_histogram-1.svg)
  
 ## Make the final grade binary (pass and fail)
  
@@ -277,7 +277,7 @@ plot(m2)
 text(m2, pretty = 0, cex = 0.65)
 ```
 
-![plot of chunk 2016-03-01_plot_m2](/figures/2016-03-01_plot_m2-1.svg)
+![plot of chunk 2016-03-01_plot_m2](img/2016-03-01_plot_m2-1.svg)
  
 OK, but not great, we need a pretty interfce if people are expected to use this tool. Let's use the `rpart.plot` package and the `prp()` function therein.
  
@@ -286,7 +286,7 @@ OK, but not great, we need a pretty interfce if people are expected to use this 
 prp(m2,varlen = 4, extra = 2)  # plot with shortened abrreviated variable names
 ```
 
-![plot of chunk 2016-03-01_plot_prp](/figures/2016-03-01_plot_prp-1.svg)
+![plot of chunk 2016-03-01_plot_prp](img/2016-03-01_plot_prp-1.svg)
  
 This function is much better for plotting trees with huge customisation options. Here we display the classification rate at the node, expressed as the number of correct classifications and the number of observations in the node.
  
